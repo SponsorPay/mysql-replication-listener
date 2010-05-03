@@ -41,44 +41,6 @@ const char* get_event_type_str(Log_event_type type)
 
 } // end namespace system
 
-/*
-Binary_log_event *construct_event(Log_event_header &h)
-{
-  switch( h.type_code)
-  {
-  case UNKNOWN_EVENT:
-  case START_EVENT_V3:
-  case QUERY_EVENT:
-  case STOP_EVENT:
-  case ROTATE_EVENT:
-  case INTVAR_EVENT:
-  case LOAD_EVENT:
-  case SLAVE_EVENT:
-  case CREATE_FILE_EVENT:
-  case APPEND_BLOCK_EVENT:
-  case EXEC_LOAD_EVENT:
-  case DELETE_FILE_EVENT:
-  case NEW_LOAD_EVENT:
-  case RAND_EVENT:
-  case USER_VAR_EVENT:
-  case FORMAT_DESCRIPTION_EVENT:
-  case XID_EVENT:
-  case BEGIN_LOAD_QUERY_EVENT:
-  case EXECUTE_LOAD_QUERY_EVENT:
-  case TABLE_MAP_EVENT:
-  case PRE_GA_WRITE_ROWS_EVENT:
-  case PRE_GA_UPDATE_ROWS_EVENT:
-  case PRE_GA_DELETE_ROWS_EVENT:
-  case WRITE_ROWS_EVENT:
-  case UPDATE_ROWS_EVENT:
-  case DELETE_ROWS_EVENT:
-  case INCIDENT_EVENT:
-    
-  default:
-      
-  }
-} */
-
 
 Binary_log_event::~Binary_log_event()
 {
@@ -95,20 +57,20 @@ Binary_log_event *create_transaction_log_event(void)
 
 Transaction_log_event::~Transaction_log_event()
 {
-  std::cout << "I'm "<< std::hex << (unsigned long) this << " a poor Transaction_log_event and I'm about to die." << std::endl;
+  Int_to_Event_map::iterator it;
+  for(it = m_table_map.begin(); it != m_table_map.end();)
+  {
+    /* No need to delete the event here; it happens in the next iteration */
+    m_table_map.erase(it++);
+  }
+
   while (m_events.size() > 0)
   {
     Binary_log_event_ptr event= m_events.back();
     m_events.pop_back();
     delete(event);
   }
-
-  Int_to_Event_map::iterator it;
-  for(it = m_table_map.begin(); it != m_table_map.end();)
-  {
-    //delete it->second;
-    m_table_map.erase(it++);
-  }
+ 
 }
 
 } // end namespace MySQL
