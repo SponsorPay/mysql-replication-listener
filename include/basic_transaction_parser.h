@@ -15,7 +15,7 @@
 class Basic_transaction_parser
 {
 public:
-  Basic_transaction_parser() {}
+  Basic_transaction_parser() : m_transaction_state(NOT_IN_PROGRESS) {}
   enum Transaction_states { STARTING, IN_PROGRESS, COMMITTING, NOT_IN_PROGRESS } ;
   enum Transaction_states m_transaction_state;
   std::list <MySQL::Binary_log_event_ptr> m_event_stack;
