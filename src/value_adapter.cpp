@@ -168,7 +168,10 @@ Value &Value::operator=(const Value &val)
 
 bool Value::operator==(Value &val)
 {
-  return m_size= val.m_size && m_storage == val.m_storage && m_type == val.m_type && m_metadata == val.m_metadata;
+  return (m_size == val.m_size) &&
+         (m_storage == val.m_storage) &&
+         (m_type == val.m_type) &&
+         (m_metadata == val.m_metadata);
 }
 
 bool Value::operator!=(Value &val)

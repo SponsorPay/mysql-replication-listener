@@ -39,7 +39,11 @@ public:
         m_shutdown= false;
     }
 
-    ~Binlog_tcp_driver() {}
+    ~Binlog_tcp_driver()
+    {
+        delete m_event_queue;
+        delete m_socket;
+    }
 
     /**
      * Connects to a mysql server, authenticates and initiates the event
@@ -55,7 +59,7 @@ public:
      *   @retval 0 Successfully established a connection
      *   @retval >1 An error occurred.
      */
-    int connect(const std::string &user, const std::string &passwd, const std::string &host, long port, std::string binlog_filename="", size_t offset=4);
+    int connect(const std::string user, const std::string passwd, const std::string host, long port, std::string binlog_filename="", size_t offset=4);
 
 
     /**

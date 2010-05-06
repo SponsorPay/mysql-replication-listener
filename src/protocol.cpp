@@ -81,27 +81,15 @@ void prot_parse_error_message(std::istream &is, struct st_error_package &err, in
     // TODO is the number of bytes read = is.tellg() ?
 
     int message_size= packet_length -2 -1 -5; // the remaining part of the package
-    if (message_size > 0)
-    {
-      char *buf= new char[message_size+1];
-      err.message= (boost::uint8_t *)&buf[0];
-    }
-
-    is >> err.message;
-
-    if (message_size > 0)
-    {
-      Protocol_chunk<boost::uint8_t> prot_message(err.message, message_size);
-      is >> prot_message;
-      err.message[message_size]= '\0';
-    }
+    Protocol_chunk_string prot_message(err.message, message_size);
+    is >> prot_message;
+    err.message[message_size]= '\0';
 };
 
 void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packet_length)
 {
  // TODO: Assure that zero length messages can be but on the input stream.
 
-    ok.message= 0;
   //Protocol_chunk<boost::uint8_t>  prot_result_type(result_type);
   Protocol_chunk<boost::uint64_t> prot_affected_rows(ok.affected_rows);
   Protocol_chunk<boost::uint64_t> prot_insert_id(ok.insert_id);
@@ -110,13 +98,6 @@ void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packe
 
 
   int message_size= packet_length - 2- prot_affected_rows.size() - prot_insert_id.size() - prot_server_status.size()- prot_warning_count.size();
-  if (message_size > 0)
-  {
-    char *buf= new char[message_size+1];
-    ok.message= (boost::uint8_t *)&buf[0];
-  }
-
-  Protocol_chunk<boost::uint8_t>  prot_message(ok.message, message_size);
 
   prot_affected_rows.set_length_encoded_binary(true);
   prot_insert_id.set_length_encoded_binary(true);
@@ -128,6 +109,7 @@ void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packe
 
    if (message_size > 0)
    {
+     Protocol_chunk_string prot_message(ok.message, message_size);
      is >> prot_message;
      ok.message[message_size]= '\0';
    }

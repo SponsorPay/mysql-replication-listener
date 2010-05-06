@@ -29,7 +29,7 @@ void Result_set_feeder::digest_row_set()
   m_current_state= RESULT_HEADER;
   boost::asio::streambuf resultbuff;
   std::istream response_stream(&resultbuff);
-  int field_count= 0;
+  unsigned field_count= 0;
   try {
   do
   {
@@ -57,13 +57,16 @@ void Result_set_feeder::digest_row_set()
           }
             break;
           case MARKER:
+          {
             char marker;
             response_stream >> marker;
             assert(marker= 0xfe);
             system::digest_marker(response_stream);
             m_current_state= ROW_CONTENTS;
+          }
             break;
           case ROW_CONTENTS:
+          {
             bool is_eof= false;
             Row_of_fields row(0);
             system::digest_row_content(response_stream, m_field_count, row, m_storage, is_eof);
@@ -74,7 +77,10 @@ void Result_set_feeder::digest_row_set()
                 m_rows.push_back(row);
                 ++m_row_count;
               }
+          }
             break;
+          default:
+              continue;
       }
   } while (m_current_state != EOF_PACKET);
   } catch(boost::system::system_error e)

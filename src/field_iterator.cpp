@@ -14,7 +14,7 @@ size_t Row_event_iterator::fields(Row_of_fields& fields_vector )
   int row_field_col_index= 0;
   std::string nullbits= m_row_event->row.substr(field_offset,m_row_event->null_bits_len).c_str();
   field_offset += m_row_event->null_bits_len;
-  for( int col_no=0; col_no < m_table_map->columns_len; ++col_no)
+  for(unsigned col_no=0; col_no < m_table_map->columns_len; ++col_no)
   {
     ++row_field_col_index;
     unsigned int type= m_table_map->columns[col_no]&0xFF;
@@ -79,7 +79,7 @@ Row_event_iterator& Row_event_iterator::operator++()
     int row_field_col_index= 0;
     std::string nullbits= m_row_event->row.substr(m_field_offset,m_row_event->null_bits_len).c_str();
     m_field_offset += m_row_event->null_bits_len;
-    for( int col_no=0; col_no < m_table_map->columns_len; ++col_no)
+    for(unsigned col_no=0; col_no < m_table_map->columns_len; ++col_no)
     {
       ++row_field_col_index;
       MySQL::Value val((enum MySQL::system::enum_field_types)m_table_map->columns[col_no],

@@ -59,8 +59,8 @@ private:
     size_t fields(Row_of_fields& fields_vector );
     Row_event *m_row_event;
     Table_map_event *m_table_map;
-    size_t m_field_offset;
-    size_t m_new_field_offset_calculated;
+    unsigned long m_new_field_offset_calculated;
+    unsigned long m_field_offset;
 };
 
 }

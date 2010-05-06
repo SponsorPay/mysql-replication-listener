@@ -128,7 +128,7 @@ public:
 
         Row_of_fields *row1= &m_feeder->m_rows[m_current_row];
         Row_of_fields *row2= &other.m_feeder->m_rows[m_current_row];
-        for (int i=0; i< m_feeder->m_field_count; ++i)
+        for (unsigned i=0; i< m_feeder->m_field_count; ++i)
         {
             Value val1= row1->at(i);
             Value val2= row2->at(i);

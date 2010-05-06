@@ -36,7 +36,7 @@ namespace MySQL
 		      const char *pass);
     static int hash_sha1(boost::uint8_t *output, ...);
 
-    int Binlog_tcp_driver::connect(const std::string& user, const std::string& passwd, const std::string& host, long port, std::string binlog_filename, size_t offset)
+    int Binlog_tcp_driver::connect(const std::string user, const std::string passwd, const std::string host, long port, std::string binlog_filename, size_t offset)
     {
       m_user=user;
       m_passwd=passwd;
@@ -342,7 +342,7 @@ namespace MySQL
       packet_length+=(unsigned long) ((m_net_header[2] &0xFF) << 16);
 
       // TODO validate packet sequence numbers
-      int packet_no=(unsigned char) m_net_header[3];
+      //int packet_no=(unsigned char) m_net_header[3];
 
       if (m_waiting_event == 0)
       {
@@ -635,7 +635,7 @@ namespace MySQL
         boost::uint64_t integer;
         boost::uint8_t bytes[6];
       } table_id;
-      char zero_marker;
+      char zero_marker= 0;
 
       table_id.integer=0L;
       Protocol_chunk<boost::uint8_t> proto_table_id(&table_id.bytes[0], 6);
@@ -877,7 +877,7 @@ int encrypt_password(boost::uint8_t *reply,   /* buffer at least EVP_MAX_MD_SIZE
 		      const boost::uint8_t *scramble_buff,
 		      const char *pass) {
   boost::uint8_t hash_stage1[EVP_MAX_MD_SIZE], hash_stage2[EVP_MAX_MD_SIZE];
-  EVP_MD_CTX *hash_context = EVP_MD_CTX_create();
+  //EVP_MD_CTX *hash_context = EVP_MD_CTX_create();
 
   /* Hash password into hash_stage1 */
   int length_stage1 = hash_sha1(hash_stage1,

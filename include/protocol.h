@@ -35,7 +35,7 @@ struct st_ok_package
   boost::uint64_t insert_id;
   boost::uint16_t server_status;
   boost::uint16_t warning_count;
-  boost::uint8_t  *message;
+  std::string  message;
 };
 
 struct st_eof_package
@@ -52,7 +52,7 @@ struct st_error_package
 {
   boost::uint16_t error_code;
   boost::uint8_t  sql_state[5];
-  boost::uint8_t  *message;
+  std::string  message;
 };
 
 #define CLIENT_LONG_PASSWORD	1	/* new more secure passwords */

@@ -25,8 +25,6 @@ namespace io = boost::iostreams;
 namespace MySQL
 {
 
-class Binary_log;
-
 /**
  * Returns true if the event is consumed
  */
@@ -55,9 +53,10 @@ public:
 private:
 };
 
+template <class DeviceDriver >
 class Binary_log {
 private:
-  system::Binary_log_driver *m_driver;
+  DeviceDriver *m_driver;
   Default_event_parser m_default_parser;
   Event_parser_func m_parser_func;
   unsigned long m_binlog_position;
@@ -72,8 +71,9 @@ public:
    * Attach a device driver for reading and writing to the binlog event
    * stream.
    */
-  int register_device_driver(MySQL::system::Binary_log_driver *driver)
+  int register_device_driver(DeviceDriver *driver)
   {
+      delete m_driver;
       m_driver= driver;
       // TODO init driver?
       return 1;

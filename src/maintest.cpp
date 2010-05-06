@@ -23,14 +23,11 @@ void table_delete(std::string &table_name,MySQL::Row_of_fields &fields);
 int main(int argc, char** argv)
 {
 
-  MySQL::Binary_log binlog;
-  MySQL::system::Binlog_tcp_driver drv;
-  binlog.register_device_driver(&drv);
-  while (drv.connect("root","","127.0.0.1",13000))
-  //while (drv.connect("root","","10.129.10.144",3306))
+  MySQL::Binary_log< MySQL::system::Binlog_tcp_driver > binlog;
+  while (binlog.open("mysql://root:Huggla9@127.0.0.1:3306"))
   {
     std::cout << "Can't connect to the master. Retrying... " <<std::endl;
-    sleep(2000);
+    sleep(2);
   };
 
   
