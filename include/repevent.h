@@ -18,7 +18,11 @@
 #include <list>
 #include "binlog_event.h"
 #include "binlog_driver.h"
-
+#include "tcp_driver.h"
+#include "basic_transaction_parser.h"
+#include "field_iterator.h"
+#include "rowset.h"
+#include "access_method_factory.h"
 
 namespace io = boost::iostreams;
 
@@ -53,44 +57,25 @@ public:
 private:
 };
 
-template <class DeviceDriver >
 class Binary_log {
 private:
-  DeviceDriver *m_driver;
+  system::Binary_log_driver *m_driver;
   Default_event_parser m_default_parser;
   Event_parser_func m_parser_func;
   unsigned long m_binlog_position;
   std::string m_binlog_file;
 public:
-  Binary_log();
+  Binary_log(system::Binary_log_driver *drv);
   ~Binary_log() {}
 
-  int open(const char *url);
-
-  /**
-   * Attach a device driver for reading and writing to the binlog event
-   * stream.
-   */
-  int register_device_driver(DeviceDriver *driver)
-  {
-      delete m_driver;
-      m_driver= driver;
-      // TODO init driver?
-      return 1;
-  }
+  int connect();
 
   /**
    * Blocking attempt to get the next binlog event from the stream
    */
   int wait_for_next_event(Binary_log_event_ptr &event);
 
-
-  /**
-   * Non-blocking fetch from event stream
-   */
-  int poll_next_event(Binary_log_event_ptr &event) { m_driver->poll_next_event(event); return 1; }
-
-
+  
   /**
    * Pluggable parser for accumulating events
    */

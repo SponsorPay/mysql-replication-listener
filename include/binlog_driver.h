@@ -20,6 +20,14 @@ public:
   Binary_log_driver() {}
   ~Binary_log_driver() {}
 
+  /**
+   * Connect to the binary log using previously declared connection parameters
+   * @return Success or error code
+   * @retval 0 Success
+   * @retval >0 Error code (to be specified)
+   */
+  virtual int connect()= 0;
+
 
   /**
    * Blocking attempt to get the next binlog event from the stream

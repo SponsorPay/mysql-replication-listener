@@ -8,11 +8,6 @@
 #include <stdlib.h>
 #include <boost/foreach.hpp>
 #include "repevent.h"
-#include "tcp_driver.h"
-#include "binlog_driver.h"
-#include "basic_transaction_parser.h"
-#include "field_iterator.h"
-#include "rowset.h"
 
 void table_insert(std::string &table_name,MySQL::Row_of_fields &fields);
 void table_update(std::string &table_name,MySQL::Row_of_fields &old_fields, MySQL::Row_of_fields &new_fields);
@@ -23,8 +18,8 @@ void table_delete(std::string &table_name,MySQL::Row_of_fields &fields);
 int main(int argc, char** argv)
 {
 
-  MySQL::Binary_log< MySQL::system::Binlog_tcp_driver > binlog;
-  while (binlog.open("mysql://root:Huggla9@127.0.0.1:3306"))
+  MySQL::Binary_log binlog(MySQL::create_transport("mysql://pear:apple@127.0.0.1:13000"));
+  while (binlog.connect())
   {
     std::cout << "Can't connect to the master. Retrying... " <<std::endl;
     sleep(2);
@@ -39,7 +34,7 @@ int main(int argc, char** argv)
   binlog.parser(f);
 
   MySQL::Binary_log_event_ptr event;
-  binlog.position(4);
+  //binlog.position("searchbin.000001",4);
   
   while(true)
   {
@@ -74,6 +69,16 @@ int main(int argc, char** argv)
         
       }
       break;
+    case MySQL::ROTATE_EVENT:
+      {
+        MySQL::Rotate_event *rot= static_cast<MySQL::Rotate_event *>(event->body());
+        std::cout << "filename: "
+                  << rot->binlog_file.c_str()
+                  << " pos: "
+                  << rot->binlog_pos
+                  << std::endl;
+      }
+      break;
     case MySQL::TABLE_MAP_EVENT:
       {
         MySQL::Table_map_event *tmev= static_cast<MySQL::Table_map_event *>(event->body());
@@ -93,7 +98,7 @@ int main(int argc, char** argv)
       {
         std::cout << "A user defined change set has arrived!" << std::endl;
         MySQL::Transaction_log_event *trans= static_cast<MySQL::Transaction_log_event *>(event->body());
-
+        int row_count=0;
         /*
          The transaction event we created has aggregated all row events in an
          ordered list.
@@ -120,9 +125,7 @@ int main(int argc, char** argv)
                */
                MySQL::Row_set<Row_event_feeder > rows(rev, tm);
                
-               
                MySQL::Row_set<Row_event_feeder >::iterator it= rows.begin();
-               int row_count=0;
                do {
                  MySQL::Row_of_fields fields= *it;
                  if (event->get_event_type() == MySQL::WRITE_ROWS_EVENT)

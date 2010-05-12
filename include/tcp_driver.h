@@ -29,7 +29,11 @@ class Binlog_tcp_driver : public Binary_log_driver
 {
 public:
 
-    Binlog_tcp_driver() {
+    Binlog_tcp_driver(std::string user, std::string passwd, std::string host, unsigned long port) {
+        m_host= host;
+        m_user= user;
+        m_passwd= passwd;
+        m_port= port;
         m_socket = NULL;
         m_binlog_offset = 4;
         m_waiting_event= 0;
@@ -44,6 +48,11 @@ public:
         delete m_event_queue;
         delete m_socket;
     }
+
+    /**
+     * Connect using previously declared connection parameters.
+     */
+    int connect();
 
     /**
      * Connects to a mysql server, authenticates and initiates the event

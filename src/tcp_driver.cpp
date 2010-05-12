@@ -495,13 +495,15 @@ namespace MySQL
           break;
         }
 
-        
-        /*
-         Wait for 2 seconds
-        */
-        boost::asio::deadline_timer t(m_io_service, boost::posix_time::seconds(2));
-        t.wait();
         m_io_service.reset();
+
+        /*
+          Clear binlog file name and position so that we continue on the latest
+          position available. This allow us to reconnect and continue after
+          an EOF or server disconnect.
+        */
+        //this->m_binlog_file_name= "";
+        //this->m_binlog_offset= 0;
 
         reconnect();
 
@@ -509,8 +511,24 @@ namespace MySQL
 
     }
 
+    int Binlog_tcp_driver::connect()
+    {
+      return connect(m_user, m_passwd, m_host, m_port);
+    }
+
+    /**
+     * Makae synchronous reconnect. The io service must have stopped.
+     */
     void Binlog_tcp_driver::reconnect()
     {
+      while(m_event_queue->has_unread())
+      {
+        /*
+          Wait for 1 second while the event queue is clearing up.
+        */
+        boost::asio::deadline_timer t(m_io_service, boost::posix_time::seconds(1));
+        t.wait();
+      }
       disconnect();
       connect(m_user, m_passwd, m_host, m_port);
     }
@@ -572,7 +590,7 @@ namespace MySQL
     {
       Rotate_event *rev= new Rotate_event(ev);
 
-      boost::uint32_t file_name_length= ev->header()->event_length - 8;
+      boost::uint32_t file_name_length= ev->header()->event_length - 7 - LOG_EVENT_HEADER_SIZE;
       
       Protocol_chunk<boost::uint64_t > prot_position(rev->binlog_pos);
       Protocol_chunk_string prot_file_name(rev->binlog_file, file_name_length);
@@ -691,7 +709,12 @@ namespace MySQL
         proto_rows_event(is, ev);
         break;
       case ROTATE_EVENT:
-        proto_rotate_event(is, ev);
+        {
+          proto_rotate_event(is, ev);
+          Rotate_event *rot= static_cast<Rotate_event *>(ev->body());
+          m_binlog_file_name= rot->binlog_file;
+          m_binlog_offset= (unsigned long)rot->binlog_pos;
+        }
         break;
       }
 
