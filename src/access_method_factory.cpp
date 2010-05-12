@@ -13,6 +13,10 @@ system::Binary_log_driver *create_transport(const char *url)
     char host[50];
     char port[6];
     char pass[21];
+    user[0]= 0;
+    host[0]= 0;
+    port[0]= 0;
+    pass[0]= 0;
     unsigned user_length;
     unsigned host_length;
     unsigned port_length;

@@ -229,7 +229,6 @@ public:
     boost::uint32_t null_bits_len;
     std::string null_bits;
 
-    int extract_metadata(boost::uint32_t &metadata);
 };
 
 typedef std::vector<char*> Column_images;
@@ -252,13 +251,23 @@ public:
 class Int_var_event: public Event_body
 {
 public:
+    Int_var_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
     boost::uint8_t  type;
     boost::uint64_t value;
+};
+
+class Incident_event: public Event_body
+{
+public:
+    Incident_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    boost::uint8_t  type;
+    std::string message;
 };
 
 class Xid: public Event_body
 {
 public:
+    Xid(Binary_log_event_ptr &ev) : Event_body(ev) {}
     boost::uint64_t xid_id;
 };
 
@@ -281,7 +290,8 @@ public:
     std::list<Binary_log_event_ptr> m_events;
 };
 
-Binary_log_event *create_transaction_log_event(void);
+Binary_log_event_ptr create_transaction_log_event(void);
+Binary_log_event_ptr create_incident_event(unsigned int type, const char *message, unsigned long pos= 0);
 
 } // end namespace MySQL
 

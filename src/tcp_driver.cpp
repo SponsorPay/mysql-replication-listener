@@ -270,13 +270,21 @@ namespace MySQL
     {
       if (err)
       {
-        std::cout << err.message() << std::endl;
+        Binary_log_event_ptr ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
+        m_event_queue->push_front(ev);
         return;
       }
 
       if (bytes_transferred > MAX_PACKAGE_SIZE || bytes_transferred == 0)
       {
-        //std::cout << "Transferred wrong number of bytes: " << bytes_transferred << std::endl;
+        std::ostringstream os;
+        os << "Expected byte size to be between 0 and "
+           << MAX_PACKAGE_SIZE
+           << " number of bytes; got "
+           << bytes_transferred
+           << " instead.";
+        Binary_log_event_ptr ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
+        m_event_queue->push_front(ev);
         return;
       }
 
@@ -327,13 +335,21 @@ namespace MySQL
     {
       if (err)
       {
-        std::cerr << err.message() << std::endl;
+        Binary_log_event_ptr ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
+        m_event_queue->push_front(ev);
         return;
       }
 
       if (bytes_transferred != 4)
       {
-        // Wrong number of bytes completed!
+        std::ostringstream os;
+        os << "Expected byte size to be between 0 and "
+           << MAX_PACKAGE_SIZE
+           << " number of bytes; got "
+           << bytes_transferred
+           << " instead.";
+        Binary_log_event_ptr ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
+        m_event_queue->push_front(ev);
         return;
       }
 
@@ -600,6 +616,16 @@ namespace MySQL
          >> prot_file_name;
     }
 
+    void proto_incident_event(std::istream &is, Binary_log_event_ptr &ev)
+    {
+      Incident_event *incident= new Incident_event(ev);
+      Protocol_chunk<boost::uint8_t> proto_incident_code(incident->type);
+      Protocol_chunk_string_len      proto_incident_message(incident->message);
+
+      is >> proto_incident_code
+         >> proto_incident_message;
+    }
+
     void proto_rows_event(std::istream &is, Binary_log_event_ptr &ev)
     {
       Row_event *rev=new Row_event(ev);
@@ -702,6 +728,9 @@ namespace MySQL
         break;
       case QUERY_EVENT:
         proto_query_event(is, ev);
+        break;
+      case INCIDENT_EVENT:
+        proto_incident_event(is, ev);
         break;
       case WRITE_ROWS_EVENT:
       case UPDATE_ROWS_EVENT:

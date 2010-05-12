@@ -47,7 +47,7 @@ Binary_log_event::~Binary_log_event()
   delete m_payload;
 }
 
-Binary_log_event *create_transaction_log_event(void)
+Binary_log_event_ptr create_transaction_log_event(void)
 {
     Binary_log_event *ev= new Binary_log_event();
     ev->header()->type_code= USER_DEFINED;
@@ -71,6 +71,18 @@ Transaction_log_event::~Transaction_log_event()
     delete(event);
   }
  
+}
+
+Binary_log_event_ptr create_incident_event(unsigned int type, const char *message, unsigned long pos)
+{
+  Binary_log_event *ev= new Binary_log_event();
+  ev->header()->type_code= INCIDENT_EVENT;
+  ev->header()->next_position= pos;
+  ev->header()->event_length= LOG_EVENT_HEADER_SIZE + 2 + strlen(message);
+  Incident_event *incident= new Incident_event(ev);
+  incident->type= type;
+  incident->message.append(message);
+  return ev;
 }
 
 } // end namespace MySQL

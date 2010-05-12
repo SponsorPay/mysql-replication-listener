@@ -107,9 +107,7 @@ int calc_field_size(unsigned char column_type, unsigned char *field_ptr, boost::
   case MySQL::system::MYSQL_TYPE_BLOB:
   case MySQL::system::MYSQL_TYPE_GEOMETRY:
   {
-    // Field_blob fb(metadata_ptr[column_index]);
-    // length= fb.get_packed_size(master_data, TRUE);
-    switch (metadata)
+     switch (metadata)
     {
       case 1:
         length= 1+ (boost::uint32_t) field_ptr[0];
