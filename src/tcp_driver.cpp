@@ -643,8 +643,8 @@ namespace MySQL
       proto_column_len.set_length_encoded_binary(true);
 
       is >> proto_table_id
-              >> proto_flags
-              >> proto_column_len;
+         >> proto_flags
+         >> proto_column_len;
 
       rev->table_id=table_id.integer;
       int used_column_len=(int) ((rev->columns_len + 7) / 8);
@@ -863,7 +863,9 @@ namespace MySQL
         Converter conv1(row[0]);
         conv1.to_string(filename);
         Converter conv2(row[1]);
-        conv2.to_long(position);
+        long pos;
+        conv2.to_long(pos);
+        position= (unsigned long)pos;
       }
       return false;
     }
@@ -892,12 +894,12 @@ namespace MySQL
       BOOST_FOREACH(Row_of_fields row, result_set)
       {
         std::string filename;
-        unsigned long position;
+        long position;
         Converter conv1(row[0]);
         conv1.to_string(filename);
         Converter conv2(row[1]);
         conv2.to_long(position);
-        binlog_map.insert(std::make_pair<std::string, unsigned long>(filename, position));
+        binlog_map.insert(std::make_pair<std::string, unsigned long>(filename, (unsigned long)position));
       }
       return false;
     }

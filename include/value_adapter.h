@@ -33,7 +33,7 @@ int calc_field_size(unsigned char column_type, unsigned char *field_ptr,
 
 
 /**
- * A value object class which encapsluate a tuple (value type, storage)
+ * A value object class which encapsluate a tuple (value type, metadata, storage)
  * and provide for views to this storage through a well defined interface.
  *
  * Can be used with a Converter to convert between different Values.
@@ -81,19 +81,31 @@ public:
      */
     size_t size() { return m_size; }
     enum system::enum_field_types type() { return m_type; }
-	boost::uint32_t metadata() { return m_metadata; }
+    boost::uint32_t metadata() { return m_metadata; }
     
     /**
      * Returns the integer representation of a storage of a pre-specified
      * type.
      */
-    boost::uint32_t sql_integer();
+    boost::int32_t sql_integer();
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::uint64_t sql_long();
+    boost::int64_t sql_bigint();
+
+    /**
+     * Returns the integer representation of a storage of pre-specified
+     * type.
+     */
+    boost::int8_t sql_tinyint();
+
+    /**
+     * Returns the integer representation of a storage of pre-specified
+     * type.
+     */
+    boost::int16_t sql_smallint();
 
     /**
      * Returns a pointer to the character data of a string type stored
@@ -102,7 +114,7 @@ public:
      * @param[out] size The size in bytes of the character string.
      * 
      */
-    char *sql_string_ptr(size_t &size);
+    char *sql_string_ptr(unsigned long &size);
 
     /**
      * Returns a pointer to the byte data of a blob type stored in the pre-
@@ -110,18 +122,13 @@ public:
      *
      * @param[out] size The size in bytes of the blob data.
      */
-    char *sql_blob(size_t &size);
+    char *sql_blob(unsigned long &size);
 
     double sql_decimal() { return 0.0; }
-    boost::uint16_t sql_tiny() { return 0; }
-    boost::uint32_t sql_short() { return 0; }
     double sql_float() { return 0.0; }
     double sql_double() { return 0.0; }
-
     long sql_timestamp() { return 0; }
 
-    boost::uint64_t sql_longlong() { return 0; }
-    boost::uint64_t sql_int24() { return 0; }
 
 //			MYSQL_TYPE_DATE,   MYSQL_TYPE_TIME,
 //			MYSQL_TYPE_DATETIME, MYSQL_TYPE_YEAR,
@@ -152,11 +159,6 @@ public:
     ~Converter() {}
 
     /**
-     * Converts and copies the sql value to a boost::any object.
-     */
-    boost::any to_any();
-
-    /**
      * Converts and copies the sql value to a std::string object.
      */
     void to_string(std::string &str);
@@ -164,7 +166,7 @@ public:
     /**
      * Voncerts and copies the sql value to a long integer.
      */
-    void to_long(unsigned long &val);
+    void to_long(long &val);
 private:
     Value m_val;
 };

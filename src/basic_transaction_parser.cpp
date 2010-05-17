@@ -16,12 +16,12 @@ bool Basic_transaction_parser::operator()(MySQL::Binary_log_event_ptr &ev)
       MySQL::Query_event *qev= static_cast<MySQL::Query_event *>(ev->body());
       if (qev->query == "BEGIN")
       {
-        std::cout << "Transaction has started!" << std::endl;
+        //std::cout << "Transaction has started!" << std::endl;
         m_transaction_state= STARTING;
       }
       if (qev->query == "COMMIT")
       {
-        std::cout << "Transaction is committed!" << std::endl;
+        //std::cout << "Transaction is committed!" << std::endl;
         m_transaction_state= COMMITTING;
       }
     }
@@ -29,7 +29,7 @@ bool Basic_transaction_parser::operator()(MySQL::Binary_log_event_ptr &ev)
     case MySQL::XID_EVENT:
     {
       /* Transaction capable engines end their transactions with XID */
-      std::cout << "Transaction is committed!" << std::endl;
+      //std::cout << "Transaction is committed!" << std::endl;
       m_transaction_state= COMMITTING;
     }
     break;

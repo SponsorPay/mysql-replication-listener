@@ -18,6 +18,7 @@ int calc_field_size(unsigned char column_type, unsigned char *field_ptr, boost::
   case MySQL::system::MYSQL_TYPE_NEWDECIMAL:
     //length= my_decimal_get_binary_size(metadata_ptr[col] >> 8,
     //                                   metadata_ptr[col] & 0xff);
+    length= 0;
     break;
   case MySQL::system::MYSQL_TYPE_DECIMAL:
   case MySQL::system::MYSQL_TYPE_FLOAT:
@@ -117,11 +118,11 @@ int calc_field_size(unsigned char column_type, unsigned char *field_ptr, boost::
         break;
       case 3:
         // TODO make platform indep.
-        length= 3+ (boost::uint32_t) (long) (*((unsigned int *) (field_ptr)) & 0xFFFFFF);
+        length= 3+ (boost::uint32_t) (long) (*((boost::uint32_t *) (field_ptr)) & 0xFFFFFF);
         break;
       case 4:
         // TODO make platform indep.
-        length= 4+ (boost::uint32_t) (long) *((unsigned int *) (field_ptr));
+        length= 4+ (boost::uint32_t) (long) *((boost::uint32_t *) (field_ptr));
         break;
       default:
         length= 0;
@@ -177,9 +178,9 @@ bool Value::operator!=(Value &val)
   return !operator==(val);
 }
 
-char *Value::sql_string_ptr(size_t &size)
+char *Value::sql_string_ptr(unsigned long &size)
 {
-  if (m_is_null)
+  if (m_is_null || m_size == 0)
   {
     size= 0;
     return 0;
@@ -195,13 +196,14 @@ char *Value::sql_string_ptr(size_t &size)
   return m_storage + metadata_length;
 }
 
-char *Value::sql_blob(size_t &size)
+char *Value::sql_blob(unsigned long &size)
 {
-  if (m_is_null)
+  if (m_is_null || m_size == 0)
   {
     size= 0;
     return 0;
   }
+
   /*
    Size was calculated during construction of the object and only inludes the
    size of the blob data, not the metadata part which also is stored in the
@@ -215,7 +217,7 @@ char *Value::sql_blob(size_t &size)
   return m_storage + m_metadata;
 }
 
-boost::uint32_t Value::sql_integer()
+boost::int32_t Value::sql_integer()
 {
   if (m_is_null)
   {
@@ -229,85 +231,46 @@ boost::uint32_t Value::sql_integer()
   return to_int;
 }
 
-boost::uint64_t Value::sql_long()
+boost::int8_t Value::sql_tinyint()
 {
   if (m_is_null)
   {
     return 0;
   }
-  boost::uint64_t to_int;
-  Protocol_chunk<boost::uint64_t> prot_integer(to_int);
+  boost::int8_t to_int;
+  Protocol_chunk<boost::int8_t> prot_integer(to_int);
 
   buffer_source buff(m_storage, m_size);
   buff >> prot_integer;
   return to_int;
 }
 
-boost::any Converter::to_any()
+boost::int16_t Value::sql_smallint()
 {
-  boost::any value;
-  switch(m_val.type())
+  if (m_is_null)
   {
-    case MYSQL_TYPE_DECIMAL:
-      break;
-    case MYSQL_TYPE_TINY:
-      break;
-    case MYSQL_TYPE_SHORT:
-      break;
-    case MYSQL_TYPE_LONG:
-      value= m_val.sql_long();
-      break;
-    case MYSQL_TYPE_FLOAT:
-      break;
-    case MYSQL_TYPE_DOUBLE:
-      value= m_val.sql_double();
-    case MYSQL_TYPE_NULL:
-      break;
-    case MYSQL_TYPE_TIMESTAMP:
-      break;
-    case MYSQL_TYPE_LONGLONG:
-      value= m_val.sql_long();
-      break;
-    case MYSQL_TYPE_INT24:
-      break;
-    case MYSQL_TYPE_DATE:
-      break;
-    case MYSQL_TYPE_TIME:
-      break;
-    case MYSQL_TYPE_DATETIME:
-      break;
-    case MYSQL_TYPE_YEAR:
-      break;
-    case MYSQL_TYPE_NEWDATE:
-      break;
-    case MYSQL_TYPE_VARCHAR:
-      break;
-    case MYSQL_TYPE_BIT:
-      break;
-    case MYSQL_TYPE_NEWDECIMAL:
-      break;
-    case MYSQL_TYPE_ENUM:
-      break;
-    case MYSQL_TYPE_SET:
-      break;
-    case MYSQL_TYPE_TINY_BLOB:
-      break;
-    case MYSQL_TYPE_MEDIUM_BLOB:
-      break;
-    case MYSQL_TYPE_LONG_BLOB:
-      break;
-    case MYSQL_TYPE_BLOB:
-      break;
-    case MYSQL_TYPE_VAR_STRING:
-      break;
-    case MYSQL_TYPE_STRING:
-      break;
-    case MYSQL_TYPE_GEOMETRY:
-      break;
-    default:
-      value= 0;
+    return 0;
   }
-  return value;
+  boost::int16_t to_int;
+  Protocol_chunk<boost::int16_t> prot_integer(to_int);
+
+  buffer_source buff(m_storage, m_size);
+  buff >> prot_integer;
+  return to_int;
+}
+
+boost::int64_t Value::sql_bigint()
+{
+  if (m_is_null)
+  {
+    return 0;
+  }
+  boost::int64_t to_int;
+  Protocol_chunk<boost::int64_t> prot_integer(to_int);
+
+  buffer_source buff(m_storage, m_size);
+  buff >> prot_integer;
+  return to_int;
 }
 
 void Converter::to_string(std::string &str)
@@ -318,11 +281,17 @@ void Converter::to_string(std::string &str)
       str= "not implemented";
       break;
     case MYSQL_TYPE_TINY:
-      str= "not implemented";
+      if (m_val.is_null())
+        str= "(NULL)";
+      else
+        str= boost::lexical_cast<std::string>(static_cast<int>(m_val.sql_tinyint()));
       break;
     case MYSQL_TYPE_SHORT:
-      str= "not implemented";
-      break;;
+      if (m_val.is_null())
+        str= "(NULL)";
+      else
+        str= boost::lexical_cast<std::string>(m_val.sql_smallint());
+      break;
     case MYSQL_TYPE_LONG:
       if (m_val.is_null())
         str= "(NULL)";
@@ -348,7 +317,7 @@ void Converter::to_string(std::string &str)
       if (m_val.is_null())
         str= "(NULL)";
       else
-        str= boost::lexical_cast<std::string>(m_val.sql_long());
+        str= boost::lexical_cast<std::string>(m_val.sql_bigint());
       break;
     case MYSQL_TYPE_INT24:
       str= "not implemented";
@@ -374,7 +343,29 @@ void Converter::to_string(std::string &str)
         str= "(NULL)";
       else
       {
-        size_t size;
+        unsigned long size;
+        char *ptr= m_val.sql_string_ptr(size);
+        str.append(ptr, size);
+      }
+    }
+      break;
+    case MYSQL_TYPE_VAR_STRING:
+    {
+      if (m_val.is_null())
+        str= "(NULL)";
+      else
+      {
+        str.append(m_val.storage(), m_val.size());
+      }
+    }
+    break;
+    case MYSQL_TYPE_STRING:
+    {
+      if (m_val.is_null())
+        str= "(NULL)";
+      else
+      {
+        unsigned long size;
         char *ptr= m_val.sql_string_ptr(size);
         str.append(ptr, size);
       }
@@ -401,18 +392,11 @@ void Converter::to_string(std::string &str)
         str= "(NULL)";
       else
       {
-        size_t size;
+        unsigned long size;
         char *ptr= m_val.sql_blob(size);
         str.append(ptr, size);
       }
     }
-      break;
-    case MYSQL_TYPE_VAR_STRING:
-    case MYSQL_TYPE_STRING:
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-        str.append(m_val.storage(), m_val.size());
       break;
     case MYSQL_TYPE_GEOMETRY:
       str= "not implemented";
@@ -424,7 +408,7 @@ void Converter::to_string(std::string &str)
 }
 
 
-void Converter::to_long(unsigned long &val)
+void Converter::to_long(long &val)
 {
   switch(m_val.type())
   {
@@ -438,13 +422,14 @@ void Converter::to_long(unsigned long &val)
       val= 0;
       break;;
     case MYSQL_TYPE_LONG:
-      val= (unsigned long)m_val.sql_integer();
+      
+      val= (long)m_val.sql_integer();
       break;
     case MYSQL_TYPE_FLOAT:
       val= 0;
       break;
     case MYSQL_TYPE_DOUBLE:
-      val= (unsigned long)m_val.sql_double();
+      val= (long)m_val.sql_double();
     case MYSQL_TYPE_NULL:
       val= 0;
       break;
@@ -453,7 +438,7 @@ void Converter::to_long(unsigned long &val)
       break;
 
     case MYSQL_TYPE_LONGLONG:
-      val= m_val.sql_long();
+      val= (long)m_val.sql_bigint();
       break;
     case MYSQL_TYPE_INT24:
       val= 0;
@@ -498,7 +483,7 @@ void Converter::to_long(unsigned long &val)
     {
       std::string str;
       str.append(m_val.storage(), m_val.size());
-      val= boost::lexical_cast<unsigned long>(str.c_str());
+      val= boost::lexical_cast<long>(str.c_str());
     }
       break;
     case MYSQL_TYPE_STRING:
