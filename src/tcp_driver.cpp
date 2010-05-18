@@ -850,6 +850,7 @@ namespace MySQL
 
       Row_set<Result_set_feeder > result_set(socket);
 
+      Converter conv;
       BOOST_FOREACH(Row_of_fields row, result_set)
       {
         // BOOST_FOREACH(Value value, row)
@@ -860,11 +861,9 @@ namespace MySQL
         //   std::cout << str << " ";
         // }
         filename= "";
-        Converter conv1(row[0]);
-        conv1.to_string(filename);
-        Converter conv2(row[1]);
+        conv.to_string(filename, row[0]);
         long pos;
-        conv2.to_long(pos);
+        conv.to_long(pos, row[1]);
         position= (unsigned long)pos;
       }
       return false;
@@ -891,14 +890,13 @@ namespace MySQL
 
       Row_set<Result_set_feeder > result_set(socket);
 
+      Converter conv;
       BOOST_FOREACH(Row_of_fields row, result_set)
       {
         std::string filename;
         long position;
-        Converter conv1(row[0]);
-        conv1.to_string(filename);
-        Converter conv2(row[1]);
-        conv2.to_long(position);
+        conv.to_string(filename, row[0]);
+        conv.to_long(position, row[1]);
         binlog_map.insert(std::make_pair<std::string, unsigned long>(filename, (unsigned long)position));
       }
       return false;

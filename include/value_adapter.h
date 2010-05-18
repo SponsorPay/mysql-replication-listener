@@ -155,20 +155,18 @@ private:
 class Converter
 {
 public:
-    Converter(Value &val) : m_val(val) {}
+    Converter() {}
     ~Converter() {}
 
     /**
      * Converts and copies the sql value to a std::string object.
      */
-    void to_string(std::string &str);
+    void to_string(std::string &str, Value &val);
 
     /**
      * Voncerts and copies the sql value to a long integer.
      */
-    void to_long(long &val);
-private:
-    Value m_val;
+    void to_long(long &val, Value &val);
 };
 
 

@@ -1,6 +1,7 @@
 #include "value_adapter.h"
 #include "binlog_event.h"
 #include <boost/lexical_cast.hpp>
+#include <iomanip>
 
 using namespace MySQL;
 using namespace MySQL::system;
@@ -273,51 +274,43 @@ boost::int64_t Value::sql_bigint()
   return to_int;
 }
 
-void Converter::to_string(std::string &str)
+void Converter::to_string(std::string &str, Value &val)
 {
-  switch(m_val.type())
+  if (val.is_null())
+  {
+    str= "(NULL)";
+    return;
+  }
+
+  switch(val.type())
   {
     case MYSQL_TYPE_DECIMAL:
       str= "not implemented";
       break;
     case MYSQL_TYPE_TINY:
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-        str= boost::lexical_cast<std::string>(static_cast<int>(m_val.sql_tinyint()));
+      str= boost::lexical_cast<std::string>(static_cast<int>(val.sql_tinyint()));
       break;
     case MYSQL_TYPE_SHORT:
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-        str= boost::lexical_cast<std::string>(m_val.sql_smallint());
+      str= boost::lexical_cast<std::string>(val.sql_smallint());
       break;
     case MYSQL_TYPE_LONG:
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-        str= boost::lexical_cast<std::string>(m_val.sql_integer());
+      str= boost::lexical_cast<std::string>(val.sql_integer());
       break;
     case MYSQL_TYPE_FLOAT:
       str= "not implemented";
       break;
     case MYSQL_TYPE_DOUBLE:
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-        str= boost::lexical_cast<std::string>(m_val.sql_double());
+      str= boost::lexical_cast<std::string>(val.sql_double());
+      break;
     case MYSQL_TYPE_NULL:
       str= "not implemented";
       break;
     case MYSQL_TYPE_TIMESTAMP:
-      str="not implemented";
+      str= boost::lexical_cast<std::string>((boost::uint32_t)val.sql_integer());
       break;
 
     case MYSQL_TYPE_LONGLONG:
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-        str= boost::lexical_cast<std::string>(m_val.sql_bigint());
+      str= boost::lexical_cast<std::string>(val.sql_bigint());
       break;
     case MYSQL_TYPE_INT24:
       str= "not implemented";
@@ -325,10 +318,29 @@ void Converter::to_string(std::string &str)
     case MYSQL_TYPE_DATE:
       str= "not implemented";
       break;
-    case MYSQL_TYPE_TIME:
-      str= "not implemented";
-      break;
     case MYSQL_TYPE_DATETIME:
+    {
+      boost::uint64_t timestamp= val.sql_bigint();
+      unsigned long d= timestamp / 1000000;
+      unsigned long t= timestamp % 1000000;
+      std::ostringstream os;
+
+      os << std::setfill('0') << std::setw(4) << d / 10000
+         << std::setw(1) << '-'
+         << std::setw(2) << (d % 10000) / 100
+         << std::setw(1) << '-'
+         << std::setw(2) << d % 100
+         << std::setw(1) << ' '
+         << std::setw(2) << t / 10000
+         << std::setw(1) << ':'
+         << std::setw(2) << (t % 10000) / 100
+         << std::setw(1) << ':'
+         << std::setw(2) << t % 100;
+    
+      str= os.str();
+    }
+      break;
+    case MYSQL_TYPE_TIME:
       str= "not implemented";
       break;
     case MYSQL_TYPE_YEAR:
@@ -339,36 +351,21 @@ void Converter::to_string(std::string &str)
       break;
     case MYSQL_TYPE_VARCHAR:
     {
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-      {
-        unsigned long size;
-        char *ptr= m_val.sql_string_ptr(size);
-        str.append(ptr, size);
-      }
+      unsigned long size;
+      char *ptr= val.sql_string_ptr(size);
+      str.append(ptr, size);
     }
       break;
     case MYSQL_TYPE_VAR_STRING:
     {
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-      {
-        str.append(m_val.storage(), m_val.size());
-      }
+      str.append(val.storage(), val.size());
     }
     break;
     case MYSQL_TYPE_STRING:
     {
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-      {
-        unsigned long size;
-        char *ptr= m_val.sql_string_ptr(size);
-        str.append(ptr, size);
-      }
+      unsigned long size;
+      char *ptr= val.sql_string_ptr(size);
+      str.append(ptr, size);
     }
       break;
     case MYSQL_TYPE_BIT:
@@ -388,14 +385,9 @@ void Converter::to_string(std::string &str)
     case MYSQL_TYPE_LONG_BLOB:
     case MYSQL_TYPE_BLOB:
     {
-      if (m_val.is_null())
-        str= "(NULL)";
-      else
-      {
-        unsigned long size;
-        char *ptr= m_val.sql_blob(size);
-        str.append(ptr, size);
-      }
+      unsigned long size;
+      char *ptr= val.sql_blob(size);
+      str.append(ptr, size);
     }
       break;
     case MYSQL_TYPE_GEOMETRY:
@@ -408,92 +400,91 @@ void Converter::to_string(std::string &str)
 }
 
 
-void Converter::to_long(long &val)
+void Converter::to_long(long &out, Value &val)
 {
-  switch(m_val.type())
+  switch(val.type())
   {
     case MYSQL_TYPE_DECIMAL:
-      val= 0;
+      out= (long)val.sql_decimal();
       break;
     case MYSQL_TYPE_TINY:
-      val= 0;
+      out= val.sql_tinyint();
       break;
     case MYSQL_TYPE_SHORT:
-      val= 0;
+      out= val.sql_smallint();
       break;;
     case MYSQL_TYPE_LONG:
-      
-      val= (long)m_val.sql_integer();
+      out= (long)val.sql_integer();
       break;
     case MYSQL_TYPE_FLOAT:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_DOUBLE:
-      val= (long)m_val.sql_double();
+      out= (long)val.sql_double();
     case MYSQL_TYPE_NULL:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_TIMESTAMP:
-      val=0;
+      out=(boost::uint32_t)val.sql_integer();
       break;
 
     case MYSQL_TYPE_LONGLONG:
-      val= (long)m_val.sql_bigint();
+      out= (long)val.sql_bigint();
       break;
     case MYSQL_TYPE_INT24:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_DATE:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_TIME:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_DATETIME:
-      val= 0;
+      out= (long)val.sql_bigint();
       break;
     case MYSQL_TYPE_YEAR:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_NEWDATE:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_VARCHAR:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_BIT:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_NEWDECIMAL:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_ENUM:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_SET:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_TINY_BLOB:
     case MYSQL_TYPE_MEDIUM_BLOB:
     case MYSQL_TYPE_LONG_BLOB:
     case MYSQL_TYPE_BLOB:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_VAR_STRING:
     {
       std::string str;
-      str.append(m_val.storage(), m_val.size());
-      val= boost::lexical_cast<long>(str.c_str());
+      str.append(val.storage(), val.size());
+      out= boost::lexical_cast<long>(str.c_str());
     }
       break;
     case MYSQL_TYPE_STRING:
-      val= 0;
+      out= 0;
       break;
     case MYSQL_TYPE_GEOMETRY:
-      val= 0;
+      out= 0;
       break;
     default:
-      val= 0;
+      out= 0;
       break;
   }
 }

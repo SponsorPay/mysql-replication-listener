@@ -25,15 +25,15 @@ void table_insert(std::string table_name, MySQL::Row_of_fields &fields)
            << table_name
            << " VALUES (";
   MySQL::Row_of_fields::iterator field_it= fields.begin();
+  MySQL::Converter converter;
   do {
     /*
      Each row contains a vector of Value objects. The converter
      allows us to transform the value into another
      representation.
     */
-    MySQL::Converter converter(*field_it);
     std::string str;
-    converter.to_string(str);
+    converter.to_string(str, *field_it);
     if (is_text_field(*field_it))
       std::cout << '\'';
     std::cout << str;
@@ -55,10 +55,10 @@ void table_update(std::string table_name, MySQL::Row_of_fields &old_fields, MySQ
 
   int field_id= 0;
   MySQL::Row_of_fields::iterator field_it= new_fields.begin();
+  MySQL::Converter converter;
   do {
-    MySQL::Converter converter(*field_it);
     std::string str;
-    converter.to_string(str);
+    converter.to_string(str, *field_it);
     std::cout << field_id << "= ";
     if (is_text_field(*field_it))
       std::cout << '\'';
@@ -74,9 +74,8 @@ void table_update(std::string table_name, MySQL::Row_of_fields &old_fields, MySQ
   field_it= old_fields.begin();
   field_id= 0;
   do {
-    MySQL::Converter converter(*field_it);
     std::string str;
-    converter.to_string(str);
+    converter.to_string(str, *field_it);
     std::cout << field_id << "= ";
     if (is_text_field(*field_it))
       std::cout << '\'';
@@ -100,10 +99,11 @@ void table_delete(std::string table_name, MySQL::Row_of_fields &fields)
            << " WHERE ";
   MySQL::Row_of_fields::iterator field_it= fields.begin();
   int field_id= 0;
+  MySQL::Converter converter;
   do {
-    MySQL::Converter converter(*field_it);
+    
     std::string str;
-    converter.to_string(str);
+    converter.to_string(str, *field_it);
     std::cout << field_id << "= ";
     if (is_text_field(*field_it))
       std::cout << '\'';
@@ -115,7 +115,7 @@ void table_delete(std::string table_name, MySQL::Row_of_fields &fields)
     if (field_it != fields.end())
       std::cout << " AND ";
   } while(field_it != fields.end());
-  std::cout " LIMIT 1" << std::endl;
+  std::cout << " LIMIT 1" << std::endl;
 }
 
 /*
