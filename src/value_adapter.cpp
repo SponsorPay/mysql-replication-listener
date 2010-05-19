@@ -2,6 +2,7 @@
 #include "binlog_event.h"
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
+#include <boost/format.hpp>
 
 using namespace MySQL;
 using namespace MySQL::system;
@@ -274,6 +275,18 @@ boost::int64_t Value::sql_bigint()
   return to_int;
 }
 
+float Value::sql_float()
+{
+  // TODO
+  return *((float *)storage());
+}
+
+double Value::sql_double()
+{
+  // TODO
+  return *((double *)storage());
+}
+
 void Converter::to_string(std::string &str, Value &val)
 {
   if (val.is_null())
@@ -297,10 +310,12 @@ void Converter::to_string(std::string &str, Value &val)
       str= boost::lexical_cast<std::string>(val.sql_integer());
       break;
     case MYSQL_TYPE_FLOAT:
-      str= "not implemented";
+    {
+      str= boost::str(boost::format("%d") % val.sql_float());
+    }
       break;
     case MYSQL_TYPE_DOUBLE:
-      str= boost::lexical_cast<std::string>(val.sql_double());
+      str= boost::str(boost::format("%d") % val.sql_double());
       break;
     case MYSQL_TYPE_NULL:
       str= "not implemented";
@@ -399,6 +414,17 @@ void Converter::to_string(std::string &str, Value &val)
   }
 }
 
+void Converter::to_float(float &out, Value &val)
+{
+  switch(val.type())
+  {
+  case MYSQL_TYPE_FLOAT:
+    out= val.sql_float();
+    break;
+  default:
+    out= 0;
+  }
+}
 
 void Converter::to_long(long &out, Value &val)
 {

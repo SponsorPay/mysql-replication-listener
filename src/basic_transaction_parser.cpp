@@ -70,7 +70,6 @@ bool Basic_transaction_parser::operator()(MySQL::Binary_log_event_ptr &ev)
         MySQL::Transaction_log_event *trans= static_cast<MySQL::Transaction_log_event*>(ev->body());
           
         //std::cout << "There are " << m_event_stack.size() << " events in the transaction: ";
-        std::list <MySQL::Binary_log_event_ptr>::iterator it= m_event_stack.begin();
         while( m_event_stack.size() > 0)
         {
           MySQL::Binary_log_event_ptr event= m_event_stack.front();

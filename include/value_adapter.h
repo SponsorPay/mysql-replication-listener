@@ -110,6 +110,8 @@ public:
     /**
      * Returns a pointer to the character data of a string type stored
      * in the pre-defined storage.
+     * @note The position is an offset of the storage pointer determined
+     * by the metadata and type.
      *
      * @param[out] size The size in bytes of the character string.
      * 
@@ -119,15 +121,17 @@ public:
     /**
      * Returns a pointer to the byte data of a blob type stored in the pre-
      * defined storage.
+     * @note The position is an offset of the storage pointer determined
+     * by the metadata and type.
      *
      * @param[out] size The size in bytes of the blob data.
      */
     char *sql_blob(unsigned long &size);
 
     double sql_decimal() { return 0.0; }
-    double sql_float() { return 0.0; }
-    double sql_double() { return 0.0; }
-    long sql_timestamp() { return 0; }
+    float sql_float();
+    double sql_double();
+    long sql_timestamp() { return sql_integer(); }
 
 
 //			MYSQL_TYPE_DATE,   MYSQL_TYPE_TIME,
@@ -160,13 +164,24 @@ public:
 
     /**
      * Converts and copies the sql value to a std::string object.
+     * @param[out] str The target string
+     * @param[in] val The value object to be converted
      */
     void to_string(std::string &str, Value &val);
 
     /**
-     * Voncerts and copies the sql value to a long integer.
+     * Converts and copies the sql value to a long integer.
+     * @param[out] out The target variable
+     * @param[in] val The value object to be converted
      */
-    void to_long(long &val, Value &val);
+    void to_long(long &out, Value &val);
+
+    /**
+     * Converts and copies the sql value to a floating point number.
+     * @param[out] out The target variable
+     * @param[in] val The value object to be converted
+     */
+    void to_float(float &out, Value &val);
 };
 
 

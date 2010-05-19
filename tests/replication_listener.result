@@ -303,6 +303,18 @@ CREATE TABLE t1 (c1 DATETIME);
 INSERT INTO t1 VALUES ("2005-05-18 14:17:59");
 DELETE FROM t1;
 DROP TABLE t1;
+"*** Testing FLOAT"
+CREATE TABLE t1 (c1 FLOAT);
+INSERT INTO t1 VALUES (1.0),(1.01),(-12.05),(115.321);
+UPDATE t1 SET c1=0.000001 WHERE c1=1.0;
+DELETE FROM t1;
+DROP TABLE t1;
+"*** Testing DOUBLE"
+CREATE TABLE t1 (c1 DOUBLE);
+INSERT INTO t1 VALUES (1.0),(1.01),(-12.05),(115.321);
+UPDATE t1 SET c1=0.00000000001 WHERE c1=1.0;
+DELETE FROM t1;
+DROP TABLE t1;
 DROP TABLE REPLICATION_LISTENER;
 Event type: Incident length: 40 next pos: 4
 type= 175 message= Operation canceled
@@ -926,7 +938,43 @@ DELETE FROM test.t1 WHERE 0= 2005-05-18 14:17:59 LIMIT 1
 Event type: Query length: 76 next pos: 52163
 query= DROP TABLE t1 db= test
 
-Event type: Query length: 94 next pos: 52257
+Event type: Query length: 89 next pos: 52252
+query= CREATE TABLE t1 (c1 FLOAT) db= test
+
+Event type: User defined length: 0 next pos: 52411
+INSERT INTO test.t1 VALUES (1)
+INSERT INTO test.t1 VALUES (1.01)
+INSERT INTO test.t1 VALUES (-12.05)
+INSERT INTO test.t1 VALUES (115.321)
+Event type: User defined length: 0 next pos: 52630
+UPDATE test.t1 SET 0= 1e-06 WHERE 0= 1 LIMIT 1
+Event type: User defined length: 0 next pos: 52858
+DELETE FROM test.t1 WHERE 0= 1e-06 LIMIT 1
+DELETE FROM test.t1 WHERE 0= 1.01 LIMIT 1
+DELETE FROM test.t1 WHERE 0= -12.05 LIMIT 1
+DELETE FROM test.t1 WHERE 0= 115.321 LIMIT 1
+Event type: Query length: 76 next pos: 53003
+query= DROP TABLE t1 db= test
+
+Event type: Query length: 90 next pos: 53093
+query= CREATE TABLE t1 (c1 DOUBLE) db= test
+
+Event type: User defined length: 0 next pos: 53268
+INSERT INTO test.t1 VALUES (1)
+INSERT INTO test.t1 VALUES (1.01)
+INSERT INTO test.t1 VALUES (-12.05)
+INSERT INTO test.t1 VALUES (115.321)
+Event type: User defined length: 0 next pos: 53495
+UPDATE test.t1 SET 0= 1e-11 WHERE 0= 1 LIMIT 1
+Event type: User defined length: 0 next pos: 53739
+DELETE FROM test.t1 WHERE 0= 1e-11 LIMIT 1
+DELETE FROM test.t1 WHERE 0= 1.01 LIMIT 1
+DELETE FROM test.t1 WHERE 0= -12.05 LIMIT 1
+DELETE FROM test.t1 WHERE 0= 115.321 LIMIT 1
+Event type: Query length: 76 next pos: 53884
+query= DROP TABLE t1 db= test
+
+Event type: Query length: 94 next pos: 53978
 query= DROP TABLE REPLICATION_LISTENER db= test
 
 "## End of binary log."

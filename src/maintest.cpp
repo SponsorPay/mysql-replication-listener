@@ -99,6 +99,7 @@ int main(int argc, char** argv)
         std::cout << "A user defined change set has arrived!" << std::endl;
         MySQL::Transaction_log_event *trans= static_cast<MySQL::Transaction_log_event *>(event->body());
         int row_count=0;
+        MySQL::Converter converter;
         /*
          The transaction event we created has aggregated all row events in an
          ordered list.
@@ -149,9 +150,8 @@ int main(int argc, char** argv)
                        allows us to transform the value into another
                        representation.
                       */
-                      MySQL::Converter converter(*field_it);
                       std::string str;
-                      converter.to_string(str);
+                      converter.to_string(str, *field_it);
 
                       std::cout << tm->table_name << " row= " << (int)row_count << " field type: " << (*field_it).type() << " Field size is: " << (*field_it).size() << " Field data is: " << str << std::endl;
                     } while(++field_it != fields.end());
