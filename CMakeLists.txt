@@ -12,13 +12,18 @@ SET (Boost_USE_STATIC_LIBS FALSE)
 SET (Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
 
 FIND_PACKAGE(Boost COMPONENTS system thread)
+
+# --------- Find crypt
+FIND_LIBRARY(LIB_CRYPTO crypto /opt/local/lib /opt/lib /usr/lib /usr/local/lib)
+
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 INCLUDE_DIRECTORIES(include ${Boost_INCLUDE_DIR})
+
 
 # -- build dynamic lib
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "./lib")
 ADD_LIBRARY (replication SHARED src/access_method_factory.cpp src/field_iterator.cpp src/row_of_fields.cpp src/basic_transaction_parser.cpp src/tcp_driver.cpp src/binary_log.cpp src/protocol.cpp src/value_adapter.cpp src/binlog_event.cpp src/resultset_iterator.cpp)
-TARGET_LINK_LIBRARIES(replication crypto ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(replication ${LIB_CRYPTO} ${Boost_LIBRARIES})
 
 # -- build static lib
 #ADD_LIBRARY (replication-s STATIC src/access_method_factory.cpp src/field_iterator.cpp src/row_of_fields.cpp src/basic_transaction_parser.cpp src/tcp_driver.cpp src/binary_log.cpp src/protocol.cpp src/value_adapter.cpp src/binlog_event.cpp src/resultset_iterator.cpp)
