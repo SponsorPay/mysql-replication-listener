@@ -4,11 +4,11 @@ project (libreplication)
 #SET (CMAKE_BUILD_TYPE Debug)
 
 # ---------- Find Boost Headers/Libraries -----------------------
-SET( Boost_DEBUG FALSE)
-SET (Boost_FIND_REQUIRED TRUE)
-SET (Boost_FIND_QUIETLY TRUE)
-SET (Boost_USE_STATIC_LIBS FALSE)
-SET (Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
+SET(Boost_DEBUG FALSE)
+SET(Boost_FIND_REQUIRED TRUE)
+SET(Boost_FIND_QUIETLY TRUE)
+SET(Boost_USE_STATIC_LIBS FALSE)
+SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
 
 FIND_PACKAGE(Boost COMPONENTS system thread)
 
@@ -18,16 +18,21 @@ FIND_LIBRARY(LIB_CRYPTO crypto /opt/local/lib /opt/lib /usr/lib /usr/local/lib)
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 INCLUDE_DIRECTORIES(include ${Boost_INCLUDE_DIR})
 
-
 # -- build dynamic lib
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "./lib")
-ADD_LIBRARY (replication SHARED src/access_method_factory.cpp src/field_iterator.cpp src/row_of_fields.cpp src/basic_transaction_parser.cpp src/tcp_driver.cpp src/binary_log.cpp src/protocol.cpp src/value_adapter.cpp src/binlog_event.cpp src/resultset_iterator.cpp)
-TARGET_LINK_LIBRARIES(replication ${LIB_CRYPTO} ${Boost_LIBRARIES})
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+# Locate Google Test package and enable tests if it is found
+find_package(GTest)
+if (GTEST_FOUND)
+  enable_testing(true)
+  include_directories(${GTEST_INCLUDE_DIRS})
+  add_subdirectory(tests)
+endif(GTEST_FOUND)
 
 # -- build static lib
 #ADD_LIBRARY (replication-s STATIC src/access_method_factory.cpp src/field_iterator.cpp src/row_of_fields.cpp src/basic_transaction_parser.cpp src/tcp_driver.cpp src/binary_log.cpp src/protocol.cpp src/value_adapter.cpp src/binlog_event.cpp src/resultset_iterator.cpp)
 #TARGET_LINK_LIBRARIES(replication-s crypto ${Boost_LIBRARIES})
 
-ADD_EXECUTABLE(maintest src/maintest.cpp)
-TARGET_LINK_LIBRARIES(maintest replication)
+add_subdirectory(src)
+
 
