@@ -29,4 +29,8 @@ if (GTEST_FOUND)
   add_subdirectory(tests)
 endif(GTEST_FOUND)
 
+# -- Build the libraries
 add_subdirectory(src)
+
+# -- Build the examples
+add_subdirectory(examples)
