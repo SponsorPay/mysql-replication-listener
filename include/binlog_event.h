@@ -186,6 +186,7 @@ public:
 class Format_event: public Event_body
 {
 public:
+    Format_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
     boost::uint16_t binlog_version;
     std::string master_version;
     boost::uint32_t created_ts;
@@ -197,6 +198,7 @@ public:
 class User_var_event: public Event_body
 {
 public:
+    User_var_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
     boost::uint32_t name_len;
     std::string name;
 
