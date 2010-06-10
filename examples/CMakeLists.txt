@@ -1,0 +1,5 @@
+PROJECT(examples)
+LINK_DIRECTORIES(../lib)
+INCLUDE_DIRECTORIES(../src)
+ADD_EXECUTABLE(example1 example_1.cpp)
+TARGET_LINK_LIBRARIES(example1 replication)
