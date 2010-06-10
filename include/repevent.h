@@ -33,6 +33,20 @@ namespace MySQL
  * Returns true if the event is consumed
  */
 typedef boost::function< bool (Binary_log_event_ptr& )> Event_parser_func;
+class Dummy_driver : public system::Binary_log_driver
+{
+  public:
+  Dummy_driver() {}
+  virtual ~Dummy_driver() {}
+
+  virtual int connect() { return 1; }
+
+  virtual void wait_for_next_event(MySQL::Binary_log_event_ptr &event) {  }
+
+  virtual bool set_position(const std::string &str, unsigned long position) { return false; }
+
+  virtual bool get_position(std::string &str, unsigned long &position) { return false; }
+};
 
 class Default_event_parser
 {
@@ -61,6 +75,7 @@ class Binary_log {
 private:
   system::Binary_log_driver *m_driver;
   Default_event_parser m_default_parser;
+  Dummy_driver m_dummy_driver;
   Event_parser_func m_parser_func;
   unsigned long m_binlog_position;
   std::string m_binlog_file;
@@ -73,7 +88,7 @@ public:
   /**
    * Blocking attempt to get the next binlog event from the stream
    */
-  int wait_for_next_event(Binary_log_event_ptr &event);
+  void wait_for_next_event(Binary_log_event_ptr &event);
 
   
   /**

@@ -463,26 +463,12 @@ namespace MySQL
       }
     }
 
-    int Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event_ptr &event)
+    void Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event_ptr &event)
     {
       // poll for new event until one event is found.
       // return the event
       event=0;
       m_event_queue->pop_back(&event);
-      return 1;
-    }
-
-    int Binlog_tcp_driver::poll_next_event(MySQL::Binary_log_event_ptr &event)
-    {
-      // BUG Not really non-blocking
-      if (m_event_queue->has_unread())
-      {
-        event=0;
-        m_event_queue->pop_back(&event);
-        return 1;
-      } else
-        return 0;
-
     }
 
     void Binlog_tcp_driver::start_event_loop()

@@ -3,19 +3,25 @@
 using namespace MySQL;
 using namespace MySQL::system;
 
-Binary_log::Binary_log(Binary_log_driver *drv) : m_driver(drv), m_binlog_position(4), m_binlog_file("")
+Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4), m_binlog_file("")
 {
+  if (drv == NULL)
+  {
+    m_driver= &m_dummy_driver;
+  }
+  else
+   m_driver= drv;
+
   m_parser_func= boost::ref(m_default_parser);
 }
 
-int Binary_log::wait_for_next_event(MySQL::Binary_log_event_ptr &event)
+void Binary_log::wait_for_next_event(MySQL::Binary_log_event_ptr &event)
 {
   do
   {
     m_driver->wait_for_next_event(event);
     m_binlog_position= event->header()->next_position;
   } while (m_parser_func(event));
-  return 1;
 }
 
 bool Binary_log::position(const std::string &filename, unsigned long position)

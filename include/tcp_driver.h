@@ -74,12 +74,7 @@ public:
     /**
      * Blocking wait for the next binary log event to reach the client
      */
-    int wait_for_next_event(MySQL::Binary_log_event_ptr &event);
-
-    /**
-     * Non-blocking wait for the next binary log event to reach the client
-     */
-    int poll_next_event(MySQL::Binary_log_event_ptr &event);
+    void wait_for_next_event(MySQL::Binary_log_event_ptr &event);
 
     /**
      * Reconnects to the master with a new binlog dump request.

@@ -12,10 +12,25 @@ protected:
   MySQL::Binary_log *binlog;
 };
 
-TEST_P(TestBinaryLog, CheckNull) {
-  // This is not really a very good test. It should be replaced with a
-  // test that the creation of a Binary_log instance worked OK.
-  EXPECT_TRUE(binlog == NULL);
+
+TEST_F(TestBinaryLog, CreateTransport_TcpIp) {
+  MySQL::system::Binary_log_driver *drv= MySQL::create_transport("mysql://nosuchuser@128.0.0.1:99999");
+  EXPECT_FALSE(drv == NULL);
+  delete drv;
+}
+
+TEST_F(TestBinaryLog, CreateTransport_Bogus)
+{
+  MySQL::system::Binary_log_driver *drv= MySQL::create_transport("bogus-url");
+  EXPECT_TRUE(drv == NULL);
+  delete drv;
+}
+
+TEST_F(TestBinaryLog, ConnectTo_Bogus)
+{
+  MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("bogus-url"));
+  EXPECT_GT(binlog->connect(), 0);
+  delete(binlog);
 }
 
 // Here are some tentative tests
@@ -26,10 +41,10 @@ TEST_P(TestBinaryLog, ReadEmptyBinlog) {
 }
 #endif
 
-INSTANTIATE_TEST_CASE_P(UrlTesting, TestBinaryLog,
-                        ::testing::Values("file:binlog-master.000001"));
-
-int main(int argc, char *argv[]) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+//INSTANTIATE_TEST_CASE_P(UrlTesting, TestBinaryLog,
+//                        ::testing::Values("file:binlog-master.000001"));
+//
+//int main(int argc, char *argv[]) {
+//  ::testing::InitGoogleTest(&argc, argv);
+//  return RUN_ALL_TESTS();
+//}
