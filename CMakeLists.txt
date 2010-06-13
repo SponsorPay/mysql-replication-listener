@@ -4,9 +4,10 @@ cmake_minimum_required (VERSION 2.6)
 #SET (CMAKE_BUILD_TYPE Debug)
 
 # General settings
-include_directories(include)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_ARCHIVE_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+include_directories(include)
+link_directories(${PROJECT_BINARY_DIR}/lib)
 
 # ---------- Find Boost Headers/Libraries -----------------------
 SET(Boost_DEBUG FALSE)
@@ -33,4 +34,4 @@ endif(GTEST_FOUND)
 add_subdirectory(src)
 
 # -- Build the examples
-add_subdirectory(examples)
+add_subdirectory(examples EXCLUDE_FROM_ALL)
