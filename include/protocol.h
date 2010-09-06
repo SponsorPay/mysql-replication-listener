@@ -3,6 +3,7 @@
 
 #include <boost/asio.hpp>
 #include <list>
+#include "binlog_event.h"
 
 using boost::asio::ip::tcp;
 namespace MySQL {
@@ -249,7 +250,7 @@ public:
   virtual const char *data() { return m_data; }
   virtual void collapse_size(unsigned int new_size)
   {
-    assert(new_size <= m_size);
+    //assert(new_size <= m_size);
     memset((char *)m_data+new_size,'\0', m_size-new_size);
     m_size= new_size;
   }
@@ -346,6 +347,16 @@ void prot_parse_error_message(std::istream &is, struct st_error_package &err, in
 void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packet_length);
 void prot_parse_eof_message(std::istream &is, struct st_eof_package &eof);
 void proto_get_handshake_package(std::istream &is, struct st_handshake_package &p, int packet_length);
+
+/**
+  Allocates a new event and copy the header. The caller must be responsible for
+  releasing the allocated memory.
+*/
+Query_event *proto_query_event(std::istream &is, Log_event_header *header);
+Rotate_event *proto_rotate_event(std::istream &is, Log_event_header *header);
+Incident_event *proto_incident_event(std::istream &is, Log_event_header *header);
+Row_event *proto_rows_event(std::istream &is, Log_event_header *header);
+Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header);
 
 class Protocol_validator
 {

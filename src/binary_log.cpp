@@ -1,8 +1,12 @@
-#include "repevent.h"
+#include <list>
+
+#include "binlog_api.h"
+#include <boost/foreach.hpp>
 
 using namespace MySQL;
 using namespace MySQL::system;
-
+namespace MySQL
+{
 Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4), m_binlog_file("")
 {
   if (drv == NULL)
@@ -11,17 +15,40 @@ Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4), m_binlog_
   }
   else
    m_driver= drv;
-
-  m_parser_func= boost::ref(m_default_parser);
 }
 
-void Binary_log::wait_for_next_event(MySQL::Binary_log_event_ptr &event)
+Content_handler_pipeline *Binary_log::content_handler_pipeline(void)
 {
-  do
-  {
-    m_driver->wait_for_next_event(event);
+  return &m_content_handlers;
+}
+
+void Binary_log::wait_for_next_event(MySQL::Binary_log_event * &event)
+{
+  bool handler_code;
+
+  MySQL::Injection_queue reinjection_queue;
+
+  do {
+    handler_code= false;
+    if (!reinjection_queue.empty())
+    {
+      event= reinjection_queue.front();
+      reinjection_queue.pop_front();
+    }
+    else m_driver->wait_for_next_event(event);
     m_binlog_position= event->header()->next_position;
-  } while (m_parser_func(event));
+    MySQL::Content_handler *handler;
+
+    BOOST_FOREACH(handler, m_content_handlers)
+    {
+      if (event)
+      {
+        handler->set_injection_queue(&reinjection_queue);
+        event= handler->internal_process_event(event);
+      }
+    }
+  } while(event == 0 || !reinjection_queue.empty());
+
 }
 
 bool Binary_log::position(const std::string &filename, unsigned long position)
@@ -58,5 +85,7 @@ unsigned long Binary_log::position(std::string &filename)
 int Binary_log::connect()
 {
   return m_driver->connect();
+}
+
 }
 

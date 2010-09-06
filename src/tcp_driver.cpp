@@ -1,4 +1,4 @@
-#include "repevent.h"
+#include "binlog_api.h"
 #include <iostream>
 #include "tcp_driver.h"
 
@@ -172,8 +172,11 @@ namespace MySQL
         write_packet_header(command_packet_header, size, 0); // packet_no= 0
 
         // Send the request.
-        boost::asio::write(*socket, boost::asio::buffer(command_packet_header, 4), boost::asio::transfer_at_least(4));
-        boost::asio::write(*socket, server_messages, boost::asio::transfer_at_least(size));
+        boost::asio::write(*socket,
+                           boost::asio::buffer(command_packet_header, 4),
+                           boost::asio::transfer_at_least(4));
+        boost::asio::write(*socket, server_messages,
+                           boost::asio::transfer_at_least(size));
       } catch( boost::system::error_code e)
       {
         return 0;
@@ -225,8 +228,11 @@ namespace MySQL
       write_packet_header(command_packet_header, size, 0);
 
       // Send the request.
-      boost::asio::write(*m_socket, boost::asio::buffer(command_packet_header, 4), boost::asio::transfer_at_least(4));
-      boost::asio::write(*m_socket, server_messages, boost::asio::transfer_at_least(size));
+      boost::asio::write(*m_socket,
+                         boost::asio::buffer(command_packet_header, 4),
+                         boost::asio::transfer_at_least(4));
+      boost::asio::write(*m_socket, server_messages,
+                         boost::asio::transfer_at_least(size));
 
       /*
        Start receiving binlog events.
@@ -238,7 +244,7 @@ namespace MySQL
        Start the event loop in a new thread
        */
       if (!m_event_loop)
-        m_event_loop=new boost::thread(boost::bind(&Binlog_tcp_driver::start_event_loop, this));
+        m_event_loop= new boost::thread(boost::bind(&Binlog_tcp_driver::start_event_loop, this));
 
     }
 
@@ -270,7 +276,7 @@ namespace MySQL
     {
       if (err)
       {
-        Binary_log_event_ptr ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
+        Binary_log_event * ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
         m_event_queue->push_front(ev);
         return;
       }
@@ -283,12 +289,12 @@ namespace MySQL
            << " number of bytes; got "
            << bytes_transferred
            << " instead.";
-        Binary_log_event_ptr ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
+        Binary_log_event * ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
         m_event_queue->push_front(ev);
         return;
       }
 
-      assert(m_waiting_event != 0);
+      //assert(m_waiting_event != 0);
       //std::cerr << "Committing '"<< bytes_transferred << "' bytes to the event stream." << std::endl;
       m_event_stream_buffer.commit(bytes_transferred);
       /*
@@ -297,33 +303,36 @@ namespace MySQL
         we make the assumption that the next bytes waiting in the stream is
         the event header and attempt to parse it.
        */
-      if (m_waiting_event->header()->event_length == 0 && m_event_stream_buffer.size() >= 19)
+      if (m_waiting_event->event_length == 0 && m_event_stream_buffer.size() >= 19)
       {
         /*
           Copy and remove from the event stream, the remaining bytes might be
           dynamic payload.
          */
         //std::cerr << "Consuming event stream for header. Size before: " << m_event_stream_buffer.size() << std::endl;
-        proto_event_packet_header(m_event_stream_buffer, m_waiting_event->header());
+        proto_event_packet_header(m_event_stream_buffer, m_waiting_event);
         //std::cerr << " Size after: " << m_event_stream_buffer.size() << std::endl;
       }
 
       //std::cerr << "Event length: " << m_waiting_event->header()->event_length << " and available payload size is " << m_event_stream_buffer.size()+LOG_EVENT_HEADER_SIZE-1 <<  std::endl;
-      if (m_waiting_event->header()->event_length == m_event_stream_buffer.size() + LOG_EVENT_HEADER_SIZE - 1)
+      if (m_waiting_event->event_length == m_event_stream_buffer.size() + LOG_EVENT_HEADER_SIZE - 1)
       {
         /*
          If the header length equals the size of the payload plus the
          size of the header, the event object is complete.
          Next we need to parse the payload buffer
          */
-        parse_event(m_event_stream_buffer, m_waiting_event);
+        Binary_log_event * event= parse_event(m_event_stream_buffer,
+                                              m_waiting_event);
 
-        m_event_queue->push_front(m_waiting_event);
+        m_event_queue->push_front(event);
+
         /*
-         We can safely reset the pointer as the pointer value has been
-         copied during push_front()
-         */
-        m_waiting_event=0;
+          Note on memory management: The pushed Binary_log_event will be
+          deleted in user land.
+        */
+        delete m_waiting_event;
+        m_waiting_event= 0;
       }
 
       if (!m_shutdown)
@@ -335,7 +344,7 @@ namespace MySQL
     {
       if (err)
       {
-        Binary_log_event_ptr ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
+        Binary_log_event * ev= create_incident_event(175, err.message().c_str(), m_binlog_offset);
         m_event_queue->push_front(ev);
         return;
       }
@@ -348,7 +357,7 @@ namespace MySQL
            << " number of bytes; got "
            << bytes_transferred
            << " instead.";
-        Binary_log_event_ptr ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
+        Binary_log_event * ev= create_incident_event(175, os.str().c_str(), m_binlog_offset);
         m_event_queue->push_front(ev);
         return;
       }
@@ -363,9 +372,9 @@ namespace MySQL
       if (m_waiting_event == 0)
       {
         //std::cerr << "event_stream_buffer.size= " << m_event_stream_buffer.size() << std::endl;
-        m_waiting_event= new Binary_log_event();
+        m_waiting_event= new Log_event_header();
         m_event_packet=  boost::asio::buffer_cast<char *>(m_event_stream_buffer.prepare(packet_length));
-        assert(m_event_stream_buffer.size() == 0);
+        //assert(m_event_stream_buffer.size() == 0);
       }
 
 
@@ -463,7 +472,7 @@ namespace MySQL
       }
     }
 
-    void Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event_ptr &event)
+    void Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event * &event)
     {
       // poll for new event until one event is found.
       // return the event
@@ -537,7 +546,7 @@ namespace MySQL
 
     void Binlog_tcp_driver::disconnect()
     {
-      Binary_log_event_ptr event;
+      Binary_log_event * event;
       m_waiting_event= 0;
       m_event_stream_buffer.consume(m_event_stream_buffer.in_avail());
       while(m_event_queue->has_unread())
@@ -550,193 +559,50 @@ namespace MySQL
       m_socket= 0;
     }
 
-    void proto_query_event(std::istream &is, Binary_log_event_ptr &ev)
-    {
-      Query_event *qev=new Query_event(ev);
-
-      Protocol_chunk<boost::uint32_t> proto_query_event_thread_id(qev->thread_id);
-      Protocol_chunk<boost::uint32_t> proto_query_event_exec_time(qev->exec_time);
-      Protocol_chunk<boost::uint8_t> proto_query_event_db_name_len(qev->db_name_len);
-      Protocol_chunk<boost::uint16_t> proto_query_event_error_code(qev->error_code);
-      Protocol_chunk<boost::uint16_t> proto_query_event_var_size(qev->var_size);
-
-
-      is >> proto_query_event_thread_id
-              >> proto_query_event_exec_time
-              >> proto_query_event_db_name_len
-              >> proto_query_event_error_code
-              >> proto_query_event_var_size;
-
-      //is.seekg((std::streamoff)qev->var3_size,std::istream::cur);
-      //assert( qev->var_size < ev->header()->event_length);
-	  
-	  std::vector<boost::uint8_t > payload(qev->var_size);
-      Protocol_chunk<boost::uint8_t> proto_payload(&payload[0], qev->var_size);
-      is >> proto_payload;
-
-
-      Protocol_chunk_string proto_query_event_db_name(qev->db_name,
-                                                      qev->db_name_len);
-
-      char zero_marker; // should always be 0;
-      is >> proto_query_event_db_name
-              >> zero_marker
-              >> qev->query; // Null-terminated string
-
-      qev->query.resize(qev->query.size() - 1); // Last character is a '\0' character.
-
-      assert(zero_marker == '\0');
-    }
-
-    void proto_rotate_event(std::istream &is, Binary_log_event_ptr &ev)
-    {
-      Rotate_event *rev= new Rotate_event(ev);
-
-      boost::uint32_t file_name_length= ev->header()->event_length - 7 - LOG_EVENT_HEADER_SIZE;
-      
-      Protocol_chunk<boost::uint64_t > prot_position(rev->binlog_pos);
-      Protocol_chunk_string prot_file_name(rev->binlog_file, file_name_length);
-      
-
-      is >> prot_position
-         >> prot_file_name;
-    }
-
-    void proto_incident_event(std::istream &is, Binary_log_event_ptr &ev)
-    {
-      Incident_event *incident= new Incident_event(ev);
-      Protocol_chunk<boost::uint8_t> proto_incident_code(incident->type);
-      Protocol_chunk_string_len      proto_incident_message(incident->message);
-
-      is >> proto_incident_code
-         >> proto_incident_message;
-    }
-
-    void proto_rows_event(std::istream &is, Binary_log_event_ptr &ev)
-    {
-      Row_event *rev=new Row_event(ev);
-
-      union
-      {
-        boost::uint64_t integer;
-        boost::uint8_t bytes[6];
-      } table_id;
-
-      table_id.integer=0L;
-      Protocol_chunk<boost::uint8_t> proto_table_id(&table_id.bytes[0], 6);
-      Protocol_chunk<boost::uint16_t> proto_flags(rev->flags);
-      Protocol_chunk<boost::uint64_t> proto_column_len(rev->columns_len);
-      proto_column_len.set_length_encoded_binary(true);
-
-      is >> proto_table_id
-         >> proto_flags
-         >> proto_column_len;
-
-      rev->table_id=table_id.integer;
-      int used_column_len=(int) ((rev->columns_len + 7) / 8);
-      Protocol_chunk_string proto_used_columns(rev->used_columns, used_column_len);
-      rev->null_bits_len=used_column_len;
-
-      is >> proto_used_columns;
-
-      if (ev->get_event_type() == UPDATE_ROWS_EVENT)
-      {
-        std::string columns_before_image;
-        Protocol_chunk_string proto_columns_before_image(columns_before_image, used_column_len);
-        is >> proto_columns_before_image;
-      }
-
-      int bytes_read=proto_table_id.size() + proto_flags.size() + proto_column_len.size() + used_column_len;
-      if (ev->get_event_type() == UPDATE_ROWS_EVENT)
-        bytes_read+=used_column_len;
-
-      rev->row_len=ev->header()->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;
-      //std::cout << "Bytes read: " << bytes_read << " Bytes expected: " << rev->row_len << std::endl;
-      Protocol_chunk_string proto_row(rev->row, rev->row_len);
-      is >> proto_row;
-    }
-
-    void proto_table_map_event(std::istream &is, Binary_log_event_ptr &ev)
-    {
-      Table_map_event *tmev=new Table_map_event(ev);
-
-      union
-      {
-        boost::uint64_t integer;
-        boost::uint8_t bytes[6];
-      } table_id;
-      char zero_marker= 0;
-
-      table_id.integer=0L;
-      Protocol_chunk<boost::uint8_t> proto_table_id(&table_id.bytes[0], 6);
-      Protocol_chunk<boost::uint16_t> proto_flags(tmev->flags);
-      Protocol_chunk_string_len proto_db_name(tmev->db_name);
-      Protocol_chunk<boost::uint8_t> proto_marker(zero_marker); // Should be '\0'
-      Protocol_chunk_string_len proto_table_name(tmev->table_name);
-      Protocol_chunk<boost::uint64_t> proto_columns_len(tmev->columns_len);
-      proto_columns_len.set_length_encoded_binary(true);
-
-      is >> proto_table_id
-              >> proto_flags
-              >> proto_db_name
-              >> proto_marker
-              >> proto_table_name
-              >> proto_marker
-              >> proto_columns_len;
-
-      tmev->table_id=table_id.integer;
-      Protocol_chunk_string proto_columns(tmev->columns, tmev->columns_len);
-      Protocol_chunk<boost::uint64_t> proto_metadata_len(tmev->metadata_len);
-      proto_metadata_len.set_length_encoded_binary(true);
-
-
-      is >> proto_columns
-              >> proto_metadata_len;
-
-      Protocol_chunk_string proto_metadata(tmev->metadata, tmev->metadata_len);
-      is >> proto_metadata;
-
-      tmev->null_bits_len=(int) ((tmev->columns_len + 7) / 8);
-
-      Protocol_chunk_string proto_null_bits(tmev->null_bits, tmev->null_bits_len);
-
-      is >> proto_null_bits;
-    }
-
-    void Binlog_tcp_driver::parse_event(boost::asio::streambuf &sbuff, Binary_log_event_ptr &ev)
+    Binary_log_event *Binlog_tcp_driver::parse_event(boost::asio::streambuf &sbuff, Log_event_header *header)
     {
       std::istream is(&sbuff);
 
-      switch (ev->get_event_type()) {
+      Binary_log_event *parsed_event= 0;
+      
+      switch (header->type_code) {
 
       case TABLE_MAP_EVENT:
-        proto_table_map_event(is, ev);
+        parsed_event= proto_table_map_event(is, header);
         break;
       case QUERY_EVENT:
-        proto_query_event(is, ev);
+        parsed_event= proto_query_event(is, header);
         break;
       case INCIDENT_EVENT:
-        proto_incident_event(is, ev);
+        parsed_event= proto_incident_event(is, header);
         break;
       case WRITE_ROWS_EVENT:
       case UPDATE_ROWS_EVENT:
       case DELETE_ROWS_EVENT:
-        proto_rows_event(is, ev);
+        parsed_event= proto_rows_event(is, header);
         break;
       case ROTATE_EVENT:
         {
-          proto_rotate_event(is, ev);
-          Rotate_event *rot= static_cast<Rotate_event *>(ev->body());
+          Rotate_event *rot= proto_rotate_event(is, header);
           m_binlog_file_name= rot->binlog_file;
           m_binlog_offset= (unsigned long)rot->binlog_pos;
+          parsed_event= rot;
         }
         break;
+       default:
+       {
+         /*
+           Create a dummy driver 
+         */
+         parsed_event= new Binary_log_event(header);
+       }
       }
 
       //if (sbuff.size() != 0)
       //  std::cout << "Issues during parsing of "<<get_event_type_str(ev->get_event_type()) <<": Bytes still remaining in the buffer (should be 0): " << sbuff.size() << std::endl;
 
       sbuff.consume(sbuff.size());
+      return parsed_event;
     }
 
     void Binlog_tcp_driver::shutdown(void)
@@ -834,7 +700,7 @@ namespace MySQL
       boost::asio::write(*socket, boost::asio::buffer(command_packet_header, 4), boost::asio::transfer_at_least(4));
       boost::asio::write(*socket, server_messages, boost::asio::transfer_at_least(size));
 
-      Row_set<Result_set_feeder > result_set(socket);
+      Result_set result_set(socket);
 
       Converter conv;
       BOOST_FOREACH(Row_of_fields row, result_set)
@@ -847,9 +713,9 @@ namespace MySQL
         //   std::cout << str << " ";
         // }
         filename= "";
-        conv.to_string(filename, row[0]);
+        conv.to(filename, row[0]);
         long pos;
-        conv.to_long(pos, row[1]);
+        conv.to(pos, row[1]);
         position= (unsigned long)pos;
       }
       return false;
@@ -874,15 +740,15 @@ namespace MySQL
       boost::asio::write(*socket, boost::asio::buffer(command_packet_header, 4), boost::asio::transfer_at_least(4));
       boost::asio::write(*socket, server_messages, boost::asio::transfer_at_least(size));
 
-      Row_set<Result_set_feeder > result_set(socket);
+      Result_set result_set(socket);
 
       Converter conv;
       BOOST_FOREACH(Row_of_fields row, result_set)
       {
         std::string filename;
         long position;
-        conv.to_string(filename, row[0]);
-        conv.to_long(position, row[1]);
+        conv.to(filename, row[0]);
+        conv.to(position, row[1]);
         binlog_map.insert(std::make_pair<std::string, unsigned long>(filename, (unsigned long)position));
       }
       return false;
@@ -932,8 +798,8 @@ int encrypt_password(boost::uint8_t *reply,   /* buffer at least EVP_MAX_MD_SIZE
 			       hash_stage2, length_stage2,
 			       NULL, -1);
 
-  assert(length_reply <= EVP_MAX_MD_SIZE);
-  assert(length_reply == length_stage1);
+  //assert(length_reply <= EVP_MAX_MD_SIZE);
+  //assert(length_reply == length_stage1);
 
   int i;
   for ( i=0 ; i<length_reply ; ++i )

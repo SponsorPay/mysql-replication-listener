@@ -6,23 +6,12 @@ using namespace MySQL;
 
 namespace MySQL {
 
-Result_set_feeder::Iterator Result_set_feeder::begin_iterator()
-{
-  return Iterator(this);
-}
+Result_set::iterator Result_set::begin() { return iterator(this); }
+Result_set::iterator Result_set::end() { return iterator(); }
+Result_set::const_iterator Result_set::begin() const { return const_iterator(const_cast<Result_set *>(this)); }
+Result_set::const_iterator Result_set::end() const { return const_iterator(); }
 
-Result_set_feeder::Iterator Result_set_feeder::end_iterator()
-{
-  return Iterator();
-}
-
-void Result_set_iterator::increment()
-{
-  if (++m_current_row >= m_feeder->m_row_count)
-    m_current_row= -1;
-}
-
-void Result_set_feeder::digest_row_set()
+void Result_set::digest_row_set()
 {
   unsigned long packet_length;
   unsigned char packet_no= 1;
@@ -34,7 +23,7 @@ void Result_set_feeder::digest_row_set()
   do
   {
       /*
-       * Get server authentication response
+       * Get server response
        */    
       packet_length= system::proto_get_one_package(m_socket, resultbuff, &packet_no);
 
@@ -60,7 +49,7 @@ void Result_set_feeder::digest_row_set()
           {
             char marker;
             response_stream >> marker;
-            assert(marker= 0xfe);
+            //assert(marker == 0xfe);
             system::digest_marker(response_stream);
             m_current_state= ROW_CONTENTS;
           }
@@ -164,7 +153,7 @@ void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, S
     Protocol_chunk_string_len proto_value(*storage);
     is >> proto_value;
 
-    Value value(MYSQL_TYPE_VAR_STRING, storage->length(), const_cast<char *>(storage->c_str()));
+    Value value(MYSQL_TYPE_VAR_STRING, storage->length(), storage->c_str());
     row.push_back(value);
   }
 }

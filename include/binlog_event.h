@@ -11,6 +11,7 @@
 #include <boost/cstdint.hpp>
 #include <list>
 #include <boost/asio.hpp>
+#include <boost/function.hpp>
 
 namespace MySQL
 {
@@ -106,12 +107,11 @@ public:
 };
 
 
-class Event_body;
+class Binary_log_event;
 
 /**
  * TODO Base class for events. Implementation is in body()
  */
-//template <class Event_body >
 class Binary_log_event
 {
 public:
@@ -122,178 +122,126 @@ public:
          */
         m_header.event_length= 0;
         m_header.type_code=    0;
-        m_payload= 0;
     }
 
-    ~Binary_log_event();
+    Binary_log_event(Log_event_header *header)
+    {
+        m_header= *header;
+    }
+
+    virtual ~Binary_log_event();
 
     /**
      * Helper method
      */
-    enum Log_event_type get_event_type() { return (enum Log_event_type) m_header.type_code; }
+    enum Log_event_type get_event_type()
+    {
+      return (enum Log_event_type) m_header.type_code;
+    }
 
     /**
      * Return a pointer to the header of the log event
      */
     Log_event_header *header() { return &m_header; }
 
-    /**
-     *
-     */
-    Event_body *body() { return m_payload; }
-
-
-
-
 private:
     Log_event_header m_header;
-    void body(Event_body *body) { m_payload= body; }
-    friend class Event_body;
-    Event_body *m_payload;
 };
 
-typedef Binary_log_event* Binary_log_event_ptr;
-
-class Event_body
+class Query_event: public Binary_log_event
 {
 public:
-    Event_body(Binary_log_event_ptr &ev) { ev->body(this); }
-    virtual ~Event_body() {}
-};
-
-class Query_event: public Event_body
-{
-public:
-    Query_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Query_event(Log_event_header *header) : Binary_log_event(header) {}
     boost::uint32_t thread_id;
     boost::uint32_t exec_time;
-    boost::uint8_t  db_name_len;
     boost::uint16_t error_code;
     boost::uint16_t var_size;
 
+    // TODO variables are stored where?
+    
     std::string db_name;
     std::string query;
 };
 
-class Rotate_event: public Event_body
+class Rotate_event: public Binary_log_event
 {
 public:
-    Rotate_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Rotate_event(Log_event_header *header) : Binary_log_event(header) {}
     std::string binlog_file;
     boost::uint64_t binlog_pos;
 };
 
-class Format_event: public Event_body
+class Format_event: public Binary_log_event
 {
 public:
-    Format_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Format_event(Log_event_header *header) : Binary_log_event(header) {}
     boost::uint16_t binlog_version;
     std::string master_version;
     boost::uint32_t created_ts;
     boost::uint8_t  log_header_len;
-    std::string perm_events;
-    boost::uint32_t  perm_events_len;
 };
 
-class User_var_event: public Event_body
+class User_var_event: public Binary_log_event
 {
 public:
-    User_var_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
-    boost::uint32_t name_len;
+    User_var_event(Log_event_header *header) : Binary_log_event(header) {}
     std::string name;
-
     boost::uint8_t is_null;
     boost::uint8_t type;
     boost::uint32_t charset; /* charset of the string */
-
-    boost::uint32_t value_len;
     std::string value; /* encoded in binary speak, depends on .type */
 };
 
-class Table_map_event: public Event_body
+class Table_map_event: public Binary_log_event
 {
 public:
-    Table_map_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Table_map_event(Log_event_header *header) : Binary_log_event(header) {}
     boost::uint64_t table_id;
     boost::uint16_t flags;
-
-    boost::uint8_t db_name_len;
     std::string db_name;
-    boost::uint8_t table_name_len;
     std::string table_name;
-
-    boost::uint64_t columns_len;
     std::string columns;
-
-    boost::uint64_t metadata_len;
     std::string metadata;
-
-    boost::uint32_t null_bits_len;
     std::string null_bits;
-
 };
 
-typedef std::vector<char*> Column_images;
-
-class Row_event: public Event_body
+class Row_event: public Binary_log_event
 {
 public:
-    Row_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Row_event(Log_event_header *header) : Binary_log_event(header) {}
     boost::uint64_t table_id;
     boost::uint16_t flags;
     boost::uint64_t columns_len;
-
     std::string used_columns;
     boost::uint32_t null_bits_len;
-
-    boost::uint32_t row_len;
     std::string row;
 };
 
-class Int_var_event: public Event_body
+class Int_var_event: public Binary_log_event
 {
 public:
-    Int_var_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Int_var_event(Log_event_header *header) : Binary_log_event(header) {}
     boost::uint8_t  type;
     boost::uint64_t value;
 };
 
-class Incident_event: public Event_body
+class Incident_event: public Binary_log_event
 {
 public:
-    Incident_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Incident_event() : Binary_log_event() {}
+    Incident_event(Log_event_header *header) : Binary_log_event(header) {}
     boost::uint8_t  type;
     std::string message;
 };
 
-class Xid: public Event_body
+class Xid: public Binary_log_event
 {
 public:
-    Xid(Binary_log_event_ptr &ev) : Event_body(ev) {}
+    Xid(Log_event_header *header) : Binary_log_event(header) {}
     boost::uint64_t xid_id;
 };
 
-typedef std::pair<boost::uint64_t, Binary_log_event_ptr> Event_index_element;
-typedef std::map<boost::uint64_t, Binary_log_event_ptr> Int_to_Event_map;
-class Transaction_log_event : public Event_body
-{
-public:
-    Transaction_log_event(Binary_log_event_ptr &ev) : Event_body(ev) {}
-    virtual ~Transaction_log_event();
-    
-    Int_to_Event_map &table_map() { return m_table_map; }
-//private:
-
-    /**
-     * Index for easier table name look up
-     */
-    Int_to_Event_map m_table_map;
-
-    std::list<Binary_log_event_ptr> m_events;
-};
-
-Binary_log_event_ptr create_transaction_log_event(void);
-Binary_log_event_ptr create_incident_event(unsigned int type, const char *message, unsigned long pos= 0);
+Binary_log_event *create_incident_event(unsigned int type, const char *message, unsigned long pos= 0);
 
 } // end namespace MySQL
 

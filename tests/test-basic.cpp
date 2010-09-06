@@ -1,40 +1,64 @@
-#include "repevent.h"
+#include "binlog_api.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <stdlib.h>
+class TestBinaryLog : public ::testing::Test {
+ protected:
+  TestBinaryLog() {
+    // You can do set-up work for each test here.
+  }
 
-TEST(TestBinaryLog, CreateTransport_TcpIp) {
+  virtual ~TestBinaryLog() {
+    // You can do clean-up work that doesn't throw exceptions here.
+  }
+
+  // If the constructor and destructor are not enough for setting up
+  // and cleaning up each test, you can define the following methods:
+
+  virtual void SetUp() {
+    // Code here will be called immediately after the constructor (right
+    // before each test).
+  }
+
+  virtual void TearDown() {
+    // Code here will be called immediately after each test (right
+    // before the destructor).
+  }
+
+};
+
+TEST_F(TestBinaryLog, CreateTransport_TcpIp) {
   MySQL::system::Binary_log_driver *drv= MySQL::create_transport("mysql://nosuchuser@128.0.0.1:99999");
   EXPECT_FALSE(drv == NULL);
   delete drv;
 }
 
-TEST(TestBinaryLog, CreateTransport_Bogus)
+TEST_F(TestBinaryLog, CreateTransport_Bogus)
 {
   MySQL::system::Binary_log_driver *drv= MySQL::create_transport("bogus-url");
   EXPECT_TRUE(drv == NULL);
   delete drv;
 }
 
-TEST(TestBinaryLog, ConnectTo_Bogus)
+TEST_F(TestBinaryLog, ConnectTo_Bogus)
 {
   MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("bogus-url"));
   EXPECT_GT(binlog->connect(), 0);
   delete(binlog);
 }
 
-TEST(TestBinaryLog, ConnectTo_TcpIp)
+TEST_F(TestBinaryLog, ConnectTo_TcpIp)
 {
   MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   delete binlog;
 }
 
-TEST(TestBinaryLog, Connected_TcpIp)
+TEST_F(TestBinaryLog, Connected_TcpIp)
 {
   MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
-  MySQL::Binary_log_event_ptr event;
+  MySQL::Binary_log_event *event;
   binlog->wait_for_next_event(event);
   EXPECT_TRUE(event->get_event_type() == MySQL::ROTATE_EVENT);
   delete event;

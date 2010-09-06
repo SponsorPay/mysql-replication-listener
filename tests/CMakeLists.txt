@@ -1,7 +1,7 @@
 # Right now, the tests are built using the static version of the
 # replication listener, but we need to decide which one to use.
 add_executable(test-basic test-basic.cpp)
-target_link_libraries(test-basic replication_static ${GTEST_BOTH_LIBRARIES})
+target_link_libraries(test-basic replication_static gtest gtest_main)
 
 add_executable(replaybinlog replaybinlog.cpp)
 target_link_libraries(replaybinlog replication_static)

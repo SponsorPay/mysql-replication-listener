@@ -44,45 +44,19 @@ const char* get_event_type_str(Log_event_type type)
 
 Binary_log_event::~Binary_log_event()
 {
-  delete m_payload;
 }
 
-Binary_log_event_ptr create_transaction_log_event(void)
-{
-    Binary_log_event *ev= new Binary_log_event();
-    ev->header()->type_code= USER_DEFINED;
-    Transaction_log_event *trans= new Transaction_log_event(ev);
-    return ev;
-};
 
-Transaction_log_event::~Transaction_log_event()
-{
-  Int_to_Event_map::iterator it;
-  for(it = m_table_map.begin(); it != m_table_map.end();)
-  {
-    /* No need to delete the event here; it happens in the next iteration */
-    m_table_map.erase(it++);
-  }
 
-  while (m_events.size() > 0)
-  {
-    Binary_log_event_ptr event= m_events.back();
-    m_events.pop_back();
-    delete(event);
-  }
- 
-}
-
-Binary_log_event_ptr create_incident_event(unsigned int type, const char *message, unsigned long pos)
+Binary_log_event * create_incident_event(unsigned int type, const char *message, unsigned long pos)
 {
-  Binary_log_event *ev= new Binary_log_event();
-  ev->header()->type_code= INCIDENT_EVENT;
-  ev->header()->next_position= pos;
-  ev->header()->event_length= LOG_EVENT_HEADER_SIZE + 2 + strlen(message);
-  Incident_event *incident= new Incident_event(ev);
+  Incident_event *incident= new Incident_event();
+  incident->header()->type_code= INCIDENT_EVENT;
+  incident->header()->next_position= pos;
+  incident->header()->event_length= LOG_EVENT_HEADER_SIZE + 2 + strlen(message);
   incident->type= type;
   incident->message.append(message);
-  return ev;
+  return incident;
 }
 
 } // end namespace MySQL

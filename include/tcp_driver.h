@@ -37,7 +37,7 @@ public:
         m_socket = NULL;
         m_binlog_offset = 4;
         m_waiting_event= 0;
-        m_event_queue= new bounded_buffer<Binary_log_event_ptr >(50);
+        m_event_queue= new bounded_buffer<Binary_log_event * >(50);
         m_event_loop= 0;
         m_total_bytes_transferred= 0;
         m_shutdown= false;
@@ -74,7 +74,7 @@ public:
     /**
      * Blocking wait for the next binary log event to reach the client
      */
-    void wait_for_next_event(MySQL::Binary_log_event_ptr &event);
+    void wait_for_next_event(MySQL::Binary_log_event * &event);
 
     /**
      * Reconnects to the master with a new binlog dump request.
@@ -151,7 +151,8 @@ private:
      */
     void shutdown(void);
 
-    void parse_event(boost::asio::streambuf &sbuff, Binary_log_event_ptr &ev);
+    Binary_log_event *parse_event(boost::asio::streambuf &sbuff,
+                                  Log_event_header *header);
 
     boost::thread *m_event_loop;
     boost::asio::io_service m_io_service;
@@ -206,7 +207,7 @@ private:
      * server. If it is 0 it means that no event has been
      * constructed yet.
      */
-    Binary_log_event *m_waiting_event;
+    Log_event_header *m_waiting_event;
 
     /**
      * A ring buffer used to dispatch aggregated events to the user application

@@ -11,7 +11,8 @@
 #include <iostream>
 #include <boost/iterator.hpp>
 #include <boost/asio.hpp>
-#include "value_adapter.h"
+#include "value.h"
+#include "rowset.h"
 #include "row_of_fields.h"
 
 using namespace MySQL;
@@ -46,33 +47,32 @@ namespace system {
     void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, String_storage &storage, bool &is_eof);
 }
 
+template <class T>
 class Result_set_iterator;
-#ifndef NoArg
-typedef int NoArg;
-#endif
-class Result_set_feeder
+
+class Result_set
 {
 public:
-    typedef Result_set_iterator Iterator;
-    typedef tcp::socket * Arg1;
-    typedef NoArg Arg2;
-    typedef NoArg Arg3;
-    typedef NoArg Arg4;
-    typedef const Iterator const_iterator;
+    typedef Result_set_iterator<Row_of_fields > iterator;
+    typedef Result_set_iterator<Row_of_fields const > const_iterator;
 
-    void source(Arg1 socket, Arg2 a, Arg3 b, Arg4 c) { m_socket= socket; digest_row_set(); }
-    Iterator begin_iterator();
-    Iterator end_iterator();
+    Result_set(tcp::socket *socket) { source(socket); }
+    void source(tcp::socket *socket) { m_socket= socket; digest_row_set(); }
+    iterator begin();
+    iterator end();
+    const_iterator begin() const;
+    const_iterator end() const;
 
 private:
     void digest_row_set();
-    friend class Result_set_iterator;
+    friend class Result_set_iterator<Row_of_fields >;
+    friend class Result_set_iterator<Row_of_fields const>;
 
     std::vector<Field_packet > m_field_types;
     int m_row_count;
     std::vector<Row_of_fields > m_rows;
     String_storage m_storage;
-    Arg1 m_socket;
+    tcp::socket *m_socket;
     typedef enum { RESULT_HEADER, FIELD_PACKETS, MARKER, ROW_CONTENTS, EOF_PACKET } state_t;
     state_t m_current_state;
 
@@ -86,14 +86,18 @@ private:
     boost::uint64_t m_extra;
 };
 
-
-class Result_set_iterator : public boost::iterator_facade<Result_set_iterator, Row_of_fields, boost::forward_traversal_tag >
+template <class Iterator_value_type >
+class Result_set_iterator :
+  public boost::iterator_facade<Result_set_iterator<Iterator_value_type >,
+                                Iterator_value_type,
+                                boost::forward_traversal_tag >
 {
 public:
     Result_set_iterator() : m_feeder(0), m_current_row(-1)
     {}
 
-    explicit Result_set_iterator(Result_set_feeder *feeder) : m_feeder(feeder), m_current_row(-1)
+    explicit Result_set_iterator(Result_set *feeder) : m_feeder(feeder),
+      m_current_row(-1)
     {
       increment();
     }
@@ -101,8 +105,11 @@ public:
  private:
     friend class boost::iterator_core_access;
 
-    void increment();
-    
+    void increment()
+    {
+      if (++m_current_row >= m_feeder->m_row_count)
+        m_current_row= -1;
+    }
 
     bool equal(const Result_set_iterator& other) const
     {
@@ -126,8 +133,8 @@ public:
         if( other.m_feeder->m_field_count != m_feeder->m_field_count)
             return false;
 
-        Row_of_fields *row1= &m_feeder->m_rows[m_current_row];
-        Row_of_fields *row2= &other.m_feeder->m_rows[m_current_row];
+        Iterator_value_type *row1= &m_feeder->m_rows[m_current_row];
+        Iterator_value_type *row2= &other.m_feeder->m_rows[m_current_row];
         for (unsigned i=0; i< m_feeder->m_field_count; ++i)
         {
             Value val1= row1->at(i);
@@ -138,16 +145,17 @@ public:
         return true;
     }
 
-    Row_of_fields &dereference() const
+    Iterator_value_type &dereference() const
     {
         return m_feeder->m_rows[m_current_row];
     }
 
 private:
-    Result_set_feeder *m_feeder;
+    Result_set *m_feeder;
     int m_current_row;
  
 };
+
 
 } // end namespace MySQL
 

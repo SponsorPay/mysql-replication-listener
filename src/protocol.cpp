@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "protocol.h"
 using namespace MySQL;
 using namespace MySQL::system;
@@ -151,8 +153,19 @@ void proto_get_handshake_package(std::istream &is, struct st_handshake_package &
       >> proto_filler2
       >> proto_scramble_buffer2;
 
-  assert(filler == 0);
+  //assert(filler == 0);
 
+  int remaining_bytes= packet_length - 9+13+13+8;
+  boost::uint8_t extention_buffer[remaining_bytes];
+  if (remaining_bytes > 0)
+  {
+    
+    Protocol_chunk<boost::uint8_t> proto_extension(extention_buffer, remaining_bytes);
+    is >> proto_extension;
+
+  }
+  
+  //std::copy(&extention_buffer[0],&extention_buffer[remaining_bytes],std::ostream_iterator<char>(std::cout,","));
 }
 
 void write_packet_header(char *buff, boost::uint16_t size, boost::uint8_t packet_no)
@@ -265,6 +278,169 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
     os.write((const char *) chunk.data(),chunk.size());
   return os;
 }
+
+ Query_event *proto_query_event(std::istream &is, Log_event_header *header)
+  {
+    boost::uint8_t db_name_len;
+    Query_event *qev=new Query_event(header);
+
+    Protocol_chunk<boost::uint32_t> proto_query_event_thread_id(qev->thread_id);
+    Protocol_chunk<boost::uint32_t> proto_query_event_exec_time(qev->exec_time);
+    Protocol_chunk<boost::uint8_t> proto_query_event_db_name_len(db_name_len);
+    Protocol_chunk<boost::uint16_t> proto_query_event_error_code(qev->error_code);
+    Protocol_chunk<boost::uint16_t> proto_query_event_var_size(qev->var_size);
+
+
+    is >> proto_query_event_thread_id
+            >> proto_query_event_exec_time
+            >> proto_query_event_db_name_len
+            >> proto_query_event_error_code
+            >> proto_query_event_var_size;
+
+    //is.seekg((std::streamoff)qev->var3_size,std::istream::cur);
+    //assert( qev->var_size < ev->header()->event_length);
+// TODO This is broken --------------------------------------------------------
+    std::vector<boost::uint8_t > payload(qev->var_size);
+    Protocol_chunk<boost::uint8_t> proto_payload(&payload[0], qev->var_size);
+    is >> proto_payload;
+// ----------------------------------------------------------------------------
+
+    Protocol_chunk_string proto_query_event_db_name(qev->db_name,
+                                                    (unsigned long)db_name_len);
+
+    char zero_marker; // should always be 0;
+    is >> proto_query_event_db_name
+            >> zero_marker
+            >> qev->query; // Null-terminated string
+
+    qev->query.resize(qev->query.size() - 1); // Last character is a '\0' character.
+
+    assert(zero_marker == '\0');
+    return qev;
+  }
+
+  Rotate_event *proto_rotate_event(std::istream &is, Log_event_header *header)
+  {
+    Rotate_event *rev= new Rotate_event(header);
+
+    boost::uint32_t file_name_length= header->event_length - 7 - LOG_EVENT_HEADER_SIZE;
+
+    Protocol_chunk<boost::uint64_t > prot_position(rev->binlog_pos);
+    Protocol_chunk_string prot_file_name(rev->binlog_file, file_name_length);
+
+
+    is >> prot_position
+       >> prot_file_name;
+
+    return rev;
+  }
+
+  Incident_event *proto_incident_event(std::istream &is, Log_event_header *header)
+  {
+    Incident_event *incident= new Incident_event(header);
+    Protocol_chunk<boost::uint8_t> proto_incident_code(incident->type);
+    Protocol_chunk_string_len      proto_incident_message(incident->message);
+
+    is >> proto_incident_code
+       >> proto_incident_message;
+
+    return incident;
+  }
+
+  Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
+  {
+    Row_event *rev=new Row_event(header);
+
+    union
+    {
+      boost::uint64_t integer;
+      boost::uint8_t bytes[6];
+    } table_id;
+
+    table_id.integer=0L;
+    Protocol_chunk<boost::uint8_t> proto_table_id(&table_id.bytes[0], 6);
+    Protocol_chunk<boost::uint16_t> proto_flags(rev->flags);
+    Protocol_chunk<boost::uint64_t> proto_column_len(rev->columns_len);
+    proto_column_len.set_length_encoded_binary(true);
+
+    is >> proto_table_id
+       >> proto_flags
+       >> proto_column_len;
+
+    rev->table_id=table_id.integer;
+    int used_column_len=(int) ((rev->columns_len + 7) / 8);
+    Protocol_chunk_string proto_used_columns(rev->used_columns, used_column_len);
+    rev->null_bits_len=used_column_len;
+
+    is >> proto_used_columns;
+
+    if (header->type_code == UPDATE_ROWS_EVENT)
+    {
+      std::string columns_before_image;
+      Protocol_chunk_string proto_columns_before_image(columns_before_image, used_column_len);
+      is >> proto_columns_before_image;
+    }
+
+    int bytes_read=proto_table_id.size() + proto_flags.size() + proto_column_len.size() + used_column_len;
+    if (header->type_code == UPDATE_ROWS_EVENT)
+      bytes_read+=used_column_len;
+
+    unsigned long row_len= header->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;
+    //std::cout << "Bytes read: " << bytes_read << " Bytes expected: " << rev->row_len << std::endl;
+    Protocol_chunk_string proto_row(rev->row, row_len);
+    is >> proto_row;
+
+    return rev;
+  }
+
+  Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header)
+  {
+    Table_map_event *tmev=new Table_map_event(header);
+    unsigned long columns_len= 0;
+    boost::uint64_t metadata_len= 0;
+    union
+    {
+      boost::uint64_t integer;
+      boost::uint8_t bytes[6];
+    } table_id;
+    char zero_marker= 0;
+
+    table_id.integer=0L;
+    Protocol_chunk<boost::uint8_t> proto_table_id(&table_id.bytes[0], 6);
+    Protocol_chunk<boost::uint16_t> proto_flags(tmev->flags);
+    Protocol_chunk_string_len proto_db_name(tmev->db_name);
+    Protocol_chunk<boost::uint8_t> proto_marker(zero_marker); // Should be '\0'
+    Protocol_chunk_string_len proto_table_name(tmev->table_name);
+    Protocol_chunk<boost::uint64_t> proto_columns_len(columns_len);
+    proto_columns_len.set_length_encoded_binary(true);
+
+    is >> proto_table_id
+            >> proto_flags
+            >> proto_db_name
+            >> proto_marker
+            >> proto_table_name
+            >> proto_marker
+            >> proto_columns_len;
+
+    tmev->table_id=table_id.integer;
+    Protocol_chunk_string proto_columns(tmev->columns, columns_len);
+    Protocol_chunk<boost::uint64_t> proto_metadata_len(metadata_len);
+    proto_metadata_len.set_length_encoded_binary(true);
+
+
+    is >> proto_columns
+            >> proto_metadata_len;
+
+    Protocol_chunk_string proto_metadata(tmev->metadata, (unsigned long)metadata_len);
+    is >> proto_metadata;
+
+    unsigned long null_bits_len=(int) ((tmev->columns.length() + 7) / 8);
+
+    Protocol_chunk_string proto_null_bits(tmev->null_bits, null_bits_len);
+
+    is >> proto_null_bits;
+    return tmev;
+  }
 
 
 } } // end namespace MySQL::system

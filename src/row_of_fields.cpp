@@ -3,7 +3,7 @@
 #include "row_of_fields.h"
 #include <stdexcept>
 #include <boost/foreach.hpp>
-#include "value_adapter.h"
+#include "value.h"
 
 using namespace MySQL;
 

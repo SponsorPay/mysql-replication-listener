@@ -33,7 +33,7 @@ public:
    * Blocking attempt to get the next binlog event from the stream
    * @param event [out] Pointer to a binary log event to be fetched.
    */
-  virtual void wait_for_next_event(MySQL::Binary_log_event_ptr &event)= 0;
+  virtual void wait_for_next_event(MySQL::Binary_log_event * &event)= 0;
 
   /**
    * Set the reader position

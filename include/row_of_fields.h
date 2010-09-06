@@ -10,7 +10,7 @@
 
 #include <vector>
 #include <iostream>
-#include "value_adapter.h"
+#include "value.h"
 using namespace MySQL;
         
 namespace MySQL
