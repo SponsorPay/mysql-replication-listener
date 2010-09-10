@@ -74,15 +74,20 @@ namespace MySQL
 
       tcp::resolver resolver(io_service);
       tcp::resolver::query query(host.c_str(), "0");
-      tcp::resolver::iterator endpoint_iterator=resolver.resolve(query);
-      tcp::resolver::iterator end;
 
       boost::system::error_code error=boost::asio::error::host_not_found;
 
+      if (port == 0)
+        port= 3306;
+      
       tcp::socket *socket=new tcp::socket(io_service);
       /*
         Try each endpoint until we successfully establish a connection.
        */
+      try {
+      tcp::resolver::iterator endpoint_iterator=resolver.resolve(query);
+      tcp::resolver::iterator end;
+
       while (error && endpoint_iterator != end)
       {
         /*
@@ -95,7 +100,11 @@ namespace MySQL
         socket->connect(endpoint, error);
         endpoint_iterator++;
       }
-
+      } catch(...)
+      {
+        return 0;
+      }
+      
       if (error)
       {
         return 0;
@@ -435,8 +444,10 @@ namespace MySQL
         /*
          *  Send the request.
          */
-        boost::asio::write(*socket, boost::asio::buffer(auth_packet_header, 4), boost::asio::transfer_at_least(4));
-        boost::asio::write(*socket, auth_request, boost::asio::transfer_at_least(size));
+        boost::asio::write(*socket, boost::asio::buffer(auth_packet_header, 4),
+                           boost::asio::transfer_at_least(4));
+        boost::asio::write(*socket, auth_request,
+                           boost::asio::transfer_at_least(size));
 
         /*
          * Get server authentication response
@@ -528,7 +539,7 @@ namespace MySQL
     }
 
     /**
-     * Makae synchronous reconnect. The io service must have stopped.
+     * Make synchronous reconnect.
      */
     void Binlog_tcp_driver::reconnect()
     {
@@ -588,6 +599,9 @@ namespace MySQL
           m_binlog_offset= (unsigned long)rot->binlog_pos;
           parsed_event= rot;
         }
+        break;
+       case INTVAR_EVENT:
+        parsed_event= proto_intvar_event(is, header);
         break;
        default:
        {

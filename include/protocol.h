@@ -264,7 +264,6 @@ private:
 
 std::ostream &operator<<(std::ostream &os, Protocol &chunk);
 
-
 typedef Protocol_chunk<boost::uint8_t> Protocol_chunk_uint8;
 
 class Protocol_chunk_string : public Protocol_chunk_uint8
@@ -285,6 +284,32 @@ public:
 private:
     std::string *m_str;
 };
+
+class Protocol_chunk_vector : public Protocol_chunk_uint8
+{
+public:
+    Protocol_chunk_vector(std::vector<boost::uint8_t> &chunk, unsigned long size)
+      : Protocol_chunk_uint8()
+    {
+        m_vec= &chunk;
+        m_vec->reserve(size);
+        m_size= size;
+    }
+
+    virtual unsigned int size() { return m_vec->size(); }
+    virtual const char *data() { return (const char *) m_vec->data(); }
+    virtual void collapse_size(unsigned int new_size)
+    {
+        m_vec->resize(new_size);
+    }
+private:
+    friend std::istream &operator>>(std::istream &is, Protocol_chunk_vector &chunk);
+    std::vector<boost::uint8_t> *m_vec;
+    unsigned long m_size;
+};
+
+
+std::istream &operator>>(std::istream &is, Protocol_chunk_vector &chunk);
 
 class buffer_source
 {
@@ -357,6 +382,7 @@ Rotate_event *proto_rotate_event(std::istream &is, Log_event_header *header);
 Incident_event *proto_incident_event(std::istream &is, Log_event_header *header);
 Row_event *proto_rows_event(std::istream &is, Log_event_header *header);
 Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header);
+Int_var_event *proto_intvar_event(std::istream &is, Log_event_header *header);
 
 class Protocol_validator
 {

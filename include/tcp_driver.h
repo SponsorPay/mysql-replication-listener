@@ -14,7 +14,7 @@
 #include <boost/thread.hpp>
 
 
-#define MAX_PACKAGE_SIZE 0xffff
+#define MAX_PACKAGE_SIZE 0xffffff
 
 #define GET_NEXT_PACKET_HEADER   \
    boost::asio::async_read(*m_socket, boost::asio::buffer(m_net_header, 4), \
@@ -208,7 +208,7 @@ private:
      * constructed yet.
      */
     Log_event_header *m_waiting_event;
-
+    Log_event_header m_log_event_header;
     /**
      * A ring buffer used to dispatch aggregated events to the user application
      */

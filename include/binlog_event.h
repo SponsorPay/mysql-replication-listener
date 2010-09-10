@@ -12,6 +12,7 @@
 #include <list>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
+#include <vector>
 
 namespace MySQL
 {
@@ -155,9 +156,7 @@ public:
     boost::uint32_t thread_id;
     boost::uint32_t exec_time;
     boost::uint16_t error_code;
-    boost::uint16_t var_size;
-
-    // TODO variables are stored where?
+    std::vector<boost::uint8_t > variables;
     
     std::string db_name;
     std::string query;
@@ -178,7 +177,7 @@ public:
     boost::uint16_t binlog_version;
     std::string master_version;
     boost::uint32_t created_ts;
-    boost::uint8_t  log_header_len;
+    boost::uint8_t log_header_len;
 };
 
 class User_var_event: public Binary_log_event
@@ -200,9 +199,9 @@ public:
     boost::uint16_t flags;
     std::string db_name;
     std::string table_name;
-    std::string columns;
-    std::string metadata;
-    std::string null_bits;
+    std::vector<uint8_t> columns;
+    std::vector<uint8_t> metadata;
+    std::vector<uint8_t> null_bits;
 };
 
 class Row_event: public Binary_log_event
@@ -212,9 +211,10 @@ public:
     boost::uint64_t table_id;
     boost::uint16_t flags;
     boost::uint64_t columns_len;
-    std::string used_columns;
     boost::uint32_t null_bits_len;
-    std::string row;
+    std::vector<boost::uint8_t> columns_before_image;
+    std::vector<uint8_t> used_columns;
+    std::vector<uint8_t> row;
 };
 
 class Int_var_event: public Binary_log_event
@@ -230,7 +230,7 @@ class Incident_event: public Binary_log_event
 public:
     Incident_event() : Binary_log_event() {}
     Incident_event(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint8_t  type;
+    boost::uint8_t type;
     std::string message;
 };
 

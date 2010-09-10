@@ -1,6 +1,9 @@
 #include <stdint.h>
+#include <boost/array.hpp>
+#include <vector>
 
 #include "protocol.h"
+#include <iostream>
 using namespace MySQL;
 using namespace MySQL::system;
 
@@ -282,13 +285,14 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
  Query_event *proto_query_event(std::istream &is, Log_event_header *header)
   {
     boost::uint8_t db_name_len;
+    boost::uint16_t var_size;
     Query_event *qev=new Query_event(header);
 
     Protocol_chunk<boost::uint32_t> proto_query_event_thread_id(qev->thread_id);
     Protocol_chunk<boost::uint32_t> proto_query_event_exec_time(qev->exec_time);
     Protocol_chunk<boost::uint8_t> proto_query_event_db_name_len(db_name_len);
     Protocol_chunk<boost::uint16_t> proto_query_event_error_code(qev->error_code);
-    Protocol_chunk<boost::uint16_t> proto_query_event_var_size(qev->var_size);
+    Protocol_chunk<boost::uint16_t> proto_query_event_var_size(var_size);
 
 
     is >> proto_query_event_thread_id
@@ -299,11 +303,10 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
 
     //is.seekg((std::streamoff)qev->var3_size,std::istream::cur);
     //assert( qev->var_size < ev->header()->event_length);
-// TODO This is broken --------------------------------------------------------
-    std::vector<boost::uint8_t > payload(qev->var_size);
-    Protocol_chunk<boost::uint8_t> proto_payload(&payload[0], qev->var_size);
+    qev->variables.reserve(var_size);
+    Protocol_chunk_vector proto_payload(qev->variables, var_size);
     is >> proto_payload;
-// ----------------------------------------------------------------------------
+
 
     Protocol_chunk_string proto_query_event_db_name(qev->db_name,
                                                     (unsigned long)db_name_len);
@@ -315,7 +318,7 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
 
     qev->query.resize(qev->query.size() - 1); // Last character is a '\0' character.
 
-    assert(zero_marker == '\0');
+    //assert(zero_marker == '\0');
     return qev;
   }
 
@@ -369,15 +372,14 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
 
     rev->table_id=table_id.integer;
     int used_column_len=(int) ((rev->columns_len + 7) / 8);
-    Protocol_chunk_string proto_used_columns(rev->used_columns, used_column_len);
-    rev->null_bits_len=used_column_len;
+    Protocol_chunk_vector proto_used_columns(rev->used_columns, used_column_len);
+    rev->null_bits_len= used_column_len;
 
     is >> proto_used_columns;
 
     if (header->type_code == UPDATE_ROWS_EVENT)
     {
-      std::string columns_before_image;
-      Protocol_chunk_string proto_columns_before_image(columns_before_image, used_column_len);
+      Protocol_chunk_vector proto_columns_before_image(rev->columns_before_image, used_column_len);
       is >> proto_columns_before_image;
     }
 
@@ -387,10 +389,23 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
 
     unsigned long row_len= header->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;
     //std::cout << "Bytes read: " << bytes_read << " Bytes expected: " << rev->row_len << std::endl;
-    Protocol_chunk_string proto_row(rev->row, row_len);
+    Protocol_chunk_vector proto_row(rev->row, row_len);
     is >> proto_row;
 
     return rev;
+  }
+
+  Int_var_event *proto_intvar_event(std::istream &is, Log_event_header *header)
+  {
+    Int_var_event *event= new Int_var_event(header);
+
+    Protocol_chunk<boost::uint8_t> proto_type(event->type);
+    Protocol_chunk<boost::uint64_t> proto_value(event->value);
+
+    is >> proto_type
+       >> proto_value;
+
+    return event;
   }
 
   Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header)
@@ -415,31 +430,43 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
     proto_columns_len.set_length_encoded_binary(true);
 
     is >> proto_table_id
-            >> proto_flags
-            >> proto_db_name
-            >> proto_marker
-            >> proto_table_name
-            >> proto_marker
-            >> proto_columns_len;
+       >> proto_flags
+       >> proto_db_name
+       >> proto_marker
+       >> proto_table_name
+       >> proto_marker
+       >> proto_columns_len;
 
     tmev->table_id=table_id.integer;
-    Protocol_chunk_string proto_columns(tmev->columns, columns_len);
+    Protocol_chunk_vector proto_columns(tmev->columns, columns_len);
     Protocol_chunk<boost::uint64_t> proto_metadata_len(metadata_len);
     proto_metadata_len.set_length_encoded_binary(true);
 
 
     is >> proto_columns
-            >> proto_metadata_len;
+       >> proto_metadata_len;
 
-    Protocol_chunk_string proto_metadata(tmev->metadata, (unsigned long)metadata_len);
+    Protocol_chunk_vector proto_metadata(tmev->metadata, (unsigned long)metadata_len);
     is >> proto_metadata;
 
-    unsigned long null_bits_len=(int) ((tmev->columns.length() + 7) / 8);
+    unsigned long null_bits_len=(int) ((tmev->columns.size() + 7) / 8);
 
-    Protocol_chunk_string proto_null_bits(tmev->null_bits, null_bits_len);
+    Protocol_chunk_vector proto_null_bits(tmev->null_bits, null_bits_len);
 
     is >> proto_null_bits;
     return tmev;
+  }
+
+  std::istream &operator>>(std::istream &is, Protocol_chunk_vector &chunk)
+  {
+    unsigned long size= chunk.m_size;
+    for(int i=0; i< size; i++)
+    {
+      char ch;
+      is.get(ch);
+      chunk.m_vec->push_back(ch);
+    }
+    return is;
   }
 
 

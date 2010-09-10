@@ -17,11 +17,11 @@ system::Binary_log_driver *create_transport(const char *url)
     host[0]= 0;
     port[0]= 0;
     pass[0]= 0;
-    unsigned user_length;
-    unsigned host_length;
-    unsigned port_length;
-    unsigned pass_length;
-    unsigned long portno;
+    unsigned user_length= 0;
+    unsigned host_length= 0;
+    unsigned port_length= 0;
+    unsigned pass_length= 0;
+    unsigned long portno= 0;
     char *front, *scan;
     front= strstr(url_copy,access_method);
     if (front == 0)
@@ -56,7 +56,7 @@ system::Binary_log_driver *create_transport(const char *url)
     if (scan != 0)
         host_length= scan - front;
     else
-        host_length= strlen(front+1);
+        host_length= strlen(front);
 
     if (host_length > 49)
         goto err;
@@ -76,7 +76,7 @@ system::Binary_log_driver *create_transport(const char *url)
 
     // Only tcp driver supported so far
     free(url_copy);
-    return static_cast<system::Binary_log_driver *>(new system::Binlog_tcp_driver(user, pass, host, portno));
+    return new system::Binlog_tcp_driver(user, pass, host, portno);
 
 
 err:

@@ -1,7 +1,7 @@
 project (mysql-replication-listener)
 cmake_minimum_required (VERSION 2.6)
 
-#SET (CMAKE_BUILD_TYPE Debug)
+SET (CMAKE_BUILD_TYPE Debug)
 
 # General settings
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
