@@ -22,7 +22,7 @@ Content_handler_pipeline *Binary_log::content_handler_pipeline(void)
   return &m_content_handlers;
 }
 
-void Binary_log::wait_for_next_event(MySQL::Binary_log_event * &event)
+int Binary_log::wait_for_next_event(MySQL::Binary_log_event * &event)
 {
   bool handler_code;
 
@@ -49,9 +49,10 @@ void Binary_log::wait_for_next_event(MySQL::Binary_log_event * &event)
     }
   } while(event == 0 || !reinjection_queue.empty());
 
+  return 0;
 }
 
-bool Binary_log::position(const std::string &filename, unsigned long position)
+int Binary_log::position(const std::string &filename, unsigned long position)
 {
   bool status= m_driver->set_position(filename, position);
   if (!status)
@@ -62,7 +63,7 @@ bool Binary_log::position(const std::string &filename, unsigned long position)
   return status;
 }
 
-bool Binary_log::position(unsigned long position)
+int Binary_log::position(unsigned long position)
 {
   std::string filename;
   unsigned long old_position;

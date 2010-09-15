@@ -64,47 +64,47 @@ public:
     Value(const Value& val);
 
     Value &operator=(const Value &val);
-    bool operator==(const Value &val);
-    bool operator!=(const Value &val);
+    bool operator==(const Value &val) const;
+    bool operator!=(const Value &val) const;
 
     ~Value() {}
 
     void is_null(bool s) { m_is_null= s; }
-    bool is_null(void) { return m_is_null; }
+    bool is_null(void) const { return m_is_null; }
     
-    const char *storage() { return m_storage; }
+    const char *storage() const { return m_storage; }
 
     /**
      * Get the length in bytes of the entire storage (any metadata part +
      * atual data)
      */
-    size_t length() { return m_size; }
-    enum system::enum_field_types type() { return m_type; }
-    boost::uint32_t metadata() { return m_metadata; }
+    size_t length() const { return m_size; }
+    enum system::enum_field_types type() const { return m_type; }
+    boost::uint32_t metadata() const { return m_metadata; }
     
     /**
      * Returns the integer representation of a storage of a pre-specified
      * type.
      */
-    boost::int32_t as_int32();
+    boost::int32_t as_int32() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int64_t as_int64();
+    boost::int64_t as_int64() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int8_t as_int8();
+    boost::int8_t as_int8() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int16_t as_int16();
+    boost::int16_t as_int16() const;
 
     /**
      * Returns a pointer to the character data of a string type stored
@@ -115,7 +115,7 @@ public:
      * @param[out] size The size in bytes of the character string.
      * 
      */
-    char *as_c_str(unsigned long &size);
+    char *as_c_str(unsigned long &size) const;
 
     /**
      * Returns a pointer to the byte data of a blob type stored in the pre-
@@ -125,10 +125,10 @@ public:
      *
      * @param[out] size The size in bytes of the blob data.
      */
-    unsigned char *as_blob(unsigned long &size);
+    unsigned char *as_blob(unsigned long &size) const;
 
-    float as_float();
-    double as_double();
+    float as_float() const;
+    double as_double() const;
 
 private:
     enum system::enum_field_types m_type;
@@ -149,21 +149,21 @@ public:
      * @param[out] str The target string
      * @param[in] val The value object to be converted
      */
-    void to(std::string &str, Value &val);
+    void to(std::string &str, const Value &val);
 
     /**
      * Converts and copies the sql value to a long integer.
      * @param[out] out The target variable
      * @param[in] val The value object to be converted
      */
-    void to(long &out, Value &val);
+    void to(long &out, const Value &val);
 
     /**
      * Converts and copies the sql value to a floating point number.
      * @param[out] out The target variable
      * @param[in] val The value object to be converted
      */
-    void to(float &out, Value &val);
+    void to(float &out, const Value &val);
 };
 
 

@@ -55,6 +55,19 @@ public:
     int connect();
 
     /**
+     * Blocking wait for the next binary log event to reach the client
+     */
+    int wait_for_next_event(MySQL::Binary_log_event * &event);
+
+    /**
+     * Reconnects to the master with a new binlog dump request.
+     */
+    int set_position(const std::string &str, unsigned long position);
+
+    int get_position(std::string &str, unsigned long &position);
+
+protected:
+    /**
      * Connects to a mysql server, authenticates and initiates the event
      * request loop.
      *
@@ -69,20 +82,6 @@ public:
      *   @retval >1 An error occurred.
      */
     int connect(const std::string user, const std::string passwd, const std::string host, long port, std::string binlog_filename="", size_t offset=4);
-
-
-    /**
-     * Blocking wait for the next binary log event to reach the client
-     */
-    void wait_for_next_event(MySQL::Binary_log_event * &event);
-
-    /**
-     * Reconnects to the master with a new binlog dump request.
-     */
-    bool set_position(const std::string &str, unsigned long position);
-
-    bool get_position(std::string &str, unsigned long &position);
-
 
 private:
 
@@ -230,7 +229,7 @@ private:
  *
  * @return False if the operation succeeded, true if it failed.
  */
-bool fetch_master_status(tcp::socket *socket, std::string &filename, unsigned long &position);
+bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned long *position);
 /**
  * Sends a SHOW BINARY LOGS command to the server and stores the file
  * names and sizes in a map.

@@ -168,7 +168,7 @@ Value &Value::operator=(const Value &val)
   return *this;
 }
 
-bool Value::operator==(const Value &val)
+bool Value::operator==(const Value &val) const
 {
   return (m_size == val.m_size) &&
          (m_storage == val.m_storage) &&
@@ -176,12 +176,12 @@ bool Value::operator==(const Value &val)
          (m_metadata == val.m_metadata);
 }
 
-bool Value::operator!=(const Value &val)
+bool Value::operator!=(const Value &val) const
 {
   return !operator==(val);
 }
 
-char *Value::as_c_str(unsigned long &size)
+char *Value::as_c_str(unsigned long &size) const
 {
   if (m_is_null || m_size == 0)
   {
@@ -199,7 +199,7 @@ char *Value::as_c_str(unsigned long &size)
   return const_cast<char *>(m_storage + metadata_length);
 }
 
-unsigned char *Value::as_blob(unsigned long &size)
+unsigned char *Value::as_blob(unsigned long &size) const
 {
   if (m_is_null || m_size == 0)
   {
@@ -220,7 +220,7 @@ unsigned char *Value::as_blob(unsigned long &size)
   return (unsigned char *)(m_storage + m_metadata);
 }
 
-boost::int32_t Value::as_int32()
+boost::int32_t Value::as_int32() const
 {
   if (m_is_null)
   {
@@ -234,7 +234,7 @@ boost::int32_t Value::as_int32()
   return to_int;
 }
 
-boost::int8_t Value::as_int8()
+boost::int8_t Value::as_int8() const
 {
   if (m_is_null)
   {
@@ -248,7 +248,7 @@ boost::int8_t Value::as_int8()
   return to_int;
 }
 
-boost::int16_t Value::as_int16()
+boost::int16_t Value::as_int16() const
 {
   if (m_is_null)
   {
@@ -262,7 +262,7 @@ boost::int16_t Value::as_int16()
   return to_int;
 }
 
-boost::int64_t Value::as_int64()
+boost::int64_t Value::as_int64() const 
 {
   if (m_is_null)
   {
@@ -276,19 +276,19 @@ boost::int64_t Value::as_int64()
   return to_int;
 }
 
-float Value::as_float()
+float Value::as_float() const
 {
   // TODO
-  return *((float *)storage());
+  return *((const float *)storage());
 }
 
-double Value::as_double()
+double Value::as_double() const
 {
   // TODO
-  return *((double *)storage());
+  return *((const double *)storage());
 }
 
-void Converter::to(std::string &str, Value &val)
+void Converter::to(std::string &str, const Value &val)
 {
   if (val.is_null())
   {
@@ -415,7 +415,7 @@ void Converter::to(std::string &str, Value &val)
   }
 }
 
-void Converter::to(float &out, Value &val)
+void Converter::to(float &out, const Value &val)
 {
   switch(val.type())
   {
@@ -427,7 +427,7 @@ void Converter::to(float &out, Value &val)
   }
 }
 
-void Converter::to(long &out, Value &val)
+void Converter::to(long &out, const Value &val)
 {
   switch(val.type())
   {

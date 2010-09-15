@@ -43,11 +43,11 @@ class Dummy_driver : public system::Binary_log_driver
 
   virtual int connect() { return 1; }
 
-  virtual void wait_for_next_event(MySQL::Binary_log_event * &event) {  }
+  virtual int wait_for_next_event(MySQL::Binary_log_event * &event) {  }
 
-  virtual bool set_position(const std::string &str, unsigned long position) { return false; }
+  virtual int set_position(const std::string &str, unsigned long position) { return false; }
 
-  virtual bool get_position(std::string &str, unsigned long &position) { return false; }
+  virtual int get_position(std::string &str, unsigned long &position) { return false; }
 };
 
 class Content_handler;
@@ -70,7 +70,7 @@ public:
   /**
    * Blocking attempt to get the next binlog event from the stream
    */
-  void wait_for_next_event(Binary_log_event * &event);
+  int wait_for_next_event(Binary_log_event * &event);
 
   
   /**
@@ -84,7 +84,7 @@ public:
    *
    * @return False on success, true if the operation failed.
    */
-  bool position(const std::string &filename, unsigned long position);
+  int position(const std::string &filename, unsigned long position);
 
   /**
    * Set the binlog position using current filename
@@ -92,7 +92,7 @@ public:
    *
    * @return False on success, true if the operation failed.
    */
-  bool position(unsigned long position);
+  int position(unsigned long position);
 
   /**
    * Fetch the binlog position for the current file

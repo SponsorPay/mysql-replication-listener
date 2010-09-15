@@ -135,7 +135,7 @@ public:
     /**
      * Helper method
      */
-    enum Log_event_type get_event_type()
+    enum Log_event_type get_event_type() const
     {
       return (enum Log_event_type) m_header.type_code;
     }

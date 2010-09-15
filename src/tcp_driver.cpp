@@ -54,7 +54,7 @@ namespace MySQL
        */
       if (binlog_filename == "")
       {
-        if (fetch_master_status(m_socket, m_binlog_file_name, m_binlog_offset))
+        if (fetch_master_status(m_socket, &m_binlog_file_name, &m_binlog_offset))
           return 1;
       } else
       {
@@ -483,12 +483,13 @@ namespace MySQL
       }
     }
 
-    void Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event * &event)
+    int Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event * &event)
     {
       // poll for new event until one event is found.
       // return the event
       event=0;
       m_event_queue->pop_back(&event);
+      return 0;
     }
 
     void Binlog_tcp_driver::start_event_loop()
@@ -625,7 +626,7 @@ namespace MySQL
       m_io_service.stop();
     }
 
-    bool Binlog_tcp_driver::set_position(const std::string &str, unsigned long position)
+    int Binlog_tcp_driver::set_position(const std::string &str, unsigned long position)
     {
       /*
         Validate the new position before we attempt to set. Once we set the
@@ -636,7 +637,7 @@ namespace MySQL
       tcp::socket *socket;
 
       if ((socket= sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
-        return true;
+        return 1;
       
       std::map<std::string, unsigned long > binlog_map;
       fetch_binlogs_name_and_size(socket, binlog_map);
@@ -649,14 +650,14 @@ namespace MySQL
         If the file name isn't listed on the server we will fail here.
       */
       if (binlog_itr == binlog_map.end())
-        return true;
+        return 1;
 
       /*
         If the requested position is greater than the file size we will fail
         here.
       */
       if (position > binlog_itr->second)
-        return true;
+        return 1;
 
       
       /*
@@ -673,29 +674,29 @@ namespace MySQL
         against the server. The binlog dump command is executed asynchronously
         in another thread.
       */
-      return connect(m_user, m_passwd, m_host, m_port, str, position) == 0;
+      return connect(m_user, m_passwd, m_host, m_port, str, position);
     }
 
-    bool Binlog_tcp_driver::get_position(std::string &str, unsigned long &position)
+    int Binlog_tcp_driver::get_position(std::string &str, unsigned long &position)
     {
       boost::asio::io_service io_service;
 
       tcp::socket *socket;
 
       if ((socket=sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
-        return true;
+        return 1;
 
-      if (fetch_master_status(socket, m_binlog_file_name, m_binlog_offset))
-        return true;
+      if (fetch_master_status(socket, &m_binlog_file_name, &m_binlog_offset))
+        return 1;
 
       socket->close();
       delete socket;
-      str=m_binlog_file_name;
-      position=m_binlog_offset;
-      return false;
+      str= m_binlog_file_name;
+      position= m_binlog_offset;
+      return 0;
     }
 
-    bool fetch_master_status(tcp::socket *socket, std::string &filename, unsigned long &position)
+    bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned long *position)
     {
       boost::asio::streambuf server_messages;
 
@@ -719,18 +720,11 @@ namespace MySQL
       Converter conv;
       BOOST_FOREACH(Row_of_fields row, result_set)
       {
-        // BOOST_FOREACH(Value value, row)
-        // {
-        //   std::string str;
-        //   Converter conv(value);
-        //   conv.to_string(str);
-        //   std::cout << str << " ";
-        // }
-        filename= "";
-        conv.to(filename, row[0]);
+        *filename= "";
+        conv.to(*filename, row[0]);
         long pos;
         conv.to(pos, row[1]);
-        position= (unsigned long)pos;
+        *position= (unsigned long)pos;
       }
       return false;
     }

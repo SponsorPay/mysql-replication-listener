@@ -33,7 +33,7 @@ public:
    * Blocking attempt to get the next binlog event from the stream
    * @param event [out] Pointer to a binary log event to be fetched.
    */
-  virtual void wait_for_next_event(MySQL::Binary_log_event * &event)= 0;
+  virtual int wait_for_next_event(MySQL::Binary_log_event * &event)= 0;
 
   /**
    * Set the reader position
@@ -42,9 +42,9 @@ public:
    *
    * @return False on success and True if an error occurred.
    */
-  virtual bool set_position(const std::string &str, unsigned long position)= 0;
+  virtual int set_position(const std::string &str, unsigned long position)= 0;
 
-  virtual bool get_position(std::string &str, unsigned long &position)= 0;
+  virtual int get_position(std::string &str, unsigned long &position) = 0;
 };
 
 }} // end namespace MySQL::system
