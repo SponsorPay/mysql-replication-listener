@@ -297,7 +297,7 @@ public:
     }
 
     virtual unsigned int size() { return m_vec->size(); }
-    virtual const char *data() { return (const char *) m_vec->data(); }
+    virtual const char *data() { return reinterpret_cast<const char *>(&*m_vec->begin()); }
     virtual void collapse_size(unsigned int new_size)
     {
         m_vec->resize(new_size);
