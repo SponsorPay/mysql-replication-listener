@@ -187,21 +187,46 @@ void write_packet_header(char *buff, boost::uint16_t size, boost::uint8_t packet
 class Protocol_validator;
 class buffer_source;
 
+/**
+ * The Protocol interface is used to describe a grammar consisting of
+ * chunks of bytes that are read or written in consequtive order.
+ * Example:
+ * class Protocol_impl : public Protocol;
+ * Protocol_impl chunk1(chunk_datastore1);
+ * Protocol_impl chunk2(chunk_datastore2);
+ * input_stream >> chunk1
+ *              >> chunk2;
+ */
 class Protocol
 {
 public:
   Protocol() { m_length_encoded_binary= false; }
+  /**
+    Return the number of bytes which is read or written by this protocol chunk.
+    The default size is equal to the underlying storage data type.
+  */
   virtual unsigned int size()=0;
+
+  /** Return a pointer to the first byte in a linear storage buffer */
   virtual const char *data()=0;
-  virtual bool validate() { return true; };
+
+  /**
+    Change the number of bytes which will be read or written to the storage.
+    The default size is euqal to the storage type size. This can change if the
+    protocol is reading a length encoded binary.
+    The new size must always be less than the size of the underlying storage
+    type.
+  */
   virtual void collapse_size(unsigned int new_size)=0;
-  void push_validator(Protocol_validator &validator) { m_validators.push_back(&validator); }
+
+  /**
+    The first byte will have a special interpretation which will indicate
+    how many bytes should be read next.
+  */
   void set_length_encoded_binary(bool bswitch) { m_length_encoded_binary= bswitch; }
   bool is_length_encoded_binary(void) { return m_length_encoded_binary; }
-  std::list<Protocol_validator *>::iterator get_validators() { return m_validators.begin(); }
 
 private:
-    std::list<Protocol_validator *> m_validators;
     bool m_length_encoded_binary;
 
     friend std::istream &operator<<(std::istream &is, Protocol &chunk);
@@ -254,9 +279,6 @@ public:
     memset((char *)m_data+new_size,'\0', m_size-new_size);
     m_size= new_size;
   }
-
-  //friend std::ostream &operator<<(std::ostream &os, Protocol &chunk);
-  //friend std::istream &operator<<(std::istream &is, Protocol &chunk);
 private:
   const char *m_data;
   unsigned long m_size;
@@ -344,6 +366,7 @@ private:
 };
 
 buffer_source &operator>>(buffer_source &src, Protocol &chunk);
+/** TODO assert that the correct endianess is used */
 std::istream &operator>>(std::istream &is, Protocol &chunk);
 std::istream &operator>>(std::istream &is, std::string &str);
 std::istream &operator>>(std::istream &is, Protocol_chunk_string_len &lenstr);
@@ -383,19 +406,6 @@ Incident_event *proto_incident_event(std::istream &is, Log_event_header *header)
 Row_event *proto_rows_event(std::istream &is, Log_event_header *header);
 Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header);
 Int_var_event *proto_intvar_event(std::istream &is, Log_event_header *header);
-
-class Protocol_validator
-{
-public:
-    Protocol_validator() {}
-    Protocol_validator(Protocol &chunk) { m_chunk= &chunk; }
-    virtual bool validate()=0;
-    Protocol *get_chunk() { return m_chunk; }
-    void set_chunk(Protocol &chunk) { m_chunk= &chunk; }
-private:
-    Protocol *m_chunk;
-};
-
 
 } // end namespace system
 } // end namespace MySQL

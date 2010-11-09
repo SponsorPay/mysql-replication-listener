@@ -73,7 +73,12 @@ private:
     std::vector<Row_of_fields > m_rows;
     String_storage m_storage;
     tcp::socket *m_socket;
-    typedef enum { RESULT_HEADER, FIELD_PACKETS, MARKER, ROW_CONTENTS, EOF_PACKET } state_t;
+    typedef enum { RESULT_HEADER,
+                   FIELD_PACKETS,
+                   MARKER,
+                   ROW_CONTENTS,
+                   EOF_PACKET
+                 } state_t;
     state_t m_current_state;
 
     /**

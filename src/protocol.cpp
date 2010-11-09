@@ -20,7 +20,7 @@ int proto_read_package_header(tcp::socket *socket, unsigned long *packet_length,
   {
     return 1;
   }
-  *packet_length= (unsigned long)(buf[0] &0xFF);
+  *packet_length=  (unsigned long)(buf[0] &0xFF);
   *packet_length+= (unsigned long)((buf[1] &0xFF)<<8);
   *packet_length+= (unsigned long)((buf[2] &0xFF)<<16);
   *packet_no= (unsigned char)buf[3];
@@ -102,7 +102,9 @@ void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packe
   Protocol_chunk<boost::uint16_t> prot_warning_count(ok.warning_count);
 
 
-  int message_size= packet_length - 2- prot_affected_rows.size() - prot_insert_id.size() - prot_server_status.size()- prot_warning_count.size();
+  int message_size= packet_length -2  -prot_affected_rows.size()
+                    -prot_insert_id.size() -prot_server_status.size()
+                    -prot_warning_count.size();
 
   prot_affected_rows.set_length_encoded_binary(true);
   prot_insert_id.set_length_encoded_binary(true);
@@ -296,29 +298,25 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
 
 
     is >> proto_query_event_thread_id
-            >> proto_query_event_exec_time
-            >> proto_query_event_db_name_len
-            >> proto_query_event_error_code
-            >> proto_query_event_var_size;
+       >> proto_query_event_exec_time
+       >> proto_query_event_db_name_len
+       >> proto_query_event_error_code
+       >> proto_query_event_var_size;
 
-    //is.seekg((std::streamoff)qev->var3_size,std::istream::cur);
-    //assert( qev->var_size < ev->header()->event_length);
     qev->variables.reserve(var_size);
     Protocol_chunk_vector proto_payload(qev->variables, var_size);
     is >> proto_payload;
-
 
     Protocol_chunk_string proto_query_event_db_name(qev->db_name,
                                                     (unsigned long)db_name_len);
 
     char zero_marker; // should always be 0;
     is >> proto_query_event_db_name
-            >> zero_marker
-            >> qev->query; // Null-terminated string
+       >> zero_marker
+       >> qev->query; // Null-terminated string
 
     qev->query.resize(qev->query.size() - 1); // Last character is a '\0' character.
 
-    //assert(zero_marker == '\0');
     return qev;
   }
 
@@ -361,7 +359,7 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
     } table_id;
 
     table_id.integer=0L;
-    Protocol_chunk<boost::uint8_t> proto_table_id(&table_id.bytes[0], 6);
+    Protocol_chunk<boost::uint8_t>  proto_table_id(&table_id.bytes[0], 6);
     Protocol_chunk<boost::uint16_t> proto_flags(rev->flags);
     Protocol_chunk<boost::uint64_t> proto_column_len(rev->columns_len);
     proto_column_len.set_length_encoded_binary(true);
@@ -399,7 +397,7 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
   {
     Int_var_event *event= new Int_var_event(header);
 
-    Protocol_chunk<boost::uint8_t> proto_type(event->type);
+    Protocol_chunk<boost::uint8_t>  proto_type(event->type);
     Protocol_chunk<boost::uint64_t> proto_value(event->value);
 
     is >> proto_type
