@@ -1,10 +1,22 @@
-/* 
- * File:   main.cpp
- * Author: thek
- *
- * Created on den 12 maj 2010, 14:47
- */
+/*
+Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+reserved.
 
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 of
+the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+02110-1301  USA 
+*/
 #include <stdlib.h>
 #include <boost/foreach.hpp>
 #include "binlog_api.h"
@@ -246,7 +258,11 @@ int main(int argc, char** argv)
     return (EXIT_FAILURE);
   }
 
-  binlog.position("searchbin.000001",4);
+  if (binlog.position(4) != ERR_OK)
+  {
+    fprintf(stderr,"Can't reposition the binary log reader.\n");
+    return (EXIT_FAILURE);
+  }
 
   Binary_log_event  *event;
 
@@ -256,7 +272,11 @@ int main(int argc, char** argv)
     /*
      Pull events from the master. This is the heart beat of the event listener.
     */
-    binlog.wait_for_next_event(event);
+    if (binlog.wait_for_next_event(&event))
+    {
+      quit= true;
+      continue;
+    }
 
     /*
      Print the event
@@ -282,7 +302,8 @@ int main(int argc, char** argv)
                   << qev->db_name
                   <<  std::endl
                   <<  std::endl;
-        if (qev->query.find("DROP TABLE REPLICATION_LISTENER") != std::string::npos)
+        if (qev->query.find("DROP TABLE REPLICATION_LISTENER") != std::string::npos ||
+            qev->query.find("DROP TABLE `REPLICATION_LISTENER`") != std::string::npos)
         {
           quit= true;
         }

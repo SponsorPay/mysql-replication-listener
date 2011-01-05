@@ -1,3 +1,22 @@
+/*
+Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+reserved.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 of
+the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+02110-1301  USA 
+*/
 #include "binlog_api.h"
 #include <iostream>
 #include "tcp_driver.h"
@@ -221,12 +240,13 @@ namespace MySQL
 
       std::ostream command_request_stream(&server_messages);
 
-      Protocol_chunk<boost::uint8_t> prot_command(COM_BINLOG_DUMP);
+      Protocol_chunk<boost::uint8_t>  prot_command(COM_BINLOG_DUMP);
       Protocol_chunk<boost::uint32_t> prot_binlog_offset(offset); // binlog position to start at
       Protocol_chunk<boost::uint16_t> prot_binlog_flags(0); // not used
       Protocol_chunk<boost::uint32_t> prot_server_id(1); // must not be 0; see handshake package
 
-      command_request_stream << prot_command
+      command_request_stream
+              << prot_command
               << prot_binlog_offset
               << prot_binlog_flags
               << prot_server_id
@@ -483,12 +503,13 @@ namespace MySQL
       }
     }
 
-    int Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event * &event)
+    int Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event **event_ptr)
     {
       // poll for new event until one event is found.
       // return the event
-      event=0;
-      m_event_queue->pop_back(&event);
+      if (event_ptr)
+        *event_ptr= 0;
+      m_event_queue->pop_back(event_ptr);
       return 0;
     }
 
@@ -511,25 +532,17 @@ namespace MySQL
           to reset any internal state, such as a "stopped" flag.
         */
         m_io_service.reset();
-
+        
+        /*
+          Don't shutdown until the io service has reset!
+        */
         if (m_shutdown)
         {
           m_shutdown= false;
           break;
         }
 
-        m_io_service.reset();
-
-        /*
-          Clear binlog file name and position so that we continue on the latest
-          position available. This allow us to reconnect and continue after
-          an EOF or server disconnect.
-        */
-        //this->m_binlog_file_name= "";
-        //this->m_binlog_offset= 0;
-
         reconnect();
-
       }
 
     }
@@ -544,14 +557,6 @@ namespace MySQL
      */
     void Binlog_tcp_driver::reconnect()
     {
-      while(m_event_queue->has_unread())
-      {
-        /*
-          Wait for 1 second while the event queue is clearing up.
-        */
-        boost::asio::deadline_timer t(m_io_service, boost::posix_time::seconds(1));
-        t.wait();
-      }
       disconnect();
       connect(m_user, m_passwd, m_host, m_port);
     }
@@ -637,7 +642,7 @@ namespace MySQL
       tcp::socket *socket;
 
       if ((socket= sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
-        return 1;
+        return ERR_FAIL;
       
       std::map<std::string, unsigned long > binlog_map;
       fetch_binlogs_name_and_size(socket, binlog_map);
@@ -650,23 +655,26 @@ namespace MySQL
         If the file name isn't listed on the server we will fail here.
       */
       if (binlog_itr == binlog_map.end())
-        return 1;
+        return ERR_FAIL;
 
       /*
         If the requested position is greater than the file size we will fail
         here.
       */
       if (position > binlog_itr->second)
-        return 1;
+        return ERR_FAIL;
 
       
       /*
-        By posting a to the io service we guarantee that the operations are
+        By posting to the io service we guarantee that the operations are
         executed in the same thread as the io_service is running in.
       */
       m_io_service.post(boost::bind(&Binlog_tcp_driver::shutdown, this));
-      m_event_loop->join();
-      delete(m_event_loop);
+      if (m_event_loop)
+      {
+        m_event_loop->join();
+        delete(m_event_loop);
+      }
       m_event_loop= 0;
       disconnect();
       /*
@@ -674,26 +682,31 @@ namespace MySQL
         against the server. The binlog dump command is executed asynchronously
         in another thread.
       */
-      return connect(m_user, m_passwd, m_host, m_port, str, position);
+      if (connect(m_user, m_passwd, m_host, m_port, str, position) == 0)
+        return ERR_OK;
+      else
+        return ERR_FAIL;
     }
 
-    int Binlog_tcp_driver::get_position(std::string &str, unsigned long &position)
+    int Binlog_tcp_driver::get_position(std::string *filename_ptr, unsigned long *position_ptr)
     {
       boost::asio::io_service io_service;
 
       tcp::socket *socket;
 
       if ((socket=sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
-        return 1;
+        return ERR_FAIL;
 
       if (fetch_master_status(socket, &m_binlog_file_name, &m_binlog_offset))
-        return 1;
+        return ERR_FAIL;
 
       socket->close();
       delete socket;
-      str= m_binlog_file_name;
-      position= m_binlog_offset;
-      return 0;
+      if (filename_ptr)
+        *filename_ptr= m_binlog_file_name;
+      if (position_ptr)
+        *position_ptr= m_binlog_offset;
+      return ERR_OK;
     }
 
     bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned long *position)

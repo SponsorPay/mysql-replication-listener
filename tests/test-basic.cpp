@@ -1,3 +1,23 @@
+/*
+Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+reserved.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 of
+the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+02110-1301  USA 
+*/
+
 #include "binlog_api.h"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -59,12 +79,27 @@ TEST_F(TestBinaryLog, Connected_TcpIp)
   MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   MySQL::Binary_log_event *event;
-  binlog->wait_for_next_event(event);
+  binlog->wait_for_next_event(&event);
   EXPECT_TRUE(event->get_event_type() == MySQL::ROTATE_EVENT);
   delete event;
-  binlog->wait_for_next_event(event);
+  binlog->wait_for_next_event(&event);
   EXPECT_TRUE(event->get_event_type() == MySQL::FORMAT_DESCRIPTION_EVENT);
   delete event;
+}
+
+TEST_F(TestBinaryLog, SetPosition)
+{
+  MySQL::Binary_log_event *event;
+  MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("mysql://root@127.0.0.1:13000"));
+  EXPECT_EQ(binlog->connect(),0);
+  std::string filename;
+  unsigned long position= binlog->position(filename);
+  int result= binlog->position(filename,4);
+  EXPECT_EQ(result,ERR_OK);
+  position= binlog->position();
+  EXPECT_EQ(position, 4);
+ 
+  binlog->wait_for_next_event(&event);    
 }
 
 int main(int argc, char **argv) {
@@ -73,7 +108,7 @@ int main(int argc, char **argv) {
   // TODO require that the connection string is passed as an argument to the
   // test suite.
   std::cout << "Important: Make sure that the MySQL server is started using "
-    "'mysql-test-run --mysqld=--log_bin --mysqld=--binlog_format=row --start "
+    "'mysql-test-run --mysqld=--log_bin=searchbin --mysqld=--binlog_format=row --start "
     "alias' and that the server is listening on IP 127.0.0.1 and port"
     " 13000." << std::endl;
   return RUN_ALL_TESTS();

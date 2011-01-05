@@ -1,9 +1,22 @@
-/* 
- * File:   tcp_driver.h
- * Author: thek
- *
- * Created on den 24 februari 2010, 21:18
- */
+/*
+Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+reserved.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 of
+the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+02110-1301  USA 
+*/
 
 #ifndef _TCP_DRIVER_H
 #define	_TCP_DRIVER_H
@@ -57,14 +70,14 @@ public:
     /**
      * Blocking wait for the next binary log event to reach the client
      */
-    int wait_for_next_event(MySQL::Binary_log_event * &event);
+    int wait_for_next_event(MySQL::Binary_log_event **event);
 
     /**
      * Reconnects to the master with a new binlog dump request.
      */
     int set_position(const std::string &str, unsigned long position);
 
-    int get_position(std::string &str, unsigned long &position);
+    int get_position(std::string *str, unsigned long *position);
 
 protected:
     /**

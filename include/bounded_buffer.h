@@ -1,9 +1,6 @@
-/* 
- * File:   bounded_buffer.h
- * Author: thek
- *
- * Created on den 9 mars 2010, 11:35
- */
+/*
+
+*/
 
 #ifndef _BOUNDED_BUFFER_H
 #define	_BOUNDED_BUFFER_H

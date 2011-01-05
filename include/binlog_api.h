@@ -1,9 +1,22 @@
-/* 
- * File:   binlog_api.h
- * Author: thek
- *
- * Created on den 23 februari 2010, 16:11
- */
+/*
+Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+reserved.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2 of
+the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+02110-1301  USA 
+*/
 
 #ifndef _REPEVENT_H
 #define	_REPEVENT_H
@@ -31,6 +44,16 @@ namespace MySQL
 {
 
 /**
+ * Error codes.
+ */
+enum Error_code {
+  ERR_OK = 0,                                   /* All OK */
+  ERR_EOF,                                      /* End of file */
+  ERR_FAIL,                                     /* Unspecified failure */
+  ERROR_CODE_COUNT
+};
+
+/**
  * Returns true if the event is consumed
  */
 typedef boost::function< bool (Binary_log_event *& )> Event_content_handler;
@@ -43,11 +66,17 @@ class Dummy_driver : public system::Binary_log_driver
 
   virtual int connect() { return 1; }
 
-  virtual int wait_for_next_event(MySQL::Binary_log_event * &event) {  }
+  virtual int wait_for_next_event(MySQL::Binary_log_event **event) {
+    return ERR_EOF;
+  }
 
-  virtual int set_position(const std::string &str, unsigned long position) { return false; }
+  virtual int set_position(const std::string &str, unsigned long position) {
+    return ERR_OK;
+  }
 
-  virtual int get_position(std::string &str, unsigned long &position) { return false; }
+  virtual int get_position(std::string *str, unsigned long *position) {
+    return ERR_OK;
+  }
 };
 
 class Content_handler;
@@ -70,7 +99,7 @@ public:
   /**
    * Blocking attempt to get the next binlog event from the stream
    */
-  int wait_for_next_event(Binary_log_event * &event);
+  int wait_for_next_event(Binary_log_event **event);
 
   
   /**
@@ -82,7 +111,10 @@ public:
   /**
    * Set the binlog position (filename, position)
    *
-   * @return False on success, true if the operation failed.
+   * @return Error_code
+   *  @retval ERR_OK The position is updated.
+   *  @retval ERR_EOF The position is out-of-range
+   *  @retval >= ERR_CODE_COUNT An unspecified error occurred
    */
   int position(const std::string &filename, unsigned long position);
 
@@ -90,7 +122,10 @@ public:
    * Set the binlog position using current filename
    * @param position Requested position
    *
-   * @return False on success, true if the operation failed.
+   * @return Error_code
+   *  @retval ERR_OK The position is updated.
+   *  @retval ERR_EOF The position is out-of-range
+   *  @retval >= ERR_CODE_COUNT An unspecified error occurred
    */
   int position(unsigned long position);
 
@@ -102,7 +137,7 @@ public:
   /**
    * Fetch the current active binlog file name.
    * @param[out] filename
-   *
+   * TODO replace reference with a pointer.
    * @return The file position
    */
   unsigned long position(std::string &filename);
