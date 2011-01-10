@@ -258,7 +258,7 @@ int main(int argc, char** argv)
     return (EXIT_FAILURE);
   }
 
-  if (binlog.position(4) != ERR_OK)
+  if (binlog.set_position(4) != ERR_OK)
   {
     fprintf(stderr,"Can't reposition the binary log reader.\n");
     return (EXIT_FAILURE);

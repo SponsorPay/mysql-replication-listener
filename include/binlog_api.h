@@ -116,7 +116,7 @@ public:
    *  @retval ERR_EOF The position is out-of-range
    *  @retval >= ERR_CODE_COUNT An unspecified error occurred
    */
-  int position(const std::string &filename, unsigned long position);
+  int set_position(const std::string &filename, unsigned long position);
 
   /**
    * Set the binlog position using current filename
@@ -127,12 +127,12 @@ public:
    *  @retval ERR_EOF The position is out-of-range
    *  @retval >= ERR_CODE_COUNT An unspecified error occurred
    */
-  int position(unsigned long position);
+  int set_position(unsigned long position);
 
   /**
    * Fetch the binlog position for the current file
    */
-  unsigned long position(void);
+  unsigned long get_position(void);
 
   /**
    * Fetch the current active binlog file name.
@@ -140,7 +140,7 @@ public:
    * TODO replace reference with a pointer.
    * @return The file position
    */
-  unsigned long position(std::string &filename);
+  unsigned long get_position(std::string &filename);
 
 };
 

@@ -99,10 +99,10 @@ TEST_F(TestBinaryLog, SetPosition)
   mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   std::string filename;
-  unsigned long position= binlog->position(filename);
-  int result= binlog->position(filename,4);
+  unsigned long position= binlog->get_position(filename);
+  int result= binlog->set_position(filename,4);
   EXPECT_EQ(result,ERR_OK);
-  position= binlog->position();
+  position= binlog->get_position();
   EXPECT_EQ(position, 4);
 
   binlog->wait_for_next_event(&event);

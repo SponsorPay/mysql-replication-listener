@@ -79,7 +79,7 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
   return 0;
 }
 
-int Binary_log::position(const std::string &filename, unsigned long position)
+int Binary_log::set_position(const std::string &filename, unsigned long position)
 {
   int status= m_driver->set_position(filename, position);
   if (status == ERR_OK)
@@ -90,19 +90,19 @@ int Binary_log::position(const std::string &filename, unsigned long position)
   return status;
 }
 
-int Binary_log::position(unsigned long position)
+int Binary_log::set_position(unsigned long position)
 {
   std::string filename;
   m_driver->get_position(&filename, NULL);
-  return this->position(filename, position);
+  return this->set_position(filename, position);
 }
 
-unsigned long Binary_log::position(void)
+unsigned long Binary_log::get_position(void)
 {
   return m_binlog_position;
 }
 
-unsigned long Binary_log::position(std::string &filename)
+unsigned long Binary_log::get_position(std::string &filename)
 {
   m_driver->get_position(&m_binlog_file, &m_binlog_position);
   filename= m_binlog_file;
