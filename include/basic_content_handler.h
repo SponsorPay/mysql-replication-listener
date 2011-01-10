@@ -22,12 +22,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include "binlog_event.h"
 
-namespace MySQL {
+namespace mysql {
 
-class Injection_queue : public std::list<MySQL::Binary_log_event * >
+class Injection_queue : public std::list<mysql::Binary_log_event * >
 {
 public:
-    Injection_queue() : std::list<MySQL::Binary_log_event * >() {}
+    Injection_queue() : std::list<mysql::Binary_log_event * >() {}
     ~Injection_queue() {}
 };
 
@@ -43,22 +43,22 @@ public:
 class Content_handler {
 public:
   Content_handler();
-  Content_handler(const MySQL::Content_handler& orig);
+  Content_handler(const mysql::Content_handler& orig);
   virtual ~Content_handler();
 
-  virtual MySQL::Binary_log_event *process_event(MySQL::Query_event *ev);
-  virtual MySQL::Binary_log_event *process_event(MySQL::Row_event *ev);
-  virtual MySQL::Binary_log_event *process_event(MySQL::Table_map_event *ev);
-  virtual MySQL::Binary_log_event *process_event(MySQL::Xid *ev);
-  virtual MySQL::Binary_log_event *process_event(MySQL::User_var_event *ev);
-  virtual MySQL::Binary_log_event *process_event(MySQL::Incident_event *ev);
-  virtual MySQL::Binary_log_event *process_event(MySQL::Rotate_event *ev);
-  virtual MySQL::Binary_log_event *process_event(MySQL::Int_var_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Query_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Row_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Table_map_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Xid *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::User_var_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Incident_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Rotate_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Int_var_event *ev);
 
   /**
-    Processes any event which hasn't been registered yet.
-  */
-  virtual MySQL::Binary_log_event *process_event(MySQL::Binary_log_event *ev);
+    Process any event which hasn't been registered yet.
+   */
+  virtual mysql::Binary_log_event *process_event(mysql::Binary_log_event *ev);
 
 protected:
   /**
@@ -71,11 +71,10 @@ protected:
 private:
   Injection_queue *m_reinject_queue;
   void set_injection_queue(Injection_queue *injection_queue);
-  MySQL::Binary_log_event *internal_process_event(MySQL::Binary_log_event *ev);
-  
+  mysql::Binary_log_event *internal_process_event(mysql::Binary_log_event *ev);
+
   friend class Binary_log;
 };
 
 } // end namespace
 #endif	/* BASIC_CONTENT_HANDLER_H */
-

@@ -2,7 +2,7 @@
 #include "table_insert.h"
 #include "table_delete.h"
 
-void table_update(std::string table_name, MySQL::Row_of_fields &old_fields, MySQL::Row_of_fields &new_fields)
+void table_update(std::string table_name, mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
 {
   /*
     Find previous entry and delete it.
@@ -15,4 +15,3 @@ void table_update(std::string table_name, MySQL::Row_of_fields &old_fields, MySQ
   table_insert(table_name, new_fields);
 
 }
-

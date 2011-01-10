@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 #include "binlog_api.h"
 #include <iostream>
@@ -40,12 +40,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "field_iterator.h"
 
 using boost::asio::ip::tcp;
-using namespace MySQL::system;
-using namespace MySQL;
+using namespace mysql::system;
+using namespace mysql;
 
 typedef unsigned char uchar;
 
-namespace MySQL
+namespace mysql
 {
   namespace system
   {
@@ -98,7 +98,7 @@ namespace MySQL
 
       if (port == 0)
         port= 3306;
-      
+
       tcp::socket *socket=new tcp::socket(io_service);
       /*
         Try each endpoint until we successfully establish a connection.
@@ -123,7 +123,7 @@ namespace MySQL
       {
         return 0;
       }
-      
+
       if (error)
       {
         return 0;
@@ -268,7 +268,7 @@ namespace MySQL
        */
       if (!m_shutdown)
         GET_NEXT_PACKET_HEADER;
-      
+
       /*
        Start the event loop in a new thread
        */
@@ -503,7 +503,7 @@ namespace MySQL
       }
     }
 
-    int Binlog_tcp_driver::wait_for_next_event(MySQL::Binary_log_event **event_ptr)
+    int Binlog_tcp_driver::wait_for_next_event(mysql::Binary_log_event **event_ptr)
     {
       // poll for new event until one event is found.
       // return the event
@@ -532,7 +532,7 @@ namespace MySQL
           to reset any internal state, such as a "stopped" flag.
         */
         m_io_service.reset();
-        
+
         /*
           Don't shutdown until the io service has reset!
         */
@@ -581,7 +581,7 @@ namespace MySQL
       std::istream is(&sbuff);
 
       Binary_log_event *parsed_event= 0;
-      
+
       switch (header->type_code) {
 
       case TABLE_MAP_EVENT:
@@ -612,7 +612,7 @@ namespace MySQL
        default:
        {
          /*
-           Create a dummy driver 
+           Create a dummy driver
          */
          parsed_event= new Binary_log_event(header);
        }
@@ -643,7 +643,7 @@ namespace MySQL
 
       if ((socket= sync_connect_and_authenticate(io_service, m_user, m_passwd, m_host, m_port)) == 0)
         return ERR_FAIL;
-      
+
       std::map<std::string, unsigned long > binlog_map;
       fetch_binlogs_name_and_size(socket, binlog_map);
       socket->close();
@@ -664,7 +664,7 @@ namespace MySQL
       if (position > binlog_itr->second)
         return ERR_FAIL;
 
-      
+
       /*
         By posting to the io service we guarantee that the operations are
         executed in the same thread as the io_service is running in.
@@ -777,7 +777,7 @@ namespace MySQL
 
 
   #define SCRAMBLE_BUFF_SIZE 20
-  
+
   int hash_sha1(boost::uint8_t *output, ...) {   /* size at least EVP_MAX_MD_SIZE */
   va_list ap;
   size_t result;
@@ -828,4 +828,4 @@ int encrypt_password(boost::uint8_t *reply,   /* buffer at least EVP_MAX_MD_SIZE
   return length_reply;
 }
 
-}} // end namespace MySQL::system
+}} // end namespace mysql::system

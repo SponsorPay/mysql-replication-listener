@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 #ifndef _PROTOCOL_H
 #define	_PROTOCOL_H
@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "binlog_event.h"
 
 using boost::asio::ip::tcp;
-namespace MySQL {
+namespace mysql {
 namespace system {
 
 /**
@@ -355,7 +355,7 @@ std::istream &operator>>(std::istream &is, Protocol_chunk_vector &chunk);
 class buffer_source
 {
 public:
-    
+
     buffer_source(const char *src, int sz)
     {
         m_src= src;
@@ -368,7 +368,7 @@ private:
     const char *m_src;
     int m_size;
     int m_ptr;
-    
+
 };
 
 class Protocol_chunk_string_len
@@ -427,6 +427,6 @@ Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *heade
 Int_var_event *proto_intvar_event(std::istream &is, Log_event_header *header);
 
 } // end namespace system
-} // end namespace MySQL
+} // end namespace mysql
 
 #endif	/* _PROTOCOL_H */

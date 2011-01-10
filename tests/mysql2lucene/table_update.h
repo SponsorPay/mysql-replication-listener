@@ -9,6 +9,6 @@
 #define	_TABLE_UPDATE_H
 #include <string>
 #include "binlog_api.h"
-void table_update(std::string table_name, MySQL::Row_of_fields &old_fields, MySQL::Row_of_fields &new_fields);
+void table_update(std::string table_name, mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields);
 
 #endif	/* _TABLE_UPDATE_H */

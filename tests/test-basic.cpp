@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #include "binlog_api.h"
@@ -48,49 +48,55 @@ class TestBinaryLog : public ::testing::Test {
 };
 
 TEST_F(TestBinaryLog, CreateTransport_TcpIp) {
-  MySQL::system::Binary_log_driver *drv= MySQL::create_transport("mysql://nosuchuser@128.0.0.1:99999");
+  using mysql::system::create_transport;
+  mysql::system::Binary_log_driver *drv= create_transport("mysql://nosuchuser@128.0.0.1:99999");
   EXPECT_FALSE(drv == NULL);
   delete drv;
 }
 
 TEST_F(TestBinaryLog, CreateTransport_Bogus)
 {
-  MySQL::system::Binary_log_driver *drv= MySQL::create_transport("bogus-url");
+  using mysql::system::create_transport;
+  mysql::system::Binary_log_driver *drv= create_transport("bogus-url");
   EXPECT_TRUE(drv == NULL);
   delete drv;
 }
 
 TEST_F(TestBinaryLog, ConnectTo_Bogus)
 {
-  MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("bogus-url"));
+  using mysql::system::create_transport;
+  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("bogus-url"));
   EXPECT_GT(binlog->connect(), 0);
   delete(binlog);
 }
 
 TEST_F(TestBinaryLog, ConnectTo_TcpIp)
 {
-  MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("mysql://root@127.0.0.1:13000"));
+  using mysql::system::create_transport;
+  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   delete binlog;
 }
 
 TEST_F(TestBinaryLog, Connected_TcpIp)
 {
-  MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("mysql://root@127.0.0.1:13000"));
+  using mysql::system::create_transport;
+  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
-  MySQL::Binary_log_event *event;
+  mysql::Binary_log_event *event;
   binlog->wait_for_next_event(&event);
-  EXPECT_TRUE(event->get_event_type() == MySQL::ROTATE_EVENT);
+  EXPECT_TRUE(event->get_event_type() == mysql::ROTATE_EVENT);
   delete event;
   binlog->wait_for_next_event(&event);
-  EXPECT_TRUE(event->get_event_type() == MySQL::FORMAT_DESCRIPTION_EVENT);
+  EXPECT_TRUE(event->get_event_type() == mysql::FORMAT_DESCRIPTION_EVENT);
   delete event;
 }
 
 TEST_F(TestBinaryLog, SetPosition)
 {
-  MySQL::Binary_log_event *event;
-  MySQL::Binary_log *binlog= new MySQL::Binary_log(MySQL::create_transport("mysql://root@127.0.0.1:13000"));
+  using mysql::system::create_transport;
+  mysql::Binary_log_event *event;
+  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   std::string filename;
   unsigned long position= binlog->position(filename);
@@ -98,8 +104,8 @@ TEST_F(TestBinaryLog, SetPosition)
   EXPECT_EQ(result,ERR_OK);
   position= binlog->position();
   EXPECT_EQ(position, 4);
- 
-  binlog->wait_for_next_event(&event);    
+
+  binlog->wait_for_next_event(&event);
 }
 
 int main(int argc, char **argv) {
@@ -113,4 +119,3 @@ int main(int argc, char **argv) {
     " 13000." << std::endl;
   return RUN_ALL_TESTS();
 }
-

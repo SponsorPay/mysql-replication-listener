@@ -15,16 +15,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #include "resultset_iterator.h"
 #include "protocol.h"
 #include "row_of_fields.h"
 
-using namespace MySQL;
+using namespace mysql;
 
-namespace MySQL {
+namespace mysql {
 
 Result_set::iterator Result_set::begin() { return iterator(this); }
 Result_set::iterator Result_set::end() { return iterator(); }
@@ -44,7 +44,7 @@ void Result_set::digest_row_set()
   {
       /*
        * Get server response
-       */    
+       */
       packet_length= system::proto_get_one_package(m_socket, resultbuff, &packet_no);
 
       switch(m_current_state)
@@ -56,7 +56,7 @@ void Result_set::digest_row_set()
             break;
           case FIELD_PACKETS:
           {
-              
+
             Field_packet field;
             system::digest_field_packet(response_stream, field);
             m_field_types.assign(field_count,field);
@@ -167,9 +167,9 @@ void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, S
   }
   is.putback((char)size);
   for(int field_no=0; field_no < field_count; ++field_no)
-  {    
+  {
     std::string *storage= new std::string;
-    
+
     Protocol_chunk_string_len proto_value(*storage);
     is >> proto_value;
 
@@ -178,5 +178,4 @@ void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, S
   }
 }
 
-}} // end namespace system, MySQL
-
+}} // end namespace system, mysql

@@ -15,14 +15,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #ifndef _BINLOG_DRIVER_H
 #define	_BINLOG_DRIVER_H
 #include "binlog_event.h"
 
-namespace MySQL { namespace system {
+namespace mysql { namespace system {
 
 class Binary_log_driver
 {
@@ -46,7 +46,7 @@ public:
    * Blocking attempt to get the next binlog event from the stream
    * @param event [out] Pointer to a binary log event to be fetched.
    */
-  virtual int wait_for_next_event(MySQL::Binary_log_event **event)= 0;
+  virtual int wait_for_next_event(mysql::Binary_log_event **event)= 0;
 
   /**
    * Set the reader position
@@ -69,6 +69,5 @@ public:
   virtual int get_position(std::string *filename_ptr, unsigned long *position_ptr) = 0;
 };
 
-}} // end namespace MySQL::system
+}} // end namespace mysql::system
 #endif	/* _BINLOG_DRIVER_H */
-

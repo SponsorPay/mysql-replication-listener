@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #ifndef _TCP_DRIVER_H
@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 using boost::asio::ip::tcp;
 
-namespace MySQL { namespace system {
+namespace mysql { namespace system {
 
 class Binlog_tcp_driver : public Binary_log_driver
 {
@@ -70,7 +70,7 @@ public:
     /**
      * Blocking wait for the next binary log event to reach the client
      */
-    int wait_for_next_event(MySQL::Binary_log_event **event);
+    int wait_for_next_event(mysql::Binary_log_event **event);
 
     /**
      * Reconnects to the master with a new binlog dump request.
@@ -134,10 +134,10 @@ private:
      *
      * @param err Not used
      * @param bytes_transferred The number of bytes waiting in the event stream
-     * 
+     *
      */
     void handle_event_packet(const boost::system::error_code& err, std::size_t bytes_transferred);
-    
+
     /**
      * Executes io_service in a loop.
      * TODO Checks for connection errors and reconnects to the server
@@ -185,7 +185,7 @@ private:
      * Temporary storage for an error package
      */
     struct st_error_package m_error_package;
-    
+
     /**
      * each bin log event starts with a 19 byte long header
      * We use this sturcture every time we initiate an async
@@ -204,7 +204,7 @@ private:
     boost::uint8_t m_net_packet[MAX_PACKAGE_SIZE];
     boost::asio::streambuf m_event_stream_buffer;
     char * m_event_packet;
-    
+
     /**
      * Used each time the client reconnects to the server to specify an
      * offset position.
@@ -257,4 +257,3 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
 } }
 
 #endif	/* _TCP_DRIVER_H */
-

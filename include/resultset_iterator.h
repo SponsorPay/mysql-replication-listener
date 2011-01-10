@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #ifndef _RESULTSET_ITERATOR_H
@@ -28,9 +28,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "rowset.h"
 #include "row_of_fields.h"
 
-using namespace MySQL;
+using namespace mysql;
 
-namespace MySQL
+namespace mysql
 {
 
 struct Field_packet
@@ -171,13 +171,12 @@ public:
 private:
     Result_set *m_feeder;
     int m_current_row;
- 
+
 };
 
 
-} // end namespace MySQL
+} // end namespace mysql
 
 
 
 #endif	/* _RESULTSET_ITERATOR_H */
-

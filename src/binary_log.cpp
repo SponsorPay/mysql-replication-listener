@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #include <list>
@@ -23,9 +23,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "binlog_api.h"
 #include <boost/foreach.hpp>
 
-using namespace MySQL;
-using namespace MySQL::system;
-namespace MySQL
+using namespace mysql;
+using namespace mysql::system;
+namespace mysql
 {
 Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4), m_binlog_file("")
 {
@@ -42,12 +42,12 @@ Content_handler_pipeline *Binary_log::content_handler_pipeline(void)
   return &m_content_handlers;
 }
 
-int Binary_log::wait_for_next_event(MySQL::Binary_log_event **event_ptr)
+int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
 {
   bool handler_code;
-  MySQL::Binary_log_event *event;
+  mysql::Binary_log_event *event;
 
-  MySQL::Injection_queue reinjection_queue;
+  mysql::Injection_queue reinjection_queue;
 
   do {
     handler_code= false;
@@ -61,7 +61,7 @@ int Binary_log::wait_for_next_event(MySQL::Binary_log_event **event_ptr)
       m_driver->wait_for_next_event(&event);
     }
     m_binlog_position= event->header()->next_position;
-    MySQL::Content_handler *handler;
+    mysql::Content_handler *handler;
 
     BOOST_FOREACH(handler, m_content_handlers)
     {
@@ -115,4 +115,3 @@ int Binary_log::connect()
 }
 
 }
-

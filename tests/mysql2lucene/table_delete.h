@@ -10,6 +10,6 @@
 #include <string>
 #include "binlog_api.h"
 
-void table_delete(std::string table_name, MySQL::Row_of_fields &fields);
+void table_delete(std::string table_name, mysql::Row_of_fields &fields);
 
 #endif	/* _TABLE_DELETE_H */

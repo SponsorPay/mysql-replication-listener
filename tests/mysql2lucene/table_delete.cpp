@@ -17,22 +17,22 @@ CL_NS_USE(queryParser)
 CL_NS_USE(analysis)
 CL_NS_USE2(analysis,standard)
 
-void table_delete(std::string table_name, MySQL::Row_of_fields &fields)
+void table_delete(std::string table_name, mysql::Row_of_fields &fields)
 {
 
-  MySQL::Row_of_fields::iterator field_it= fields.begin();
+  mysql::Row_of_fields::iterator field_it= fields.begin();
   /*
    * First column must be an integer key value
   */
-  if (!(field_it->type() == MySQL::system::MYSQL_TYPE_LONG ||
-      field_it->type() == MySQL::system::MYSQL_TYPE_SHORT ||
-      field_it->type() == MySQL::system::MYSQL_TYPE_LONGLONG))
+  if (!(field_it->type() == mysql::system::MYSQL_TYPE_LONG ||
+      field_it->type() == mysql::system::MYSQL_TYPE_SHORT ||
+      field_it->type() == mysql::system::MYSQL_TYPE_LONGLONG))
    return;
 
   int field_id= 0;
   std::string key;
   std::string combined_key;
-  MySQL::Converter converter;
+  mysql::Converter converter;
   converter.to(key, *field_it);
   combined_key.append (table_name);
   combined_key.append ("_");
@@ -44,9 +44,9 @@ void table_delete(std::string table_name, MySQL::Row_of_fields &fields)
       representation.
       Only index fields which might contain searchable information.
     */
-    if (field_it->type() == MySQL::system::MYSQL_TYPE_VARCHAR ||
-        field_it->type() == MySQL::system::MYSQL_TYPE_MEDIUM_BLOB ||
-        field_it->type() == MySQL::system::MYSQL_TYPE_BLOB)
+    if (field_it->type() == mysql::system::MYSQL_TYPE_VARCHAR ||
+        field_it->type() == mysql::system::MYSQL_TYPE_MEDIUM_BLOB ||
+        field_it->type() == mysql::system::MYSQL_TYPE_BLOB)
     {
       std::string str;
       converter.to(str, *field_it);
@@ -79,5 +79,3 @@ void table_delete(std::string table_name, MySQL::Row_of_fields &fields)
     }
   } while(++field_it != fields.end());
 }
-
-

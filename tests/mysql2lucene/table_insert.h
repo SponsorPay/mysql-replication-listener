@@ -11,6 +11,6 @@
 #include <string>
 #include "binlog_api.h"
 
-void table_insert(std::string table_name, MySQL::Row_of_fields &fields);
+void table_insert(std::string table_name, mysql::Row_of_fields &fields);
 
 #endif	/* _TABLE_INSERT_H */

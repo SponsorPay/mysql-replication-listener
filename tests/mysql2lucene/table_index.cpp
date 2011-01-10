@@ -1,6 +1,6 @@
 #include "table_index.h"
 
-MySQL::Binary_log_event *Table_index::process_event(MySQL::Table_map_event *tm)
+mysql::Binary_log_event *Table_index::process_event(mysql::Table_map_event *tm)
 {
  if (find(tm->table_id) == end())
    insert(Event_index_element(tm->table_id,tm));

@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #ifndef _VALUE_ADAPTER_H
@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <boost/any.hpp>
 #include <iostream>
 
-using namespace MySQL;
-namespace MySQL {
+using namespace mysql;
+namespace mysql {
 
 /**
  This helper function calculates the size in bytes of a particular field in a
@@ -70,7 +70,7 @@ public:
       m_metadata= 0;
       m_is_null= false;
     }
-    
+
     /**
      * Copy constructor
      */
@@ -84,7 +84,7 @@ public:
 
     void is_null(bool s) { m_is_null= s; }
     bool is_null(void) const { return m_is_null; }
-    
+
     const char *storage() const { return m_storage; }
 
     /**
@@ -94,7 +94,7 @@ public:
     size_t length() const { return m_size; }
     enum system::enum_field_types type() const { return m_type; }
     boost::uint32_t metadata() const { return m_metadata; }
-    
+
     /**
      * Returns the integer representation of a storage of a pre-specified
      * type.
@@ -126,7 +126,7 @@ public:
      * by the metadata and type.
      *
      * @param[out] size The size in bytes of the character string.
-     * 
+     *
      */
     char *as_c_str(unsigned long &size) const;
 
@@ -180,6 +180,5 @@ public:
 };
 
 
-} // end namespace MySQL
+} // end namespace mysql
 #endif	/* _VALUE_ADAPTER_H */
-

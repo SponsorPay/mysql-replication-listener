@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 #include <stdint.h>
 #include <boost/array.hpp>
@@ -23,11 +23,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include "protocol.h"
 #include <iostream>
-using namespace MySQL;
-using namespace MySQL::system;
+using namespace mysql;
+using namespace mysql::system;
 
-namespace MySQL { namespace system {
-  
+namespace mysql { namespace system {
+
 int proto_read_package_header(tcp::socket *socket, unsigned long *packet_length, unsigned char *packet_no)
 {
   unsigned char buf[4];
@@ -183,12 +183,12 @@ void proto_get_handshake_package(std::istream &is, struct st_handshake_package &
   boost::uint8_t extention_buffer[remaining_bytes];
   if (remaining_bytes > 0)
   {
-    
+
     Protocol_chunk<boost::uint8_t> proto_extension(extention_buffer, remaining_bytes);
     is >> proto_extension;
 
   }
-  
+
   //std::copy(&extention_buffer[0],&extention_buffer[remaining_bytes],std::ostream_iterator<char>(std::cout,","));
 }
 
@@ -487,5 +487,4 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
   }
 
 
-} } // end namespace MySQL::system
-
+} } // end namespace mysql::system

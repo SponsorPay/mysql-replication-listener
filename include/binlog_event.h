@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 #ifndef _BINLOG_EVENT_H
 #define	_BINLOG_EVENT_H
@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <boost/function.hpp>
 #include <vector>
 
-namespace MySQL
+namespace mysql
 {
 /**
   @enum Log_event_type
@@ -169,7 +169,7 @@ public:
     boost::uint32_t exec_time;
     boost::uint16_t error_code;
     std::vector<boost::uint8_t > variables;
-    
+
     std::string db_name;
     std::string query;
 };
@@ -255,7 +255,6 @@ public:
 
 Binary_log_event *create_incident_event(unsigned int type, const char *message, unsigned long pos= 0);
 
-} // end namespace MySQL
+} // end namespace mysql
 
 #endif	/* _BINLOG_EVENT_H */
-

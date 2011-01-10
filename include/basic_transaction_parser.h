@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include <iostream>
 
-namespace MySQL {
+namespace mysql {
 typedef std::pair<boost::uint64_t, Binary_log_event *> Event_index_element;
 typedef std::map<boost::uint64_t, Binary_log_event *> Int_to_Event_map;
 class Transaction_log_event : public Binary_log_event
@@ -54,26 +54,26 @@ public:
 
 Transaction_log_event *create_transaction_log_event(void);
 
-class Basic_transaction_parser : public MySQL::Content_handler
+class Basic_transaction_parser : public mysql::Content_handler
 {
 public:
-  Basic_transaction_parser() : MySQL::Content_handler()
+  Basic_transaction_parser() : mysql::Content_handler()
   {
       m_transaction_state= NOT_IN_PROGRESS;
   }
 
-  MySQL::Binary_log_event *process_event(MySQL::Query_event *ev);
-  MySQL::Binary_log_event *process_event(MySQL::Row_event *ev);
-  MySQL::Binary_log_event *process_event(MySQL::Table_map_event *ev);
-  MySQL::Binary_log_event *process_event(MySQL::Xid *ev);
-  MySQL::Binary_log_event *process_event(MySQL::Binary_log_event *ev) {return ev; }
+  mysql::Binary_log_event *process_event(mysql::Query_event *ev);
+  mysql::Binary_log_event *process_event(mysql::Row_event *ev);
+  mysql::Binary_log_event *process_event(mysql::Table_map_event *ev);
+  mysql::Binary_log_event *process_event(mysql::Xid *ev);
+  mysql::Binary_log_event *process_event(mysql::Binary_log_event *ev) {return ev; }
 
 private:
   boost::uint32_t m_start_time;
   enum Transaction_states { STARTING, IN_PROGRESS, COMMITTING, NOT_IN_PROGRESS } ;
   enum Transaction_states m_transaction_state;
-  std::list <MySQL::Binary_log_event *> m_event_stack;
-  MySQL::Binary_log_event *process_transaction_state(MySQL::Binary_log_event *ev);
+  std::list <mysql::Binary_log_event *> m_event_stack;
+  mysql::Binary_log_event *process_transaction_state(mysql::Binary_log_event *ev);
 };
 
 } // end namespace

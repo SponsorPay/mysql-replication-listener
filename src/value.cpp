@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 #include "value.h"
 #include "binlog_event.h"
@@ -23,27 +23,27 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <iomanip>
 #include <boost/format.hpp>
 
-using namespace MySQL;
-using namespace MySQL::system;
-namespace MySQL {
+using namespace mysql;
+using namespace mysql::system;
+namespace mysql {
 
 int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, boost::uint32_t metadata)
 {
   boost::uint32_t length;
 
   switch (column_type) {
-  case MySQL::system::MYSQL_TYPE_VAR_STRING:
+  case mysql::system::MYSQL_TYPE_VAR_STRING:
     /* This type is hijacked for result set types. */
     length= metadata;
     break;
-  case MySQL::system::MYSQL_TYPE_NEWDECIMAL:
+  case mysql::system::MYSQL_TYPE_NEWDECIMAL:
     //length= my_decimal_get_binary_size(metadata_ptr[col] >> 8,
     //                                   metadata_ptr[col] & 0xff);
     length= 0;
     break;
-  case MySQL::system::MYSQL_TYPE_DECIMAL:
-  case MySQL::system::MYSQL_TYPE_FLOAT:
-  case MySQL::system::MYSQL_TYPE_DOUBLE:
+  case mysql::system::MYSQL_TYPE_DECIMAL:
+  case mysql::system::MYSQL_TYPE_FLOAT:
+  case mysql::system::MYSQL_TYPE_DOUBLE:
     length= metadata;
     break;
   /*
@@ -51,12 +51,12 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
     both are mapped to type MYSQL_TYPE_STRING and their real types
     are encoded in the field metadata.
   */
-  case MySQL::system::MYSQL_TYPE_SET:
-  case MySQL::system::MYSQL_TYPE_ENUM:
-  case MySQL::system::MYSQL_TYPE_STRING:
+  case mysql::system::MYSQL_TYPE_SET:
+  case mysql::system::MYSQL_TYPE_ENUM:
+  case mysql::system::MYSQL_TYPE_STRING:
   {
     unsigned char type= metadata >> 8U;
-    if ((type == MySQL::system::MYSQL_TYPE_SET) || (type == MySQL::system::MYSQL_TYPE_ENUM))
+    if ((type == mysql::system::MYSQL_TYPE_SET) || (type == mysql::system::MYSQL_TYPE_ENUM))
       length= metadata & 0x00ff;
     else
     {
@@ -70,39 +70,39 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
     }
     break;
   }
-  case MySQL::system::MYSQL_TYPE_YEAR:
-  case MySQL::system::MYSQL_TYPE_TINY:
+  case mysql::system::MYSQL_TYPE_YEAR:
+  case mysql::system::MYSQL_TYPE_TINY:
     length= 1;
     break;
-  case MySQL::system::MYSQL_TYPE_SHORT:
+  case mysql::system::MYSQL_TYPE_SHORT:
     length= 2;
     break;
-  case MySQL::system::MYSQL_TYPE_INT24:
+  case mysql::system::MYSQL_TYPE_INT24:
     length= 3;
     break;
-  case MySQL::system::MYSQL_TYPE_LONG:
+  case mysql::system::MYSQL_TYPE_LONG:
     length= 4;
     break;
 //  case MYSQL_TYPE_LONGLONG:
 //    length= 8;
 //    break;
-  case MySQL::system::MYSQL_TYPE_NULL:
+  case mysql::system::MYSQL_TYPE_NULL:
     length= 0;
     break;
-  case MySQL::system::MYSQL_TYPE_NEWDATE:
+  case mysql::system::MYSQL_TYPE_NEWDATE:
     length= 3;
     break;
-  case MySQL::system::MYSQL_TYPE_DATE:
-  case MySQL::system::MYSQL_TYPE_TIME:
+  case mysql::system::MYSQL_TYPE_DATE:
+  case mysql::system::MYSQL_TYPE_TIME:
     length= 3;
     break;
-  case MySQL::system::MYSQL_TYPE_TIMESTAMP:
+  case mysql::system::MYSQL_TYPE_TIMESTAMP:
     length= 4;
     break;
-  case MySQL::system::MYSQL_TYPE_DATETIME:
+  case mysql::system::MYSQL_TYPE_DATETIME:
     length= 8;
     break;
-  case MySQL::system::MYSQL_TYPE_BIT:
+  case mysql::system::MYSQL_TYPE_BIT:
   {
     /*
       Decode the size of the bit field from the master.
@@ -117,17 +117,17 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
     length= from_len + ((from_bit_len > 0) ? 1 : 0);
     break;
   }
-  case MySQL::system::MYSQL_TYPE_VARCHAR:
+  case mysql::system::MYSQL_TYPE_VARCHAR:
   {
     length= metadata > 255 ? 2 : 1;
     length+= length == 1 ? (boost::uint32_t) *field_ptr : *((boost::uint16_t *)field_ptr);
     break;
   }
-  case MySQL::system::MYSQL_TYPE_TINY_BLOB:
-  case MySQL::system::MYSQL_TYPE_MEDIUM_BLOB:
-  case MySQL::system::MYSQL_TYPE_LONG_BLOB:
-  case MySQL::system::MYSQL_TYPE_BLOB:
-  case MySQL::system::MYSQL_TYPE_GEOMETRY:
+  case mysql::system::MYSQL_TYPE_TINY_BLOB:
+  case mysql::system::MYSQL_TYPE_MEDIUM_BLOB:
+  case mysql::system::MYSQL_TYPE_LONG_BLOB:
+  case mysql::system::MYSQL_TYPE_BLOB:
+  case mysql::system::MYSQL_TYPE_GEOMETRY:
   {
      switch (metadata)
     {
@@ -281,7 +281,7 @@ boost::int16_t Value::as_int16() const
   return to_int;
 }
 
-boost::int64_t Value::as_int64() const 
+boost::int64_t Value::as_int64() const
 {
   if (m_is_null)
   {
@@ -371,7 +371,7 @@ void Converter::to(std::string &str, const Value &val)
          << std::setw(2) << (t % 10000) / 100
          << std::setw(1) << ':'
          << std::setw(2) << t % 100;
-    
+
       str= os.str();
     }
       break;
@@ -537,4 +537,4 @@ void Converter::to(long &out, const Value &val)
 }
 
 
-} // end namespace MySQL
+} // end namespace mysql

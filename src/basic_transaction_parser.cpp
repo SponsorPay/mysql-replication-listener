@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #include "binlog_event.h"
@@ -27,9 +27,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <iostream>
 #include "field_iterator.h"
 
-namespace MySQL {
+namespace mysql {
 
-MySQL::Binary_log_event *Basic_transaction_parser::process_event(MySQL::Query_event *qev)
+mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Query_event *qev)
 {
   if (qev->query == "BEGIN")
   {
@@ -44,13 +44,13 @@ MySQL::Binary_log_event *Basic_transaction_parser::process_event(MySQL::Query_ev
   return process_transaction_state(qev);
 }
 
-MySQL::Binary_log_event *Basic_transaction_parser::process_event(MySQL::Xid *ev)
+mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Xid *ev)
 {
   m_transaction_state= COMMITTING;
   return process_transaction_state(ev);
 }
 
-MySQL::Binary_log_event *Basic_transaction_parser::process_event(MySQL::Table_map_event *ev)
+mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Table_map_event *ev)
 {
   if(m_transaction_state ==IN_PROGRESS)
   {
@@ -60,7 +60,7 @@ MySQL::Binary_log_event *Basic_transaction_parser::process_event(MySQL::Table_ma
   return ev;
 }
 
-MySQL::Binary_log_event *Basic_transaction_parser::process_event(MySQL::Row_event *ev)
+mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Row_event *ev)
 {
   if(m_transaction_state ==IN_PROGRESS)
   {
@@ -70,7 +70,7 @@ MySQL::Binary_log_event *Basic_transaction_parser::process_event(MySQL::Row_even
   return ev;
 }
 
-MySQL::Binary_log_event *Basic_transaction_parser::process_transaction_state(MySQL::Binary_log_event *incomming_event)
+mysql::Binary_log_event *Basic_transaction_parser::process_transaction_state(mysql::Binary_log_event *incomming_event)
 {
   switch(m_transaction_state)
   {
@@ -84,36 +84,36 @@ MySQL::Binary_log_event *Basic_transaction_parser::process_transaction_state(MyS
     case COMMITTING:
     {
       delete incomming_event; // drop the commit event
-           
+
       /**
        * Propagate the start time for the transaction to the newly created
        * event.
        */
-      MySQL::Transaction_log_event *trans=  MySQL::create_transaction_log_event();
+      mysql::Transaction_log_event *trans=  mysql::create_transaction_log_event();
       trans->header()->timestamp= m_start_time;
 
       //std::cout << "There are " << m_event_stack.size() << " events in the transaction: ";
       while( m_event_stack.size() > 0)
       {
-        MySQL::Binary_log_event *event= m_event_stack.front();
+        mysql::Binary_log_event *event= m_event_stack.front();
         m_event_stack.pop_front();
         switch(event->get_event_type())
         {
-          case MySQL::TABLE_MAP_EVENT:
+          case mysql::TABLE_MAP_EVENT:
           {
             /*
              Index the table name with a table id to ease lookup later.
             */
-            MySQL::Table_map_event *tm= static_cast<MySQL::Table_map_event *>(event);
+            mysql::Table_map_event *tm= static_cast<mysql::Table_map_event *>(event);
             //std::cout << "Indexing table " << tm->table_id << " " << tm->table_name << std::endl;
             //std::cout.flush ();
-            trans->m_table_map.insert(MySQL::Event_index_element(tm->table_id,tm));
+            trans->m_table_map.insert(mysql::Event_index_element(tm->table_id,tm));
             trans->m_events.push_back(event);
           }
           break;
-          case MySQL::WRITE_ROWS_EVENT:
-          case MySQL::DELETE_ROWS_EVENT:
-          case MySQL::UPDATE_ROWS_EVENT:
+          case mysql::WRITE_ROWS_EVENT:
+          case mysql::DELETE_ROWS_EVENT:
+          case mysql::UPDATE_ROWS_EVENT:
           {
             trans->m_events.push_back(event);
              /*
@@ -162,5 +162,3 @@ Transaction_log_event::~Transaction_log_event()
 }
 
 } // end namespace
-
-

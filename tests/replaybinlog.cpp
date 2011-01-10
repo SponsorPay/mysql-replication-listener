@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 #include <stdlib.h>
 #include <boost/foreach.hpp>
@@ -23,21 +23,21 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 bool is_text_field(Value &val)
 {
-  if (val.type() == MySQL::system::MYSQL_TYPE_VARCHAR ||
-      val.type() == MySQL::system::MYSQL_TYPE_BLOB ||
-      val.type() == MySQL::system::MYSQL_TYPE_MEDIUM_BLOB ||
-      val.type() == MySQL::system::MYSQL_TYPE_LONG_BLOB)
+  if (val.type() == mysql::system::MYSQL_TYPE_VARCHAR ||
+      val.type() == mysql::system::MYSQL_TYPE_BLOB ||
+      val.type() == mysql::system::MYSQL_TYPE_MEDIUM_BLOB ||
+      val.type() == mysql::system::MYSQL_TYPE_LONG_BLOB)
     return true;
   return false;
 }
 
-void table_insert(std::string table_name, MySQL::Row_of_fields &fields)
+void table_insert(std::string table_name, mysql::Row_of_fields &fields)
 {
   std::cout << "INSERT INTO "
            << table_name
            << " VALUES (";
-  MySQL::Row_of_fields::iterator field_it= fields.begin();
-  MySQL::Converter converter;
+  mysql::Row_of_fields::iterator field_it= fields.begin();
+  mysql::Converter converter;
   do {
     /*
      Each row contains a vector of Value objects. The converter
@@ -59,15 +59,15 @@ void table_insert(std::string table_name, MySQL::Row_of_fields &fields)
 }
 
 
-void table_update(std::string table_name, MySQL::Row_of_fields &old_fields, MySQL::Row_of_fields &new_fields)
+void table_update(std::string table_name, mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
 {
   std::cout << "UPDATE "
            << table_name
            << " SET ";
 
   int field_id= 0;
-  MySQL::Row_of_fields::iterator field_it= new_fields.begin();
-  MySQL::Converter converter;
+  mysql::Row_of_fields::iterator field_it= new_fields.begin();
+  mysql::Converter converter;
   do {
     std::string str;
     converter.to(str, *field_it);
@@ -104,16 +104,16 @@ void table_update(std::string table_name, MySQL::Row_of_fields &old_fields, MySQ
 }
 
 
-void table_delete(std::string table_name, MySQL::Row_of_fields &fields)
+void table_delete(std::string table_name, mysql::Row_of_fields &fields)
 {
   std::cout << "DELETE FROM "
            << table_name
            << " WHERE ";
-  MySQL::Row_of_fields::iterator field_it= fields.begin();
+  mysql::Row_of_fields::iterator field_it= fields.begin();
   int field_id= 0;
-  MySQL::Converter converter;
+  mysql::Converter converter;
   do {
-    
+
     std::string str;
     converter.to(str, *field_it);
     std::cout << field_id << "= ";
@@ -130,15 +130,15 @@ void table_delete(std::string table_name, MySQL::Row_of_fields &fields)
   std::cout << " LIMIT 1" << std::endl;
 }
 
-class Incident_handler : public MySQL::Content_handler
+class Incident_handler : public mysql::Content_handler
 {
 public:
- Incident_handler() : MySQL::Content_handler() {}
+ Incident_handler() : mysql::Content_handler() {}
 
- MySQL::Binary_log_event *process_event(MySQL::Incident_event *incident)
+ mysql::Binary_log_event *process_event(mysql::Incident_event *incident)
  {
    std::cout << "Event type: "
-             << MySQL::system::get_event_type_str(incident->get_event_type())
+             << mysql::system::get_event_type_str(incident->get_event_type())
              << " length: " << incident->header()->event_length
              << " next pos: " << incident->header()->next_position
              << std::endl;
@@ -154,39 +154,39 @@ public:
  }
 };
 
-class Replay_binlog : public MySQL::Content_handler
+class Replay_binlog : public mysql::Content_handler
 {
 public:
-  Replay_binlog() : MySQL::Content_handler() {}
-  MySQL::Binary_log_event *process_event(MySQL::Binary_log_event *event)
+  Replay_binlog() : mysql::Content_handler() {}
+  mysql::Binary_log_event *process_event(mysql::Binary_log_event *event)
   {
-    if (event->get_event_type() != MySQL::USER_DEFINED)
+    if (event->get_event_type() != mysql::USER_DEFINED)
       return event;
     std::cout << "Event type: "
-            << MySQL::system::get_event_type_str(event->get_event_type())
+            << mysql::system::get_event_type_str(event->get_event_type())
             << " length: " << event->header()->event_length
             << " next pos: " << event->header()->next_position
             << std::endl;
-    MySQL::Transaction_log_event *trans= static_cast<MySQL::Transaction_log_event *>(event);
+    mysql::Transaction_log_event *trans= static_cast<mysql::Transaction_log_event *>(event);
     int row_count=0;
     /*
       The transaction event we created has aggregated all row events in an
       ordered list.
     */
-    BOOST_FOREACH(MySQL::Binary_log_event * event, trans->m_events)
+    BOOST_FOREACH(mysql::Binary_log_event * event, trans->m_events)
     {
       switch (event->get_event_type())
       {
-        case MySQL::WRITE_ROWS_EVENT:
-        case MySQL::DELETE_ROWS_EVENT:
-        case MySQL::UPDATE_ROWS_EVENT:
-        MySQL::Row_event *rev= static_cast<MySQL::Row_event *>(event);
+        case mysql::WRITE_ROWS_EVENT:
+        case mysql::DELETE_ROWS_EVENT:
+        case mysql::UPDATE_ROWS_EVENT:
+        mysql::Row_event *rev= static_cast<mysql::Row_event *>(event);
         boost::uint64_t table_id= rev->table_id;
         // BUG: will create a new event header if the table id doesn't exist.
         Binary_log_event * tmevent= trans->table_map()[table_id];
-        MySQL::Table_map_event *tm;
+        mysql::Table_map_event *tm;
         if (tmevent != NULL)
-          tm= static_cast<MySQL::Table_map_event *>(tmevent);
+          tm= static_cast<mysql::Table_map_event *>(tmevent);
         else
         {
           std::cout << "Table id "
@@ -199,25 +199,25 @@ public:
          Each row event contains multiple rows and fields. The Row_iterator
          allows us to iterate one row at a time.
         */
-        MySQL::Row_event_set rows(rev, tm);
+        mysql::Row_event_set rows(rev, tm);
         /*
          Create a fuly qualified table name
         */
         std::ostringstream os;
         os << tm->db_name << '.' << tm->table_name;
-        MySQL::Row_event_set::iterator it= rows.begin();
+        mysql::Row_event_set::iterator it= rows.begin();
         do {
-          MySQL::Row_of_fields fields= *it;
+          mysql::Row_of_fields fields= *it;
 
-          if (event->get_event_type() == MySQL::WRITE_ROWS_EVENT)
+          if (event->get_event_type() == mysql::WRITE_ROWS_EVENT)
                  table_insert(os.str(),fields);
-          if (event->get_event_type() == MySQL::UPDATE_ROWS_EVENT)
+          if (event->get_event_type() == mysql::UPDATE_ROWS_EVENT)
           {
             ++it;
-            MySQL::Row_of_fields fields2= *it;
+            mysql::Row_of_fields fields2= *it;
             table_update(os.str(),fields,fields2);
           }
-          if (event->get_event_type() == MySQL::DELETE_ROWS_EVENT)
+          if (event->get_event_type() == mysql::DELETE_ROWS_EVENT)
             table_delete(os.str(),fields);
         } while (++it != rows.end());
       } // end switch
@@ -228,7 +228,7 @@ public:
   }
 };
 /*
- * 
+ *
  */
 int main(int argc, char** argv)
 {
@@ -238,13 +238,13 @@ int main(int argc, char** argv)
     return (EXIT_FAILURE);
   }
 
-  MySQL::Binary_log binlog(MySQL::create_transport(argv[1]));
+  mysql::Binary_log binlog(mysql::system::create_transport(argv[1]));
 
 
   /*
     Attach a custom event parser which produces user defined events
   */
-  MySQL::Basic_transaction_parser transaction_parser;
+  mysql::Basic_transaction_parser transaction_parser;
   Incident_handler incident_hndlr;
   Replay_binlog replay_hndlr;
 
@@ -282,7 +282,7 @@ int main(int argc, char** argv)
      Print the event
     */
     std::cout << "Event type: "
-              << MySQL::system::get_event_type_str(event->get_event_type())
+              << mysql::system::get_event_type_str(event->get_event_type())
               << " length: " << event->header()->event_length
               << " next pos: " << event->header()->next_position
               << std::endl;
@@ -293,9 +293,9 @@ int main(int argc, char** argv)
 
     switch(event->header()->type_code)
     {
-    case MySQL::QUERY_EVENT:
+    case mysql::QUERY_EVENT:
       {
-        const MySQL::Query_event *qev= static_cast<const MySQL::Query_event *>(event);
+        const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
         std::cout << "query= "
                   << qev->query
                   << " db= "
@@ -309,10 +309,10 @@ int main(int argc, char** argv)
         }
       }
       break;
-    
-    case MySQL::ROTATE_EVENT:
+
+    case mysql::ROTATE_EVENT:
       {
-        MySQL::Rotate_event *rot= static_cast<MySQL::Rotate_event *>(event);
+        mysql::Rotate_event *rot= static_cast<mysql::Rotate_event *>(event);
         std::cout << "filename= "
                   << rot->binlog_file.c_str()
                   << " pos= "
@@ -321,10 +321,9 @@ int main(int argc, char** argv)
                   << std::endl;
       }
       break;
-    
+
     } // end switch
     delete event;
   } // end loop
   return (EXIT_SUCCESS);
 }
-

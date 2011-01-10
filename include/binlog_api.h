@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 
 #ifndef _REPEVENT_H
@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 namespace io = boost::iostreams;
 
-namespace MySQL
+namespace mysql
 {
 
 /**
@@ -66,7 +66,7 @@ class Dummy_driver : public system::Binary_log_driver
 
   virtual int connect() { return 1; }
 
-  virtual int wait_for_next_event(MySQL::Binary_log_event **event) {
+  virtual int wait_for_next_event(mysql::Binary_log_event **event) {
     return ERR_EOF;
   }
 
@@ -101,7 +101,7 @@ public:
    */
   int wait_for_next_event(Binary_log_event **event);
 
-  
+
   /**
    * Inserts/removes content handlers in and out of the chain
    * The Content_handler_pipeline is a derived std::list
@@ -147,4 +147,3 @@ public:
 }
 
 #endif	/* _REPEVENT_H */
-
