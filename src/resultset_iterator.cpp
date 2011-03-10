@@ -42,55 +42,54 @@ void Result_set::digest_row_set()
   try {
   do
   {
-      /*
-       * Get server response
-       */
-      packet_length= system::proto_get_one_package(m_socket, resultbuff, &packet_no);
+    /*
+     * Get server response
+     */
+    packet_length= system::proto_get_one_package(m_socket, resultbuff, &packet_no);
 
-      switch(m_current_state)
+    switch(m_current_state)
+    {
+      case RESULT_HEADER:
+        system::digest_result_header(response_stream, m_field_count, m_extra);
+        m_row_count= 0;
+        m_current_state= FIELD_PACKETS;
+        break;
+      case FIELD_PACKETS:
       {
-          case RESULT_HEADER:
-            system::digest_result_header(response_stream, m_field_count, m_extra);
-            m_row_count= 0;
-            m_current_state= FIELD_PACKETS;
-            break;
-          case FIELD_PACKETS:
-          {
+        Field_packet field;
+        system::digest_field_packet(response_stream, field);
+        m_field_types.assign(field_count,field);
 
-            Field_packet field;
-            system::digest_field_packet(response_stream, field);
-            m_field_types.assign(field_count,field);
-
-            if (++field_count == m_field_count)
-              m_current_state= MARKER;
-          }
-            break;
-          case MARKER:
-          {
-            char marker;
-            response_stream >> marker;
-            //assert(marker == 0xfe);
-            system::digest_marker(response_stream);
-            m_current_state= ROW_CONTENTS;
-          }
-            break;
-          case ROW_CONTENTS:
-          {
-            bool is_eof= false;
-            Row_of_fields row(0);
-            system::digest_row_content(response_stream, m_field_count, row, m_storage, is_eof);
-            if (is_eof)
-                m_current_state= EOF_PACKET;
-            else
-              {
-                m_rows.push_back(row);
-                ++m_row_count;
-              }
-          }
-            break;
-          default:
-              continue;
+        if (++field_count == m_field_count)
+          m_current_state= MARKER;
       }
+      break;
+      case MARKER:
+      {
+         char marker;
+         response_stream >> marker;
+         //assert(marker == 0xfe);
+         system::digest_marker(response_stream);
+         m_current_state= ROW_CONTENTS;
+       }
+       break;
+       case ROW_CONTENTS:
+       {
+         bool is_eof= false;
+         Row_of_fields row(0);
+         system::digest_row_content(response_stream, m_field_count, row, m_storage, is_eof);
+         if (is_eof)
+           m_current_state= EOF_PACKET;
+         else
+         {
+           m_rows.push_back(row);
+           ++m_row_count;
+         }
+       }
+       break;
+       default:
+         continue;
+    }
   } while (m_current_state != EOF_PACKET);
   } catch(boost::system::system_error e)
   {

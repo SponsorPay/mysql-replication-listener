@@ -25,7 +25,7 @@ namespace mysql
 
 namespace system {
 
-const char* get_event_type_str(Log_event_type type)
+const char *get_event_type_str(Log_event_type type)
 {
   switch(type) {
   case START_EVENT_V3:  return "Start_v3";
@@ -55,7 +55,7 @@ const char* get_event_type_str(Log_event_type type)
   case EXECUTE_LOAD_QUERY_EVENT: return "Execute_load_query";
   case INCIDENT_EVENT: return "Incident";
   case USER_DEFINED: return "User defined";
-  default: return "Unknown";				/* impossible */
+  default: return "Unknown";
   }
 }
 
@@ -65,7 +65,6 @@ const char* get_event_type_str(Log_event_type type)
 Binary_log_event::~Binary_log_event()
 {
 }
-
 
 
 Binary_log_event * create_incident_event(unsigned int type, const char *message, unsigned long pos)
