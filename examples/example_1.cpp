@@ -7,18 +7,20 @@
 
 #include <stdlib.h>
 #include <boost/foreach.hpp>
-#include "repevent.h"
+#include "binlog_api.h"
+#include "row_of_fields.h"
 
-void table_insert(std::string &table_name,mysql::Row_of_fields &fields);
-void table_update(std::string &table_name,mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields);
-void table_delete(std::string &table_name,mysql::Row_of_fields &fields);
+void table_insert(const std::string &table_name, mysql::Row_of_fields &fields);
+void table_update(const std::string &table_name, mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields);
+void table_delete(const std::string &table_name, mysql::Row_of_fields &fields);
 /*
  * 
  */
 int main(int argc, char** argv)
 {
+  using mysql::system::create_transport;
 
-  mysql::Binary_log binlog(mysql::create_transport("mysql://pear:apple@127.0.0.1:13000"));
+  mysql::Binary_log binlog(create_transport("mysql://pear:apple@127.0.0.1:13000"));
   while (binlog.connect())
   {
     std::cout << "Can't connect to the master. Retrying... " <<std::endl;

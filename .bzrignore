@@ -5,3 +5,7 @@ CMakeFiles/*
 CTestTestfile.cmake
 Makefile
 cmake_install.cmake
+lib/*
+tests/mysql2lucene/mysql2lucene
+tests/replaybinlog
+tests/test-basic

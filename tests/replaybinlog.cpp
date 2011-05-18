@@ -31,7 +31,7 @@ bool is_text_field(Value &val)
   return false;
 }
 
-void table_insert(std::string table_name, mysql::Row_of_fields &fields)
+void table_insert(const std::string& table_name, mysql::Row_of_fields &fields)
 {
   std::cout << "INSERT INTO "
            << table_name
@@ -59,7 +59,8 @@ void table_insert(std::string table_name, mysql::Row_of_fields &fields)
 }
 
 
-void table_update(std::string table_name, mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
+void table_update(const std::string& table_name,
+                  mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
 {
   std::cout << "UPDATE "
            << table_name
@@ -104,7 +105,7 @@ void table_update(std::string table_name, mysql::Row_of_fields &old_fields, mysq
 }
 
 
-void table_delete(std::string table_name, mysql::Row_of_fields &fields)
+void table_delete(const std::string& table_name, mysql::Row_of_fields &fields)
 {
   std::cout << "DELETE FROM "
            << table_name

@@ -1,0 +1,36 @@
+
+Dependencies
+------------
+
+To be able to run the unit tests, you have to have Google Test
+installed. Google Test will be automatically installed if cmake is
+called as:
+
+   cmake -DENABLE_DOWNLOADS=1 .
+
+
+Building
+--------
+
+To build the entire package, it is first necessary to run CMake to build all the makefiles.
+
+        cmake .
+
+Some of the examples are using third-party software, which can require
+extra parameters to be given to CMake.
+
+
+Building with CLucene
+---------------------
+
+To build the mysql2lucene example, it is necessary to ensure that the
+'FindCLucene.cmake' is in the CMAKE_MODULE_PATH, which on my machine
+require me to write:
+
+    cmake -DCMAKE_MODULE_PATH:String=/usr/share/kde4/apps/cmake/modules .
+
+In addition, there is a bug in the packaging of CLucene on Ubuntu in
+that the 'clucene-config.h' file is placed in '/usr/lib/CLucene' but
+not in '/usr/include/CLucene', causing compiler failure when
+attempting to use CLucene. The 'CMakeLists.txt' file hacks around this
+by adding the libraries explicitly, but it seems unnecessary.

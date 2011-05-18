@@ -8,3 +8,4 @@ target_link_libraries(replaybinlog replication_static)
 
 add_test(AllTests test-basic)
 
+add_subdirectory(mysql2lucene)

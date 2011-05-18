@@ -15,16 +15,17 @@
 
 #include "table_index.h"
 
+using mysql::system::create_transport;
+using mysql::Binary_log;
+
 std::string cl_index_file;
-
-
 
 class Incident_handler : public mysql::Content_handler
 {
 public:
  Incident_handler() : mysql::Content_handler() {}
 
- mysql::Binary_log_event *process_event(mysql::Incident_event *incident)
+ Binary_log_event *process_event(mysql::Incident_event *incident)
  {
    std::cout << "Event type: "
              << mysql::system::get_event_type_str(incident->get_event_type())
@@ -108,7 +109,7 @@ int main(int argc, char** argv)
     return (EXIT_FAILURE);
   }
 
-  mysql::Binary_log binlog(mysql::create_transport(argv[1]));
+  Binary_log binlog(create_transport(argv[1]));
 
 
   cl_index_file.append (argv[2]);
@@ -130,9 +131,7 @@ int main(int argc, char** argv)
     return (EXIT_FAILURE);
   }
 
-  binlog.position("searchbin.000001",4);
-
-  Binary_log_event  *event;
+  binlog.set_position("searchbin.000001", 4);
 
   bool quit= false;
   while(!quit)
@@ -140,7 +139,8 @@ int main(int argc, char** argv)
     /*
      Pull events from the master. This is the heart beat of the event listener.
     */
-    binlog.wait_for_next_event(event);
+    Binary_log_event  *event;
+    binlog.wait_for_next_event(&event);
 
     /*
      Print the event

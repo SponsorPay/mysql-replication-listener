@@ -3,15 +3,7 @@
 #include "table_insert.h"
 
 #include <stdlib.h>
-#include <CLucene/StdHeader.h>
-#include <CLucene/clucene-config.h>
-
 #include <CLucene.h>
-#include <CLucene/util/CLStreams.h>
-#include <CLucene/util/dirent.h>
-#include <CLucene/config/repl_tchar.h>
-#include <CLucene/util/Misc.h>
-#include <CLucene/util/StringBuffer.h>
 #include <boost/foreach.hpp>
 
 CL_NS_USE(index)

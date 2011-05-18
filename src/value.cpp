@@ -307,7 +307,7 @@ double Value::as_double() const
   return *((const double *)storage());
 }
 
-void Converter::to(std::string &str, const Value &val)
+void Converter::to(std::string &str, const Value &val) const
 {
   if (val.is_null())
   {
@@ -434,7 +434,7 @@ void Converter::to(std::string &str, const Value &val)
   }
 }
 
-void Converter::to(float &out, const Value &val)
+void Converter::to(float &out, const Value &val) const
 {
   switch(val.type())
   {
@@ -446,7 +446,7 @@ void Converter::to(float &out, const Value &val)
   }
 }
 
-void Converter::to(long &out, const Value &val)
+void Converter::to(long &out, const Value &val) const
 {
   switch(val.type())
   {

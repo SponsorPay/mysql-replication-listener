@@ -1,12 +1,7 @@
 #include "globals.h"
 #include "table_delete.h"
 
-#include <CLucene/StdHeader.h>
-#include <CLucene/clucene-config.h>
 #include <CLucene.h>
-#include <CLucene/util/Misc.h>
-#include <CLucene/util/dirent.h>
-#include <CLucene/config/repl_tchar.h>
 
 CL_NS_USE(index)
 CL_NS_USE(util)

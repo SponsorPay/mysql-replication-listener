@@ -154,29 +154,26 @@ private:
 class Converter
 {
 public:
-    Converter() {}
-    ~Converter() {}
-
     /**
      * Converts and copies the sql value to a std::string object.
      * @param[out] str The target string
      * @param[in] val The value object to be converted
      */
-    void to(std::string &str, const Value &val);
+    void to(std::string &str, const Value &val) const;
 
     /**
      * Converts and copies the sql value to a long integer.
      * @param[out] out The target variable
      * @param[in] val The value object to be converted
      */
-    void to(long &out, const Value &val);
+    void to(long &out, const Value &val) const;
 
     /**
      * Converts and copies the sql value to a floating point number.
      * @param[out] out The target variable
      * @param[in] val The value object to be converted
      */
-    void to(float &out, const Value &val);
+    void to(float &out, const Value &val) const;
 };
 
 

@@ -42,7 +42,9 @@ class Binlog_tcp_driver : public Binary_log_driver
 {
 public:
 
-    Binlog_tcp_driver(std::string user, std::string passwd, std::string host, unsigned long port) {
+    Binlog_tcp_driver(const std::string& user, const std::string& passwd,
+                      const std::string& host, unsigned long port)
+    {
         m_host= host;
         m_user= user;
         m_passwd= passwd;
@@ -94,7 +96,9 @@ protected:
      *   @retval 0 Successfully established a connection
      *   @retval >1 An error occurred.
      */
-    int connect(const std::string user, const std::string passwd, const std::string host, long port, std::string binlog_filename="", size_t offset=4);
+    int connect(const std::string& user, const std::string& passwd,
+                const std::string& host, long port,
+                const std::string& binlog_filename="", size_t offset=4);
 
 private:
 
@@ -103,7 +107,7 @@ private:
      * @param binlog_file_name The base name of the binlog files to query
      *
      */
-    void start_binlog_dump(std::string &binlog_file_name, size_t offset);
+    void start_binlog_dump(const std::string &binlog_file_name, size_t offset);
 
     /**
      * Handles a completed mysql server package header and put a
@@ -174,17 +178,17 @@ private:
     /**
      * Temporary storage for a handshake package
      */
-    struct st_handshake_package m_handshake_package;
+    st_handshake_package m_handshake_package;
 
     /**
      * Temporary storage for an OK package
      */
-    struct st_ok_package m_ok_package;
+    st_ok_package m_ok_package;
 
     /**
      * Temporary storage for an error package
      */
-    struct st_error_package m_error_package;
+    st_error_package m_error_package;
 
     /**
      * each bin log event starts with a 19 byte long header
@@ -249,9 +253,13 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
  */
 bool fetch_binlogs_name_and_size(tcp::socket *socket, std::map<std::string, unsigned long> &binlog_map);
 
-int authenticate(tcp::socket *socket, std::string user, std::string passwd, struct st_handshake_package &handshake_package);
+int authenticate(tcp::socket *socket, const std::string& user,
+                 const std::string& passwd,
+                 const st_handshake_package &handshake_package);
 
-tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, const std::string &user, const std::string &passwd, const std::string &host, long port);
+tcp::socket *
+sync_connect_and_authenticate(boost::asio::io_service &io_service, const std::string &user,
+                              const std::string &passwd, const std::string &host, long port);
 
 
 } }

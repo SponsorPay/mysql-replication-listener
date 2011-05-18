@@ -316,8 +316,8 @@ public:
         m_str->assign(size,'*');
     }
 
-    virtual unsigned int size() { return m_str->size(); }
-    virtual const char *data() { return m_str->data(); }
+    virtual unsigned int size() const { return m_str->size(); }
+    virtual const char *data() const { return m_str->data(); }
     virtual void collapse_size(unsigned int new_size)
     {
         m_str->resize(new_size);

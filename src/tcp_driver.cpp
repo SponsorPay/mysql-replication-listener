@@ -51,11 +51,13 @@ namespace mysql
   {
 
     static int encrypt_password(boost::uint8_t *reply,   /* buffer at least EVP_MAX_MD_SIZE */
-		      const boost::uint8_t *scramble_buff,
-		      const char *pass);
+                                const boost::uint8_t *scramble_buff,
+                                const char *pass);
     static int hash_sha1(boost::uint8_t *output, ...);
 
-    int Binlog_tcp_driver::connect(const std::string user, const std::string passwd, const std::string host, long port, std::string binlog_filename, size_t offset)
+    int Binlog_tcp_driver::connect(const std::string& user, const std::string& passwd,
+                                   const std::string& host, long port,
+                                   const std::string& binlog_filename, size_t offset)
     {
       m_user=user;
       m_passwd=passwd;
@@ -234,7 +236,7 @@ namespace mysql
       return socket;
     }
 
-    void Binlog_tcp_driver::start_binlog_dump(std::string &binlog_file_name, size_t offset)
+    void Binlog_tcp_driver::start_binlog_dump(const std::string &binlog_file_name, size_t offset)
     {
       boost::asio::streambuf server_messages;
 
@@ -413,7 +415,8 @@ namespace mysql
 
     }
 
-    int authenticate(tcp::socket *socket, std::string user, std::string passwd, struct st_handshake_package &handshake_package)
+    int authenticate(tcp::socket *socket, const std::string& user, const std::string& passwd,
+                     const st_handshake_package &handshake_package)
     {
       try
       {
