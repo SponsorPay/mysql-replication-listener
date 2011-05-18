@@ -44,7 +44,8 @@ void Content_handler::set_injection_queue(Injection_queue *queue)
   m_reinject_queue= queue;
 }
 
-mysql::Binary_log_event *Content_handler::internal_process_event(mysql::Binary_log_event *ev)
+mysql::Binary_log_event*
+  Content_handler::internal_process_event(mysql::Binary_log_event *ev)
 {
  mysql::Binary_log_event *processed_event= 0;
  switch(ev->header ()->type_code) {
