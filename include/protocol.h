@@ -307,10 +307,10 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk);
 
 typedef Protocol_chunk<boost::uint8_t> Protocol_chunk_uint8;
 
-class Protocol_chunk_string : public Protocol_chunk_uint8
+class Protocol_chunk_string //: public Protocol_chunk_uint8
 {
 public:
-    Protocol_chunk_string(std::string &chunk, unsigned long size) : Protocol_chunk_uint8()
+    Protocol_chunk_string(std::string &chunk, unsigned long size) //: Protocol_chunk_uint8()
     {
         m_str= &chunk;
         m_str->assign(size,'*');
@@ -323,6 +323,7 @@ public:
         m_str->resize(new_size);
     }
 private:
+    friend std::istream &operator>>(std::istream &is, Protocol_chunk_string &str);
     std::string *m_str;
 };
 
@@ -389,6 +390,7 @@ buffer_source &operator>>(buffer_source &src, Protocol &chunk);
 std::istream &operator>>(std::istream &is, Protocol &chunk);
 std::istream &operator>>(std::istream &is, std::string &str);
 std::istream &operator>>(std::istream &is, Protocol_chunk_string_len &lenstr);
+std::istream &operator>>(std::istream &is, Protocol_chunk_string &str);
 
 int proto_read_package_header(tcp::socket *socket, unsigned long *packet_length, unsigned char *packet_no);
 

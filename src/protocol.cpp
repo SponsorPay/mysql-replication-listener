@@ -287,12 +287,27 @@ std::istream &operator>>(std::istream &is, std::string &str)
   return is;
 }
 
+std::istream &operator>>(std::istream &is, Protocol_chunk_string &str)
+{
+  char ch;
+  int ct= 0;
+  int sz= str.m_str->size();
+  for (ct=0; ct< sz && is.good(); ct++)
+  {
+    is.get(ch);
+    str.m_str->at(ct)= ch;
+  }
+  
+  return is;
+}
+
 std::istream &operator>>(std::istream &is, Protocol_chunk_string_len &lenstr)
 {
   boost::uint8_t len;
+  std::string *str= lenstr.m_storage;
   Protocol_chunk<boost::uint8_t> proto_str_len(len);
   is >> proto_str_len;
-  Protocol_chunk_string   proto_str(*lenstr.m_storage, len);
+  Protocol_chunk_string   proto_str(*str, len);
   is >> proto_str;
   return is;
 }
