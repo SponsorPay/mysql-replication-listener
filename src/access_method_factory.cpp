@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 #include "access_method_factory.h"
 #include "tcp_driver.h"
+#include "file_driver.h"
 
 namespace mysql {
 namespace system {
@@ -28,7 +29,25 @@ Binary_log_driver *create_transport(const char *url)
   //      factory.
   // temporary code for test purpose follows below
   char *url_copy= strdup(url);
-  const char *access_method= "mysql://";
+  const char *mysql_access_method= "mysql://";
+  const char *file_access_method= "file://";
+
+  if (strstr(url_copy, mysql_access_method))
+    return (parse_mysql_url(url_copy, mysql_access_method));
+  else if (strstr(url_copy, file_access_method))
+    return (parse_file_url(url_copy, file_access_method));
+  else
+    goto err;                                   // Not supported!
+
+err:
+  free(url_copy);
+  return 0;
+}
+
+
+Binary_log_driver *parse_mysql_url(char *url, const char
+                                   *mysql_access_method)
+{
   char user[21];
   char host[50];
   char port[6];
@@ -43,10 +62,10 @@ Binary_log_driver *create_transport(const char *url)
   unsigned pass_length= 0;
   unsigned long portno= 0;
   char *front, *scan;
-  front= strstr(url_copy,access_method);
+  front= strstr(url, mysql_access_method);
   if (front == 0)
       goto err;
-  front += strlen(access_method);
+  front += strlen(mysql_access_method);
    scan= strpbrk(front,":@");
   if (scan == 0)
       goto err;
@@ -92,13 +111,28 @@ Binary_log_driver *create_transport(const char *url)
     portno= atol(port);
   }
 
-  // Only tcp driver supported so far
-  free(url_copy);
+  free(url);
   return new system::Binlog_tcp_driver(user, pass, host, portno);
 err:
-  free(url_copy);
+  free(url);
   return 0;
 }
+
+
+Binary_log_driver *parse_file_url(char *url, const char
+                                  *file_access_method)
+{
+  char filename[120];
+  unsigned scheme_length= strlen(file_access_method);
+  unsigned filename_length= strlen(url) - scheme_length;
+
+  memcpy(filename, url + scheme_length, filename_length);
+  filename[filename_length]= '\0';
+
+  free(url);
+  return new system::Binlog_file_driver(filename);
+}
+
 
 } // end namespace system
 } // end namespace mysql

@@ -323,6 +323,8 @@ Query_event *proto_query_event(std::istream &is, Log_event_header *header)
 {
   boost::uint8_t db_name_len;
   boost::uint16_t var_size;
+  // Length of query stored in the payload.
+  boost::uint32_t query_len;
   Query_event *qev=new Query_event(header);
 
   Protocol_chunk<boost::uint32_t> proto_query_event_thread_id(qev->thread_id);
@@ -337,6 +339,29 @@ Query_event *proto_query_event(std::istream &is, Log_event_header *header)
      >> proto_query_event_error_code
      >> proto_query_event_var_size;
 
+  //TODO : Implement it in a better way.
+
+  /*
+    Query length =
+    Total event length (header->event_length) -
+      (
+        (LOG_EVENT_HEADER_SIZE - 1) +  //Shouldn't LOG_EVENT_HEADER_SIZE=19?
+        Thread-id (pre-defined, 4) +
+        Execution time (pre-defined, 4) +
+        Placeholder to store database length (pre-defined, 1) +
+        Error code (pre-defined, 2) +
+        Placeholder to store length taken by status variable blk (pre-defined, 2) +
+        Status variable block length (calculated, var_size) +
+        Database name length (calculated, db_name_len) +
+        Null terninator (pre-defined, 1) +
+    )
+
+    which gives :
+  */
+
+  query_len= header->event_length - (LOG_EVENT_HEADER_SIZE + 13 + var_size +
+                                     db_name_len);
+
   qev->variables.reserve(var_size);
   Protocol_chunk_vector proto_payload(qev->variables, var_size);
   is >> proto_payload;
@@ -344,11 +369,15 @@ Query_event *proto_query_event(std::istream &is, Log_event_header *header)
   Protocol_chunk_string proto_query_event_db_name(qev->db_name,
                                                   (unsigned long)db_name_len);
 
+  Protocol_chunk_string proto_query_event_query_str
+    (qev->query, (unsigned long)query_len);
+
   char zero_marker; // should always be 0;
   is >> proto_query_event_db_name
      >> zero_marker
-     >> qev->query; // Null-terminated string
-  qev->query.resize(qev->query.size() - 1); // Last character is a '\0' character.
+     >> proto_query_event_query_str;
+  // Following is not really required now,
+  //qev->query.resize(qev->query.size() - 1); // Last character is a '\0' character.
 
   return qev;
 }

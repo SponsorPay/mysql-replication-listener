@@ -44,6 +44,7 @@ Content_handler_pipeline *Binary_log::content_handler_pipeline(void)
 
 int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
 {
+  int rc;
   bool handler_code;
   mysql::Binary_log_event *event;
 
@@ -58,7 +59,9 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
     }
     else
     {
-      m_driver->wait_for_next_event(&event);
+      // Return in case of non-ERR_OK.
+      if(rc= m_driver->wait_for_next_event(&event))
+        return rc;
     }
     m_binlog_position= event->header()->next_position;
     mysql::Content_handler *handler;
