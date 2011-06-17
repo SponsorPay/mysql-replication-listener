@@ -8,4 +8,6 @@ cmake_install.cmake
 lib/*
 tests/mysql2lucene/mysql2lucene
 tests/replaybinlog
+tests/replay_sys_vars
 tests/test-basic
+tags
