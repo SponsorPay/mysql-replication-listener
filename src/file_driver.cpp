@@ -27,46 +27,41 @@ using namespace std;
 
   int Binlog_file_driver::connect()
   {
+    struct stat stat_buff;
 
     char magic[]= {0xfe, 0x62, 0x69, 0x6e, 0};
-    char *magic_buf= new char[5];
+    char magic_buf[MAGIC_NUMBER_SIZE];
+
+    // Get the file size.
+    if (stat(m_binlog_file_name.c_str(), &stat_buff) == -1)
+      return ERR_FAIL;                          // Can't stat binlog file.
+    m_binlog_file_size= (unsigned long) stat_buff.st_size;
 
     m_binlog_file.exceptions(ifstream::failbit | ifstream::badbit |
                            ifstream::eofbit);
 
     try
     {
-
-      // Calculate file size.
-      m_binlog_file.open(m_binlog_file_name.c_str(), ios::in | ios::binary |
-                         ios::ate);
-      if (m_binlog_file.is_open())
-      {
-        m_binlog_file_size= m_binlog_file.tellg();
-        m_binlog_file.close();
-      }
-
       // Check if the file can be opened for reading.
       m_binlog_file.open(m_binlog_file_name.c_str(), ios::in | ios::binary);
 
       // Check if a valid MySQL binlog file is provided, BINLOG_MAGIC.
-      m_binlog_file.read(magic_buf, 4);
-      *(magic_buf+4)= 0;
+      m_binlog_file.read(magic_buf, MAGIC_NUMBER_SIZE);
 
-      if(strcmp(magic, magic_buf))
+      if(memcmp(magic, magic_buf, MAGIC_NUMBER_SIZE))
       {
         return ERR_FAIL;                        // Not a valid binlog file.
       }
 
       // Reset the get pointer.
-      m_binlog_file.seekg(0, ios::beg );
+      //m_binlog_file.seekg(0, ios::beg );
+
+      m_bytes_read= MAGIC_NUMBER_SIZE;
 
     } catch (...)
     {
       return ERR_FAIL;
     }
-    delete[] magic_buf;
-
     return ERR_OK;
   }
 
@@ -89,6 +84,8 @@ using namespace std;
     {
       return ERR_FAIL;
     }
+
+    m_bytes_read= position;
 
     return ERR_OK;
   }
@@ -115,7 +112,7 @@ using namespace std;
 
   int Binlog_file_driver::wait_for_next_event(mysql::Binary_log_event **event)
   {
-    //TODO : Check for the valid position (atleast 4).
+    //TODO : Check for the valid position (atleast MAGIC_NUMBER_SIZE).
 
     m_binlog_file.exceptions(ifstream::failbit | ifstream::badbit |
                              ifstream::eofbit);
@@ -157,6 +154,17 @@ using namespace std;
                            */
 
         *event= parse_event();
+
+        /*
+          Correction. Except for the default case (above), this condition should
+          always fail.
+        */
+        if (m_bytes_read + m_event_log_header.event_length !=
+            m_binlog_file.tellg())
+          m_binlog_file.seekg(m_bytes_read + m_event_log_header.event_length,
+                              ios::beg);
+        // else, missed the event boundary.
+
         m_bytes_read= m_binlog_file.tellg();
 
         if(*event)
@@ -173,10 +181,6 @@ using namespace std;
   Binary_log_event* Binlog_file_driver::parse_event()
   {
     Binary_log_event *parsed_event= 0;
-
-    // This condition should never be true.
-    //if (m_event_log_header.next_position > m_binlog_file_size)
-    //  return parsed_event;
 
     switch (m_event_log_header.type_code) {
       case TABLE_MAP_EVENT:
@@ -201,12 +205,6 @@ using namespace std;
           m_binlog_offset= (unsigned long)rot->binlog_pos;
           parsed_event= rot;
 
-          if(m_binlog_file.tellg() < m_binlog_file_size)
-          // Possibly a relay log file, reset the next_position.
-          {
-            m_size_before_desc_event= m_binlog_file.tellg();
-            m_correction_bytes= 4;
-          }
           return parsed_event;
         }
         break;
@@ -220,14 +218,7 @@ using namespace std;
         }
     }
 
-    // Correction, ideally, this condition must always fail.
-    if (m_event_log_header.next_position != m_binlog_file.tellg())
-      m_binlog_file.seekg(m_event_log_header.next_position +
-                          m_size_before_desc_event - m_correction_bytes, ios::beg);
-    // else, missed the event boundary.
-
     return parsed_event;
   }
 }
 }
-

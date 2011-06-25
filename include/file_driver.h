@@ -23,11 +23,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include <iostream>
 #include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "binlog_api.h"
 #include "binlog_driver.h"
 #include "protocol.h"
 
+#define MAGIC_NUMBER_SIZE 4
 
 namespace mysql { namespace system {
 
@@ -62,20 +66,6 @@ private:
     */
     unsigned long m_bytes_read;
 
-    /*
-      Used while reading relay logs, where events
-      may appear after rotate event. Its usually
-      4 to correct the magic bytes as they are not
-      present in logs after rotate event but the
-      next_position do consider them.
-    */
-    unsigned long m_correction_bytes;
-
-    /*
-      Number of bytes read before the next
-      format_description_event is encountered.
-    */
-    unsigned long m_size_before_desc_event;
     std::string m_binlog_file_name;
     std::ifstream m_binlog_file;
 
