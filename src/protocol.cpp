@@ -468,7 +468,7 @@ Int_var_event *proto_intvar_event(std::istream &is, Log_event_header *header)
 Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header)
 {
   Table_map_event *tmev=new Table_map_event(header);
-  unsigned long columns_len= 0;
+  boost::uint64_t columns_len= 0;
   boost::uint64_t metadata_len= 0;
   union
   {
