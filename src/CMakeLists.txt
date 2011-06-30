@@ -2,8 +2,8 @@
 # the library.
 set(replication_sources
   access_method_factory.cpp field_iterator.cpp row_of_fields.cpp
-  basic_transaction_parser.cpp tcp_driver.cpp file_driver.cpp
-  binary_log.cpp protocol.cpp value.cpp binlog_event.cpp
+  binlog_driver.cpp basic_transaction_parser.cpp tcp_driver.cpp
+  file_driver.cpp binary_log.cpp protocol.cpp value.cpp binlog_event.cpp
   resultset_iterator.cpp basic_transaction_parser.cpp
   basic_content_handler.cpp utilities.cpp)
 

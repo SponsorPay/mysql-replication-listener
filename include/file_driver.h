@@ -53,12 +53,10 @@ public:
     int wait_for_next_event(mysql::Binary_log_event **event);
     int set_position(const std::string &str, unsigned long position);
     int get_position(std::string *str, unsigned long *position);
-    Binary_log_event* parse_event();
 
 private:
 
     unsigned long m_binlog_file_size;
-    unsigned long m_binlog_offset;
 
     /*
       Bytes that has been read so for from the file.
@@ -66,7 +64,6 @@ private:
     */
     unsigned long m_bytes_read;
 
-    std::string m_binlog_file_name;
     std::ifstream m_binlog_file;
 
     Log_event_header m_event_log_header;

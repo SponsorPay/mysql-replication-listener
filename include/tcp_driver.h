@@ -167,9 +167,6 @@ private:
      */
     void shutdown(void);
 
-    Binary_log_event *parse_event(boost::asio::streambuf &sbuff,
-                                  Log_event_header *header);
-
     boost::thread *m_event_loop;
     boost::asio::io_service m_io_service;
     tcp::socket *m_socket;
@@ -208,14 +205,6 @@ private:
     boost::uint8_t m_net_packet[MAX_PACKAGE_SIZE];
     boost::asio::streambuf m_event_stream_buffer;
     char * m_event_packet;
-
-    /**
-     * Used each time the client reconnects to the server to specify an
-     * offset position.
-     */
-    unsigned long m_binlog_offset;
-
-    std::string m_binlog_file_name;
 
     /**
      * This pointer points to an object constructed from event

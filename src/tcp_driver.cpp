@@ -350,8 +350,10 @@ void Binlog_tcp_driver::handle_net_packet(const boost::system::error_code& err, 
      size of the header, the event object is complete.
      Next we need to parse the payload buffer
      */
-    Binary_log_event * event= parse_event(m_event_stream_buffer,
-                                          m_waiting_event);
+    std::istream is(&m_event_stream_buffer);
+    Binary_log_event * event= parse_event(is, m_waiting_event);
+
+    m_event_stream_buffer.consume(m_event_stream_buffer.size());
 
     m_event_queue->push_front(event);
 
@@ -579,54 +581,6 @@ void Binlog_tcp_driver::disconnect()
   m_socket= 0;
 }
 
-Binary_log_event *Binlog_tcp_driver::parse_event(boost::asio::streambuf &sbuff, Log_event_header *header)
-{
-  std::istream is(&sbuff);
-
-  Binary_log_event *parsed_event= 0;
-
-  switch (header->type_code) {
-
-  case TABLE_MAP_EVENT:
-    parsed_event= proto_table_map_event(is, header);
-    break;
-  case QUERY_EVENT:
-    parsed_event= proto_query_event(is, header);
-    break;
-  case INCIDENT_EVENT:
-    parsed_event= proto_incident_event(is, header);
-    break;
-  case WRITE_ROWS_EVENT:
-  case UPDATE_ROWS_EVENT:
-  case DELETE_ROWS_EVENT:
-    parsed_event= proto_rows_event(is, header);
-    break;
-  case ROTATE_EVENT:
-    {
-      Rotate_event *rot= proto_rotate_event(is, header);
-      m_binlog_file_name= rot->binlog_file;
-      m_binlog_offset= (unsigned long)rot->binlog_pos;
-      parsed_event= rot;
-    }
-    break;
-   case INTVAR_EVENT:
-    parsed_event= proto_intvar_event(is, header);
-    break;
-   default:
-   {
-     /*
-       Create a dummy driver
-     */
-     parsed_event= new Binary_log_event(header);
-   }
-  }
-
-  //if (sbuff.size() != 0)
-  //  std::cout << "Issues during parsing of "<<get_event_type_str(ev->get_event_type()) <<": Bytes still remaining in the buffer (should be 0): " << sbuff.size() << std::endl;
-
-  sbuff.consume(sbuff.size());
-  return parsed_event;
-}
 
 void Binlog_tcp_driver::shutdown(void)
 {

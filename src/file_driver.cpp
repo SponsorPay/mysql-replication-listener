@@ -35,7 +35,7 @@ using namespace std;
     // Get the file size.
     if (stat(m_binlog_file_name.c_str(), &stat_buff) == -1)
       return ERR_FAIL;                          // Can't stat binlog file.
-    m_binlog_file_size= (unsigned long) stat_buff.st_size;
+    m_binlog_file_size= stat_buff.st_size;
 
     m_binlog_file.exceptions(ifstream::failbit | ifstream::badbit |
                            ifstream::eofbit);
@@ -49,9 +49,7 @@ using namespace std;
       m_binlog_file.read(magic_buf, MAGIC_NUMBER_SIZE);
 
       if(memcmp(magic, magic_buf, MAGIC_NUMBER_SIZE))
-      {
         return ERR_FAIL;                        // Not a valid binlog file.
-      }
 
       // Reset the get pointer.
       //m_binlog_file.seekg(0, ios::beg );
@@ -94,13 +92,11 @@ using namespace std;
   int Binlog_file_driver::get_position(string *str, unsigned long *position)
   {
     m_binlog_file.exceptions(ifstream::failbit | ifstream::badbit |
-                           ifstream::eofbit);
+                             ifstream::eofbit);
     try
     {
       if(position)
-      {
         *position= m_binlog_file.tellg();
-      }
     } catch(...)
     {
       return ERR_FAIL;
@@ -112,8 +108,8 @@ using namespace std;
 
   int Binlog_file_driver::wait_for_next_event(mysql::Binary_log_event **event)
   {
-    //TODO : Check for the valid position (atleast MAGIC_NUMBER_SIZE).
 
+    assert(m_binlog_file.tellg() >= 4 );
     m_binlog_file.exceptions(ifstream::failbit | ifstream::badbit |
                              ifstream::eofbit);
 
@@ -153,7 +149,8 @@ using namespace std;
                            sizeof(boost::uint16_t));
                            */
 
-        *event= parse_event();
+        *event= parse_event(* static_cast<std::istream*> (&m_binlog_file),
+                            &m_event_log_header);
 
         /*
           Correction. Except for the default case (above), this condition should
@@ -163,7 +160,6 @@ using namespace std;
             m_binlog_file.tellg())
           m_binlog_file.seekg(m_bytes_read + m_event_log_header.event_length,
                               ios::beg);
-        // else, missed the event boundary.
 
         m_bytes_read= m_binlog_file.tellg();
 
@@ -177,48 +173,5 @@ using namespace std;
     return ERR_EOF;
   }
 
-
-  Binary_log_event* Binlog_file_driver::parse_event()
-  {
-    Binary_log_event *parsed_event= 0;
-
-    switch (m_event_log_header.type_code) {
-      case TABLE_MAP_EVENT:
-        parsed_event= proto_table_map_event(m_binlog_file, &m_event_log_header);
-        break;
-      case QUERY_EVENT:
-        parsed_event= proto_query_event(m_binlog_file, &m_event_log_header);
-        break;
-      case INCIDENT_EVENT:
-        parsed_event= proto_incident_event(m_binlog_file, &m_event_log_header);
-        break;
-      case WRITE_ROWS_EVENT:
-      case UPDATE_ROWS_EVENT:
-      case DELETE_ROWS_EVENT:
-        parsed_event= proto_rows_event(m_binlog_file, &m_event_log_header);
-        break;
-      case ROTATE_EVENT:
-        {
-          Rotate_event *rot= proto_rotate_event(m_binlog_file,
-                                                &m_event_log_header);
-          m_binlog_file_name= rot->binlog_file;
-          m_binlog_offset= (unsigned long)rot->binlog_pos;
-          parsed_event= rot;
-
-          return parsed_event;
-        }
-        break;
-      case INTVAR_EVENT:
-        parsed_event= proto_intvar_event(m_binlog_file, &m_event_log_header);
-        break;
-     default:
-        {
-          // Create a dummy driver
-          parsed_event= new Binary_log_event(&m_event_log_header);
-        }
-    }
-
-    return parsed_event;
-  }
 }
 }

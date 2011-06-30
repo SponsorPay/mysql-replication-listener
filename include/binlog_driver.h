@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _BINLOG_DRIVER_H
 #define	_BINLOG_DRIVER_H
 #include "binlog_event.h"
+#include "protocol.h"
 
 namespace mysql { namespace system {
 
@@ -67,6 +68,18 @@ public:
    * @retval >0 Error code
    */
   virtual int get_position(std::string *filename_ptr, unsigned long *position_ptr) = 0;
+
+  Binary_log_event* parse_event(std::istream &sbuff, Log_event_header *header);
+
+protected:
+  /**
+   * Used each time the client reconnects to the server to specify an
+   * offset position.
+   */
+  unsigned long m_binlog_offset;
+
+  std::string m_binlog_file_name;
+
 };
 
 }} // end namespace mysql::system

@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <list>
+#include <cassert>
 #include "binlog_event.h"
 #include "binlog_driver.h"
 #include "tcp_driver.h"

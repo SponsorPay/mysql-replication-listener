@@ -36,7 +36,7 @@ mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Query_ev
     //std::cout << "Transaction has started!" << std::endl;
     m_transaction_state= STARTING;
   }
-  if (qev->query == "COMMIT")
+  else if (qev->query == "COMMIT")
   {
     m_transaction_state= COMMITTING;
   }
