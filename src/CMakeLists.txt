@@ -20,3 +20,6 @@ target_link_libraries(replication_shared crypto ${Boost_LIBRARIES})
 set_target_properties(replication_shared PROPERTIES
   VERSION 0.1 SOVERSION 1
   OUTPUT_NAME "replication")
+
+install(TARGETS replication_shared LIBRARY DESTINATION lib)
+install(TARGETS replication_static ARCHIVE DESTINATION lib)

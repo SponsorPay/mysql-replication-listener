@@ -1,7 +1,9 @@
 project (mysql-replication-listener)
 cmake_minimum_required (VERSION 2.6)
 
-SET(CMAKE_BUILD_TYPE Debug)
+set(MySQL_BINLOG_VERSION_MAJOR "0")
+set(MySQL_BINLOG_VERSION_MINOR "0.1")
+
 set(CMAKE_VERSION_STRING "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}")
 
 # GTest download variables
@@ -120,8 +122,22 @@ if(GTEST_FOUND)
   add_subdirectory(tests)
 endif(GTEST_FOUND)
 
-# -- Build the libraries
 add_subdirectory(src)
 
 # -- Build the examples
 add_subdirectory(examples EXCLUDE_FROM_ALL)
+
+# Configure installation
+install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
+
+# Configure packaging
+include(CPack)
+include(InstallRequiredSystemLibraries)
+
+set(CPACK_PACKAGE_NAME "mysql-replication-listener")
+set(CPACK_PACKAGE_MAJOR_VERSION "${MySQL_BINLOG_VERSION_MAJOR}")
+set(CPACK_PACKAGE_MINOR_VERSION "${MySQL_BINLOG_VERSION_MINOR}")
+
+set(CPACK_PACKAGE_CONTACT "???")
+
+

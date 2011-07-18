@@ -1,5 +1,8 @@
-PROJECT(examples)
-LINK_DIRECTORIES(../lib)
-INCLUDE_DIRECTORIES(../src)
-ADD_EXECUTABLE(example1 example_1.cpp)
-TARGET_LINK_LIBRARIES(example1 replication)
+project(examples)
+
+link_directories(${PROJECT_BUILD_DIR}/lib)
+include_directories(${PROJECT_BUILD_DIR}/include)
+ADD_EXECUTABLE(example_1 example_1.cpp)
+TARGET_LINK_LIBRARIES(example_1 replication)
+
+add_subdirectory(mysql2lucene EXCLUDE_FROM_ALL)
