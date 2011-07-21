@@ -1,8 +1,9 @@
-project (mysql-replication-listener)
+project (mysql-5.6-labs-binary-log-api)
 cmake_minimum_required (VERSION 2.6)
 
 set(MySQL_BINLOG_VERSION_MAJOR "0")
 set(MySQL_BINLOG_VERSION_MINOR "0.1")
+set(MRL_VERSION "${MySQL_BINLOG_VERSION_MAJOR}.${MySQL_BINLOG_VERSION_MINOR}")
 
 set(CMAKE_VERSION_STRING "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}")
 
@@ -130,14 +131,33 @@ add_subdirectory(examples EXCLUDE_FROM_ALL)
 # Configure installation
 install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
 
-# Configure packaging
-include(CPack)
 include(InstallRequiredSystemLibraries)
 
-set(CPACK_PACKAGE_NAME "mysql-replication-listener")
-set(CPACK_PACKAGE_MAJOR_VERSION "${MySQL_BINLOG_VERSION_MAJOR}")
-set(CPACK_PACKAGE_MINOR_VERSION "${MySQL_BINLOG_VERSION_MINOR}")
+# Configure packaging
+SET(CPACK_PACKAGE_NAME "mysql-5.6-labs-binary-log-api")
+SET(CPACK_PACKAGE_VERSION_MAJOR "${MySQL_BINLOG_VERSION_MAJOR}")
+SET(CPACK_PACKAGE_VERSION_MINOR "${MySQL_BINLOG_VERSION_MINOR}")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+    "mysql-5.6-labs-binary-log-api: a MySQL client library for interfacing with the binary log mechanism.")
+ 
+SET(CPACK_GENERATOR "STGZ;TGZ;TZ;DEB;RPM")
+ 
+# Get package name correctly formatted with name, version, and platform
+find_program(DPKG_PROGRAM dpkg DOC "dpkg program of Debian-based systems")
+if(DPKG_PROGRAM)
+  execute_process(
+    COMMAND ${DPKG_PROGRAM} --print-architecture
+    OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  set(CPACK_PACKAGE_FILE_NAME
+    "${CPACK_PACKAGE_NAME}.${MRL_VERSION}.${CMAKE_SYSTEM_NAME}.${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")   
 
-set(CPACK_PACKAGE_CONTACT "???")
+else(DPKG_PROGRAM)
+  set(CPACK_PACKAGE_FILE_NAME
+    "${CPACK_PACKAGE_NAME}.${MRL_VERSION}.${CMAKE_SYSTEM_NAME}")
+endif(DPKG_PROGRAM)
 
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Oracle Corporation")
 
+include(CPack)
