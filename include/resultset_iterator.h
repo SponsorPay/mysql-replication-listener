@@ -22,7 +22,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #define	_RESULTSET_ITERATOR_H
 
 #include <iostream>
-#include <boost/iterator.hpp>
+
+// if error; try #include <boost/iterator.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+
 #include <boost/asio.hpp>
 #include "value.h"
 #include "rowset.h"
