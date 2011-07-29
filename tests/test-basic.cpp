@@ -47,20 +47,6 @@ class TestBinaryLog : public ::testing::Test {
 
 };
 
-TEST_F(TestBinaryLog, CreateTransport_TcpIp) {
-  using mysql::system::create_transport;
-  mysql::system::Binary_log_driver *drv= create_transport("mysql://nosuchuser@128.0.0.1:99999");
-  EXPECT_FALSE(drv == NULL);
-  delete drv;
-}
-
-TEST_F(TestBinaryLog, CreateTransport_Bogus)
-{
-  using mysql::system::create_transport;
-  mysql::system::Binary_log_driver *drv= create_transport("bogus-url");
-  EXPECT_TRUE(drv == NULL);
-  delete drv;
-}
 
 TEST_F(TestBinaryLog, ConnectTo_Bogus)
 {

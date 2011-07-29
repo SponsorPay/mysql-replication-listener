@@ -7,6 +7,11 @@ set(MRL_VERSION "${MySQL_BINLOG_VERSION_MAJOR}.${MySQL_BINLOG_VERSION_MINOR}")
 
 set(CMAKE_VERSION_STRING "${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}")
 
+# Options for building
+option(WITH_SERVER_TESTS
+  "Build the unit test suite with tests requiring a server"
+  OFF)
+
 # GTest download variables
 set(GTEST_VERSION "1.5.0")
 set(GTEST_PACKAGE_NAME "gtest-${GTEST_VERSION}")
@@ -51,51 +56,53 @@ if (NOT GTEST_FOUND)
     endif (NOT ONETIME_GTEST_WARNING)
   else (NOT ENABLE_DOWNLOADS)
     # Download gtest source
-    if (NOT EXISTS ${GTEST_SOURCE_DIR})
-      if (NOT EXISTS ${DOWNLOAD_ROOT}/${GTEST_TARBALL})
-        if (${CMAKE_VERSION_STRING} LESS "2.8")
-          # In versions earlier than 2.8, try wget for downloading
-          find_program(WGET_EXECUTABLE wget)
-          mark_as_advanced(WGET_EXECUTABLE)
-          if (WGET_EXECUTABLE)
-            if (NOT EXISTS ${DOWNLOAD_ROOT})
-              make_directory(${DOWNLOAD_ROOT})
-            endif (NOT EXISTS ${DOWNLOAD_ROOT})
-            execute_process(COMMAND ${WGET_EXECUTABLE} -T 30 ${GTEST_DOWNLOAD_URL}
-              WORKING_DIRECTORY ${DOWNLOAD_ROOT} RESULT_VARIABLE ERR)
-            if (ERR EQUAL 0)
-              SET(DOWNLOAD_SUCCEEDED 1)
-            endif (ERR EQUAL 0)
-          endif (WGET_EXECUTABLE)
-        else (${CMAKE_VERSION_STRING} LESS "2.8")
-          # Use CMake builtin download capabilities
-          file(DOWNLOAD ${GTEST_DOWNLOAD_URL} ${DOWNLOAD_ROOT}/${GTEST_TARBALL}
-            TIMEOUT 30
-            STATUS ERR)
+    if (NOT EXISTS ${GTEST_SOURCE_DIR} AND
+        NOT EXISTS ${DOWNLOAD_ROOT}/${GTEST_TARBALL})
+      if (${CMAKE_VERSION_STRING} LESS "2.8")
+        # In versions earlier than 2.8, try wget for downloading
+        find_program(WGET_EXECUTABLE wget)
+        mark_as_advanced(WGET_EXECUTABLE)
+        if (WGET_EXECUTABLE)
+          if (NOT EXISTS ${DOWNLOAD_ROOT})
+            make_directory(${DOWNLOAD_ROOT})
+          endif (NOT EXISTS ${DOWNLOAD_ROOT})
+          execute_process(COMMAND ${WGET_EXECUTABLE} -T 30 ${GTEST_DOWNLOAD_URL}
+            WORKING_DIRECTORY ${DOWNLOAD_ROOT} RESULT_VARIABLE ERR)
           if (ERR EQUAL 0)
             SET(DOWNLOAD_SUCCEEDED 1)
           endif (ERR EQUAL 0)
-        endif(${CMAKE_VERSION_STRING} LESS "2.8")
+        endif (WGET_EXECUTABLE)
+      else (${CMAKE_VERSION_STRING} LESS "2.8")
+        # Use CMake builtin download capabilities
+        file(DOWNLOAD ${GTEST_DOWNLOAD_URL} ${DOWNLOAD_ROOT}/${GTEST_TARBALL}
+          TIMEOUT 30
+          STATUS ERR)
+        if (ERR EQUAL 0)
+          SET(DOWNLOAD_SUCCEEDED 1)
+        endif (ERR EQUAL 0)
+      endif(${CMAKE_VERSION_STRING} LESS "2.8")
 
-        if (NOT DOWNLOAD_SUCCEEDED)
-          message(STATUS 
-            "To enable google test, please download ${GTEST_DOWNLOAD_URL} "
-            "to the directory ${DOWNLOAD_ROOT}")
-        else (NOT DOWNLOAD_SUCCEEDED)
-          message(STATUS 
-            "Successfully downloaded ${GTEST_DOWNLOAD_URL} to ${DOWNLOAD_ROOT}")
-          # Unpack tarball
-          execute_process (
-            COMMAND ${CMAKE_COMMAND} -E tar xfz  "${DOWNLOAD_ROOT}/${GTEST_TARBALL}"
-            WORKING_DIRECTORY "${DOWNLOAD_ROOT}"
-            OUTPUT_QUIET
-            ERROR_QUIET
-            )
-          set(GTEST_DOWNLOADED 1 CACHE INTERNAL "")
-          set(GTEST_FOUND 1 CACHE INTERNAL "")
-        endif (NOT DOWNLOAD_SUCCEEDED)
-      endif (NOT EXISTS ${DOWNLOAD_ROOT}/${GTEST_TARBALL})
-    endif (NOT EXISTS ${GTEST_SOURCE_DIR})
+      if (NOT DOWNLOAD_SUCCEEDED)
+        message(STATUS 
+          "To enable google test, please download ${GTEST_DOWNLOAD_URL} "
+          "to the directory ${DOWNLOAD_ROOT}")
+      else (NOT DOWNLOAD_SUCCEEDED)
+        message(STATUS 
+          "Successfully downloaded ${GTEST_DOWNLOAD_URL} to ${DOWNLOAD_ROOT}")
+        # Unpack tarball
+        execute_process (
+          COMMAND ${CMAKE_COMMAND} -E tar xfz  "${DOWNLOAD_ROOT}/${GTEST_TARBALL}"
+          WORKING_DIRECTORY "${DOWNLOAD_ROOT}"
+          OUTPUT_QUIET
+          ERROR_QUIET
+          )
+        set(GTEST_DOWNLOADED 1 CACHE INTERNAL "")
+        set(GTEST_FOUND 1 CACHE INTERNAL "")
+      endif (NOT DOWNLOAD_SUCCEEDED)
+    else(NOT EXISTS ${GTEST_SOURCE_DIR} AND NOT EXISTS ${DOWNLOAD_ROOT}/${GTEST_TARBALL})
+      set(GTEST_DOWNLOADED 1 CACHE INTERNAL "")
+      set(GTEST_FOUND 1 CACHE INTERNAL "")
+    endif(NOT EXISTS ${GTEST_SOURCE_DIR} AND NOT EXISTS ${DOWNLOAD_ROOT}/${GTEST_TARBALL})
   endif (NOT ENABLE_DOWNLOADS)
 endif (NOT GTEST_FOUND)
 
