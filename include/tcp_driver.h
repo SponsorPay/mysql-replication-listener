@@ -44,18 +44,11 @@ public:
 
     Binlog_tcp_driver(const std::string& user, const std::string& passwd,
                       const std::string& host, unsigned long port)
+      : Binary_log_driver("", 4), m_host(host), m_user(user), m_passwd(passwd),
+        m_port(port), m_socket(NULL), m_waiting_event(0), m_event_loop(0),
+        m_total_bytes_transferred(0), m_shutdown(false),
+        m_event_queue(new bounded_buffer<Binary_log_event*>(50))
     {
-        m_host= host;
-        m_user= user;
-        m_passwd= passwd;
-        m_port= port;
-        m_socket = NULL;
-        m_binlog_offset = 4;
-        m_waiting_event= 0;
-        m_event_queue= new bounded_buffer<Binary_log_event * >(50);
-        m_event_loop= 0;
-        m_total_bytes_transferred= 0;
-        m_shutdown= false;
     }
 
     ~Binlog_tcp_driver()

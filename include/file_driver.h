@@ -33,20 +33,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #define MAGIC_NUMBER_SIZE 4
 
-namespace mysql { namespace system {
+namespace mysql {
+namespace system {
 
-class Binlog_file_driver : public Binary_log_driver
+class Binlog_file_driver
+  : public Binary_log_driver
 {
 public:
-
-    Binlog_file_driver(const std::string& binlog_file_name)
-    {
-        m_binlog_file_name= binlog_file_name;
-    }
-
-    ~Binlog_file_driver()
-    {
-    }
+  template <class TFilename>
+  Binlog_file_driver(const TFilename& filename = TFilename(),
+                     unsigned int offset = 0)
+    : Binary_log_driver(filename, offset)
+  {
+  }
 
     int connect();
     int disconnect();
@@ -69,7 +68,7 @@ private:
     Log_event_header m_event_log_header;
 };
 
-}
-}
+} // namespace mysql::system
+} // namespace mysql
 
 #endif	/* _FILE_DRIVER_H */

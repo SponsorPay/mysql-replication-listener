@@ -62,8 +62,8 @@ typedef boost::function< bool (Binary_log_event *& )> Event_content_handler;
 
 class Dummy_driver : public system::Binary_log_driver
 {
-  public:
-  Dummy_driver() {}
+public:
+  Dummy_driver() : Binary_log_driver("", 0) {}
   virtual ~Dummy_driver() {}
 
   virtual int connect() { return 1; }

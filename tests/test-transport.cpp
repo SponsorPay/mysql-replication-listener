@@ -45,6 +45,9 @@ void CheckTcpValues(Binlog_tcp_driver *tcp,
 }
 
 
+/**
+  Test a TCP transport URL.
+ */
 void TestTcpTransport(const char *uri,
                       const char *user, const char *passwd,
                       const char *host, unsigned long port)
@@ -57,6 +60,25 @@ void TestTcpTransport(const char *uri,
   delete drv;
 }
 
+/**
+   Test a file transport URL.
+
+   @note We do not support user, password, host, or port in file URLs
+   yet, so we ignore those for the time being.
+ */
+void TestFileTransport(const char *uri_arg, const char *filename_arg)
+{
+  Binary_log_driver *drv= create_transport(uri_arg);
+  EXPECT_TRUE(drv);
+  Binlog_file_driver* file = dynamic_cast<Binlog_file_driver*>(drv);
+  EXPECT_TRUE(file);
+  std::string filename;
+  unsigned long position;
+  file->get_position(&filename, &position);
+  EXPECT_EQ(filename, filename_arg);
+  delete file;
+}
+
 
 TEST_F(TestTransport, CreateTransport_TcpIp) {
   TestTcpTransport("mysql://nosuchuser@128.0.0.1:99999",
@@ -67,23 +89,45 @@ TEST_F(TestTransport, CreateTransport_TcpIp) {
                    "nosuchuser", "magic", "128.0.0.1", 3306);
   TestTcpTransport("mysql://nosuchuser:magic@example.com:3306",
                    "nosuchuser", "magic", "example.com", 3306);
-  EXPECT_FALSE(create_transport("mysql://nosuchuser@128.0.0.1"));
-  EXPECT_FALSE(create_transport("mysql://:magic@128.0.0.1:99999"));
-  EXPECT_FALSE(create_transport("mysql://nosuchuser@:99999"));
+  TestTcpTransport("mysql://somebody@128.0.0.1",
+                   "somebody", "", "128.0.0.1", 3306);
+
+  // Here are tests for bad URIs
+
+  // Missing username
+  EXPECT_FALSE(create_transport("mysql://:xyzzy@128.0.0.1:99999"));
   EXPECT_FALSE(create_transport("mysql://@128.0.0.1:99999"));
+
+  // Missing hostname
+  EXPECT_FALSE(create_transport("mysql://somebody@:99999"));
+  EXPECT_FALSE(create_transport("mysql://somebody"));
+  EXPECT_FALSE(create_transport("mysql://somebody:xyzzy"));
 }
 
 TEST_F(TestTransport, CreateTransport_File) {
-  Binary_log_driver *drv= create_transport("file://master-bin.000003");
-  EXPECT_TRUE(drv);
-  EXPECT_TRUE(dynamic_cast<Binlog_file_driver*>(drv));
-  delete drv;
+  TestFileTransport("file:///master-bin.000003", "/master-bin.000003");
+  TestFileTransport("file:///etc/foo/master-bin.000003", "/etc/foo/master-bin.000003");
+
+  // Here are tests for bad URLs
+  const char *bad_urls[] = {
+    "file:master-bin.000003",
+    "file://somebody/master-bin.000003",
+    "file://somebody@localhost/master-bin.000003",
+    "file://master-bin.000003",
+    "file://somebody:xyzzy@localhost/master-bin.000003",
+  };
+
+  for (int i = 0 ; i < sizeof(bad_urls)/sizeof(*bad_urls) ; ++i)
+    EXPECT_FALSE(create_transport(bad_urls[i]));
 }
 
 TEST_F(TestTransport, CreateTransport_Bogus)
 {
   EXPECT_FALSE(create_transport("bogus-url"));
+  EXPECT_FALSE(create_transport("fil"));
   EXPECT_FALSE(create_transport("fil://almost-correct.txt"));
+  EXPECT_FALSE(create_transport("file"));
+  EXPECT_FALSE(create_transport("mysq:"));
 }
 
 int main(int argc, char **argv) {

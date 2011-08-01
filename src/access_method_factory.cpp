@@ -21,118 +21,109 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "tcp_driver.h"
 #include "file_driver.h"
 
-namespace mysql {
-namespace system {
-Binary_log_driver *create_transport(const char *url)
+using mysql::system::Binary_log_driver;
+using mysql::system::Binlog_tcp_driver;
+using mysql::system::Binlog_file_driver;
+
+/**
+   Parse the body of a MySQL URI.
+
+   The format is <code>user[:password]@host[:port]</code>
+*/
+static Binary_log_driver *parse_mysql_url(const char *body, size_t len)
 {
-  // TODO Parse the URL (using boost::spirit) and call the proper device driver
-  //      factory.
-  // temporary code for test purpose follows below
-  char *url_copy= strdup(url);
-  const char *mysql_access_method= "mysql://";
-  const char *file_access_method= "file://";
+  /* Find the beginning of the user name */
+  if (strncmp(body, "//", 2) != 0)
+    return 0;
 
-  if (strstr(url_copy, mysql_access_method))
-    return (parse_mysql_url(url_copy, mysql_access_method));
-  else if (strstr(url_copy, file_access_method))
-    return (parse_file_url(url_copy, file_access_method));
-  else
-    goto err;                                   // Not supported!
+  /* Find the user name, which is mandatory */
+  const char *user = body + 2;
+  const char *user_end= strpbrk(user, ":@");
+  if (user_end == 0 || user_end == user)
+    return 0;
+  assert(user_end - user >= 1);          // There has to be a username
 
-err:
-  free(url_copy);
-  return 0;
-}
-
-
-Binary_log_driver *parse_mysql_url(char *url, const char
-                                   *mysql_access_method)
-{
-  char user[21];
-  char host[50];
-  char port[6];
-  char pass[21];
-  user[0]= 0;
-  host[0]= 0;
-  port[0]= 0;
-  pass[0]= 0;
-  unsigned user_length= 0;
-  unsigned host_length= 0;
-  unsigned port_length= 0;
-  unsigned pass_length= 0;
-  unsigned long portno= 0;
-  char *front, *scan;
-  front= strstr(url, mysql_access_method);
-  if (front == 0)
-      goto err;
-  front += strlen(mysql_access_method);
-   scan= strpbrk(front,":@");
-  if (scan == 0)
-      goto err;
-  user_length= scan - front;
-  if (user_length > 20)
-      goto err;
-  memcpy(user, front, user_length);
-  user[user_length]= '\0';
-  front = scan;
-  if (*front == ':')
+  /* Find the password, which can be empty */
+  assert(*user_end == ':' || *user_end == '@');
+  const char *const pass = user_end + 1;        // Skip the ':' (or '@')
+  const char *pass_end = pass;
+  if (*user_end == ':')
   {
-    front += 1;
-    scan= strpbrk(front, "@");
-    if (scan == 0)
-      goto err;
-    pass_length= scan - front;
-    memcpy(pass, front, pass_length);
-    pass[pass_length] = '\0';
-    front = scan;
+    pass_end = strchr(pass, '@');
+    if (pass_end == 0)
+      return 0;       // There should be a password, but '@' was not found
   }
+  assert(pass_end - pass >= 0);               // Password can be empty
 
-  if (*front != '@')
-    goto err;
-  front += 1;
-  scan= strpbrk(front,":");
-  if (scan != 0)
-    host_length= scan - front;
-  else
-    host_length= strlen(front);
-  if (host_length > 49)
-    goto err;
-  memcpy(host,front, host_length);
-  host[host_length]= '\0';
-  front= scan;
-  if (front && *front == ':')
-  {
-    front +=1;
-    port_length= strlen(front);
-    if (port_length > 5)
-      goto err;
-    memcpy(port, front, port_length);
-    port[port_length]= '\0';
-    portno= atol(port);
-  }
+  /* Find the host name, which is mandatory */
+  // Skip the '@', if there is one
+  const char *host = *pass_end == '@' ? pass_end + 1 : pass_end;
+  const char *host_end = strchr(host, ':');
+  if (host == host_end)
+    return 0;                                 // No hostname was found
+  /* If no ':' was found there is no port, so the host end at the end
+   * of the string */
+  if (host_end == 0)
+    host_end = body + len;
+  assert(host_end - host >= 1);              // There has to be a host
 
-  free(url);
-  return new system::Binlog_tcp_driver(user, pass, host, portno);
-err:
-  free(url);
-  return 0;
+  /* Find the port number */
+  unsigned long portno = 3306;
+  if (*host_end == ':')
+    portno = strtoul(host_end + 1, NULL, 10);
+
+  /* Host name is now the string [host, port-1) if port != NULL and [host, EOS) otherwise. */
+  /* Port number is stored in portno, either the default, or a parsed one */
+  return new Binlog_tcp_driver(std::string(user, user_end - user),
+                               std::string(pass, pass_end - pass),
+                               std::string(host, host_end - host),
+                               portno);
 }
 
 
-Binary_log_driver *parse_file_url(char *url, const char
-                                  *file_access_method)
+static Binary_log_driver *parse_file_url(const char *body, size_t length)
 {
-  char filename[120];
-  unsigned scheme_length= strlen(file_access_method);
-  unsigned filename_length= strlen(url) - scheme_length;
+  /* Find the beginning of the file name */
+  if (strncmp(body, "//", 2) != 0)
+    return 0;
 
-  memcpy(filename, url + scheme_length, filename_length);
-  filename[filename_length]= '\0';
+  /*
+    Since we don't support host information yet, there should be a
+    slash after the initial "//".
+   */
+  if (body[2] != '/')
+    return 0;
 
-  free(url);
-  return new system::Binlog_file_driver(filename);
+  return new Binlog_file_driver(body + 2);
 }
 
+/**
+   URI parser information.
+ */
+struct Parser {
+  const char* protocol;
+  Binary_log_driver *(*parser)(const char *body, size_t length);
+};
 
-} // end namespace system
-} // end namespace mysql
+/**
+   Array of schema names and matching parsers.
+*/
+static Parser url_parser[] = {
+  { "mysql", parse_mysql_url },
+  { "file",  parse_file_url },
+};
+
+Binary_log_driver *
+mysql::system::create_transport(const char *url)
+{
+  const char *pfx = strchr(url, ':');
+  if (pfx == 0)
+    return NULL;
+  for (int i = 0 ; i < sizeof(url_parser)/sizeof(*url_parser) ; ++i)
+  {
+    const char *proto = url_parser[i].protocol;
+    if (strncmp(proto, url, strlen(proto)) == 0)
+      return (*url_parser[i].parser)(pfx+1, strlen(pfx+1));
+  }
+  return NULL;
+}

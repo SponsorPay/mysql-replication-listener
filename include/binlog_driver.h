@@ -23,15 +23,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "binlog_event.h"
 #include "protocol.h"
 
-namespace mysql { namespace system {
+namespace mysql {
+namespace system {
 
 class Binary_log_driver
 {
 public:
-  /**
-   *
-   */
-  Binary_log_driver() {}
+  template <class FilenameT>
+  Binary_log_driver(const FilenameT& filename = FilenameT(), unsigned int offset = 0)
+    : m_binlog_file_name(filename), m_binlog_offset(offset)
+  {
+  }
+
   ~Binary_log_driver() {}
 
   /**
@@ -77,10 +80,9 @@ protected:
    * offset position.
    */
   unsigned long m_binlog_offset;
-
   std::string m_binlog_file_name;
-
 };
 
-}} // end namespace mysql::system
+} // namespace mysql::system
+} // namespace mysql
 #endif	/* _BINLOG_DRIVER_H */
