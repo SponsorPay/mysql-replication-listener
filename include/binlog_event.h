@@ -195,6 +195,15 @@ public:
 class User_var_event: public Binary_log_event
 {
 public:
+    enum Value_type {
+      STRING_TYPE,
+      REAL_TYPE,
+      INT_TYPE,
+      ROW_TYPE,
+      DECIMAL_TYPE,
+      VALUE_TYPE_COUNT
+    };
+
     User_var_event(Log_event_header *header) : Binary_log_event(header) {}
     std::string name;
     boost::uint8_t is_null;

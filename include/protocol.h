@@ -427,6 +427,7 @@ Incident_event *proto_incident_event(std::istream &is, Log_event_header *header)
 Row_event *proto_rows_event(std::istream &is, Log_event_header *header);
 Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header);
 Int_var_event *proto_intvar_event(std::istream &is, Log_event_header *header);
+User_var_event *proto_uservar_event(std::istream &is, Log_event_header *header);
 
 } // end namespace system
 } // end namespace mysql

@@ -465,6 +465,38 @@ Int_var_event *proto_intvar_event(std::istream &is, Log_event_header *header)
   return event;
 }
 
+User_var_event *proto_uservar_event(std::istream &is, Log_event_header *header)
+{
+  User_var_event *event= new User_var_event(header);
+
+  boost::uint32_t name_len;
+  Protocol_chunk<boost::uint32_t> proto_name_len(name_len);
+
+  is >> proto_name_len;
+
+  Protocol_chunk_string proto_name(event->name, name_len);
+  Protocol_chunk<boost::uint8_t>  proto_null(event->is_null);
+
+  is >> proto_name >> proto_null;
+  if (event->is_null)
+  {
+    event->type = User_var_event::STRING_TYPE;
+    event->charset = 63;                        // Binary charset
+  }
+  else
+  {
+    boost::uint32_t value_len;
+    Protocol_chunk<boost::uint8_t> proto_type(event->type);
+    Protocol_chunk<boost::uint32_t> proto_charset(event->charset);
+    Protocol_chunk<boost::uint32_t> proto_val_len(value_len);
+    is >> proto_type >> proto_charset >> proto_val_len;
+    Protocol_chunk_string proto_value(event->value, value_len);
+    is >> proto_value;
+  }
+
+  return event;
+}
+
 Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header)
 {
   Table_map_event *tmev=new Table_map_event(header);

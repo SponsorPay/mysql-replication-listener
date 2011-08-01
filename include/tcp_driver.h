@@ -81,6 +81,11 @@ public:
 
     int get_position(std::string *str, unsigned long *position);
 
+    const std::string& user() const { return m_user; }
+    const std::string& password() const { return m_passwd; }
+    const std::string& host() const { return m_host; }
+    unsigned long port() const { return m_port; }
+
 protected:
     /**
      * Connects to a mysql server, authenticates and initiates the event
