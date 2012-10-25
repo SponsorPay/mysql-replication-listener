@@ -677,9 +677,11 @@ bool fetch_master_status(tcp::socket *socket, std::string *filename, unsigned lo
 
   Result_set result_set(socket);
   Converter conv;
-
-  BOOST_FOREACH(Row_of_fields row, result_set)
+   Result_set::iterator it;
+  it =result_set.begin();
+  for(; it!=result_set.end() ; it++ )
   {
+    Row_of_fields row= *it;
     *filename= "";
     conv.to(*filename, row[0]);
     long pos;
@@ -711,9 +713,10 @@ bool fetch_binlogs_name_and_size(tcp::socket *socket, std::map<std::string, unsi
   Result_set result_set(socket);
 
   Converter conv;
-
-  BOOST_FOREACH(Row_of_fields row, result_set)
+  Result_set::iterator it= result_set.begin();
+  for(; it!=result_set.end() ; it++)
   {
+    Row_of_fields row= *it;
     std::string filename;
     long position;
     conv.to(filename, row[0]);

@@ -64,8 +64,9 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
 		}
     m_binlog_position= event->header()->next_position;
     mysql::Content_handler *handler;
+    std::list<mysql::Content_handler *>::iterator it= m_content_handlers.begin();
 
-    for(std::list<mysql::Content_handler *>::iterator it= m_content_handlers.begin(); it != m_content_handlers.end(); it++)
+    for(; it != m_content_handlers.end(); it++)
     {
       if (event)
       {
