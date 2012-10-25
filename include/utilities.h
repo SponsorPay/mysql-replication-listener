@@ -46,7 +46,7 @@ typedef enum
 } enum_var_types;
 
 int server_var_decoder (std::map<std::string, mysql::Value> *my_var_map,
-                        std::vector<boost::uint8_t > variables);
+                        std::vector<uint8_t > variables);
 
 }
 

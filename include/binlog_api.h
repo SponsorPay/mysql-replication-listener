@@ -101,8 +101,8 @@ public:
   /**
    * Blocking attempt to get the next binlog event from the stream
    */
-  int wait_for_next_event(Binary_log_event **event);
 
+  int wait_for_next_event(Binary_log_event **event);
 
   /**
    * Inserts/removes content handlers in and out of the chain

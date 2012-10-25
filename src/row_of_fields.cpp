@@ -43,6 +43,7 @@ Row_of_fields& Row_of_fields::operator=(Row_of_fields &right)
   if (size() != right.size())
     throw std::length_error("Row dimension doesn't match.");
   int i= 0;
+
   BOOST_FOREACH(Value value, right)
   {
     this->assign(++i, value);

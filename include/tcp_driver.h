@@ -50,7 +50,7 @@ public:
         m_event_queue(new bounded_buffer<Binary_log_event*>(50))
     {
     }
-
+     Binlog_tcp_driver();
     ~Binlog_tcp_driver()
     {
         delete m_event_queue;
@@ -190,17 +190,17 @@ private:
      * We use this sturcture every time we initiate an async
      * read.
      */
-    boost::uint8_t m_event_header[19];
+    uint8_t m_event_header[19];
 
     /**
      *
      */
-    boost::uint8_t m_net_header[4];
+    uint8_t m_net_header[4];
 
     /**
      *
      */
-    boost::uint8_t m_net_packet[MAX_PACKAGE_SIZE];
+    uint8_t m_net_packet[MAX_PACKAGE_SIZE];
     boost::asio::streambuf m_event_stream_buffer;
     char * m_event_packet;
 
@@ -222,7 +222,7 @@ private:
     std::string m_passwd;
     long m_port;
 
-    boost::uint64_t m_total_bytes_transferred;
+    uint64_t m_total_bytes_transferred;
 
 
 };
@@ -248,7 +248,8 @@ tcp::socket *
 sync_connect_and_authenticate(boost::asio::io_service &io_service, const std::string &user,
                               const std::string &passwd, const std::string &host, long port);
 
+} 
 
-} }
+}
 
 #endif	/* _TCP_DRIVER_H */

@@ -22,8 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "basic_transaction_parser.h"
 #include "protocol.h"
 #include "value.h"
-#include <boost/any.hpp>
-#include <boost/lexical_cast.hpp>
 #include <iostream>
 #include "field_iterator.h"
 
@@ -33,7 +31,6 @@ mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Query_ev
 {
   if (qev->query == "BEGIN")
   {
-    //std::cout << "Transaction has started!" << std::endl;
     m_transaction_state= STARTING;
   }
   else if (qev->query == "COMMIT")
@@ -92,7 +89,6 @@ mysql::Binary_log_event *Basic_transaction_parser::process_transaction_state(mys
       mysql::Transaction_log_event *trans=  mysql::create_transaction_log_event();
       trans->header()->timestamp= m_start_time;
 
-      //std::cout << "There are " << m_event_stack.size() << " events in the transaction: ";
       while( m_event_stack.size() > 0)
       {
         mysql::Binary_log_event *event= m_event_stack.front();

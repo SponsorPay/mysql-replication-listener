@@ -24,8 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <iostream>
 
 // if error; try #include <boost/iterator.hpp>
-#include <boost/iterator/iterator_facade.hpp>
 
+#include <boost/iterator/iterator_facade.hpp>
 #include <boost/asio.hpp>
 #include "value.h"
 #include "rowset.h"
@@ -44,20 +44,20 @@ struct Field_packet
     std::string org_table;// Length Coded String
     std::string name;     // Length Coded String
     std::string org_name; // Length Coded String
-    boost::uint8_t marker;       // filler
-    boost::uint16_t charsetnr;   // charsetnr
-    boost::uint32_t length;      // length
-    boost::uint8_t type;         // field type
-    boost::uint16_t flags;
-    boost::uint8_t decimals;
-    boost::uint16_t filler;      // filler, always 0x00
-    //boost::uint64_t default_value;  // Length coded binary; only in table descr.
+    uint8_t marker;       // filler
+    uint16_t charsetnr;   // charsetnr
+    uint32_t length;      // length
+    uint8_t type;         // field type
+    uint16_t flags;
+    uint8_t decimals;
+    uint16_t filler;      // filler, always 0x00
+    //uint64_t default_value;  // Length coded binary; only in table descr.
 };
 
 typedef std::list<std::string > String_storage;
 
 namespace system {
-    void digest_result_header(std::istream &is, boost::uint64_t &field_count, boost::uint64_t extra);
+    void digest_result_header(std::istream &is, uint64_t &field_count, uint64_t extra);
     void digest_field_packet(std::istream &is, Field_packet &field_packet);
     void digest_marker(std::istream &is);
     void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, String_storage &storage, bool &is_eof);
@@ -100,11 +100,11 @@ private:
     /**
      * The number of fields in the field packets block
      */
-    boost::uint64_t m_field_count;
+    uint64_t m_field_count;
     /**
      * Used for SHOW COLUMNS to return the number of rows in the table
      */
-    boost::uint64_t m_extra;
+    uint64_t m_extra;
 };
 
 template <class Iterator_value_type >
@@ -176,7 +176,6 @@ private:
     int m_current_row;
 
 };
-
 
 } // end namespace mysql
 

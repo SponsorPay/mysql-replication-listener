@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _BINLOG_EVENT_H
 #define	_BINLOG_EVENT_H
 
-#include <boost/cstdint.hpp>
+#include <stdint.h>
 #include <list>
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
@@ -110,13 +110,13 @@ const char* get_event_type_str(Log_event_type type);
 class Log_event_header
 {
 public:
-  boost::uint8_t  marker; // always 0 or 0xFF
-  boost::uint32_t timestamp;
-  boost::uint8_t  type_code;
-  boost::uint32_t server_id;
-  boost::uint32_t event_length;
-  boost::uint32_t next_position;
-  boost::uint16_t flags;
+  uint8_t  marker; // always 0 or 0xFF
+  uint32_t timestamp;
+  uint8_t  type_code;
+  uint32_t server_id;
+  uint32_t event_length;
+  uint32_t next_position;
+  uint16_t flags;
 };
 
 
@@ -165,10 +165,10 @@ class Query_event: public Binary_log_event
 {
 public:
     Query_event(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint32_t thread_id;
-    boost::uint32_t exec_time;
-    boost::uint16_t error_code;
-    std::vector<boost::uint8_t > variables;
+    uint32_t thread_id;
+    uint32_t exec_time;
+    uint16_t error_code;
+    std::vector<uint8_t > variables;
 
     std::string db_name;
     std::string query;
@@ -179,17 +179,17 @@ class Rotate_event: public Binary_log_event
 public:
     Rotate_event(Log_event_header *header) : Binary_log_event(header) {}
     std::string binlog_file;
-    boost::uint64_t binlog_pos;
+    uint64_t binlog_pos;
 };
 
 class Format_event: public Binary_log_event
 {
 public:
     Format_event(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint16_t binlog_version;
+    uint16_t binlog_version;
     std::string master_version;
-    boost::uint32_t created_ts;
-    boost::uint8_t log_header_len;
+    uint32_t created_ts;
+    uint8_t log_header_len;
 };
 
 class User_var_event: public Binary_log_event
@@ -206,9 +206,9 @@ public:
 
     User_var_event(Log_event_header *header) : Binary_log_event(header) {}
     std::string name;
-    boost::uint8_t is_null;
-    boost::uint8_t type;
-    boost::uint32_t charset; /* charset of the string */
+    uint8_t is_null;
+    uint8_t type;
+    uint32_t charset; /* charset of the string */
     std::string value; /* encoded in binary speak, depends on .type */
 };
 
@@ -216,8 +216,8 @@ class Table_map_event: public Binary_log_event
 {
 public:
     Table_map_event(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint64_t table_id;
-    boost::uint16_t flags;
+    uint64_t table_id;
+    uint16_t flags;
     std::string db_name;
     std::string table_name;
     std::vector<uint8_t> columns;
@@ -229,11 +229,11 @@ class Row_event: public Binary_log_event
 {
 public:
     Row_event(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint64_t table_id;
-    boost::uint16_t flags;
-    boost::uint64_t columns_len;
-    boost::uint32_t null_bits_len;
-    std::vector<boost::uint8_t> columns_before_image;
+    uint64_t table_id;
+    uint16_t flags;
+    uint64_t columns_len;
+    uint32_t null_bits_len;
+    std::vector<uint8_t> columns_before_image;
     std::vector<uint8_t> used_columns;
     std::vector<uint8_t> row;
 };
@@ -242,8 +242,8 @@ class Int_var_event: public Binary_log_event
 {
 public:
     Int_var_event(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint8_t  type;
-    boost::uint64_t value;
+    uint8_t  type;
+    uint64_t value;
 };
 
 class Incident_event: public Binary_log_event
@@ -251,7 +251,7 @@ class Incident_event: public Binary_log_event
 public:
     Incident_event() : Binary_log_event() {}
     Incident_event(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint8_t type;
+    uint8_t type;
     std::string message;
 };
 
@@ -259,7 +259,7 @@ class Xid: public Binary_log_event
 {
 public:
     Xid(Log_event_header *header) : Binary_log_event(header) {}
-    boost::uint64_t xid_id;
+    uint64_t xid_id;
 };
 
 Binary_log_event *create_incident_event(unsigned int type, const char *message, unsigned long pos= 0);

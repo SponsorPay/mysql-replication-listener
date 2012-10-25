@@ -101,10 +101,10 @@ void Result_set::digest_row_set()
 
 namespace system {
 
-void digest_result_header(std::istream &is, boost::uint64_t &field_count, boost::uint64_t extra)
+void digest_result_header(std::istream &is, uint64_t &field_count, uint64_t extra)
 {
-  Protocol_chunk<boost::uint64_t> proto_field_count(field_count);
-  //Protocol_chunk<boost::uint64_t> proto_extra(extra);
+  Protocol_chunk<uint64_t> proto_field_count(field_count);
+  //Protocol_chunk<uint64_t> proto_extra(extra);
 
   proto_field_count.set_length_encoded_binary(true);
   //proto_extra.set_length_encoded_binary(true);
@@ -121,14 +121,14 @@ void digest_field_packet(std::istream &is, Field_packet &field_packet)
   Protocol_chunk_string_len proto_org_table(field_packet.org_table);
   Protocol_chunk_string_len proto_name(field_packet.name);
   Protocol_chunk_string_len proto_org_name(field_packet.org_name);
-  Protocol_chunk<boost::uint8_t>   proto_marker(field_packet.marker);
-  Protocol_chunk<boost::uint16_t>  proto_charsetnr(field_packet.charsetnr);
-  Protocol_chunk<boost::uint32_t>  proto_length(field_packet.length);
-  Protocol_chunk<boost::uint8_t>   proto_type(field_packet.type);
-  Protocol_chunk<boost::uint16_t>  proto_flags(field_packet.flags);
-  Protocol_chunk<boost::uint8_t>   proto_decimals(field_packet.decimals);
-  Protocol_chunk<boost::uint16_t>  proto_filler(field_packet.filler);
-  //Protocol_chunk<boost::uint64_t>  proto_default_value(field_packet.default_value);
+  Protocol_chunk<uint8_t>   proto_marker(field_packet.marker);
+  Protocol_chunk<uint16_t>  proto_charsetnr(field_packet.charsetnr);
+  Protocol_chunk<uint32_t>  proto_length(field_packet.length);
+  Protocol_chunk<uint8_t>   proto_type(field_packet.type);
+  Protocol_chunk<uint16_t>  proto_flags(field_packet.flags);
+  Protocol_chunk<uint8_t>   proto_decimals(field_packet.decimals);
+  Protocol_chunk<uint16_t>  proto_filler(field_packet.filler);
+  //Protocol_chunk<uint64_t>  proto_default_value(field_packet.default_value);
 
   is >> proto_catalog
      >> proto_db
@@ -153,8 +153,8 @@ void digest_marker(std::istream &is)
 
 void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, String_storage &storage, bool &is_eof)
 {
-  boost::uint8_t size;
-  Protocol_chunk<boost::uint8_t> proto_size(size);
+  uint8_t size;
+  Protocol_chunk<uint8_t> proto_size(size);
   is >> proto_size;
   if (size == 0xfe)
   {

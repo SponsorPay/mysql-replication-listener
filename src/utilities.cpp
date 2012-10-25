@@ -25,16 +25,16 @@ using namespace mysql;
 namespace mysql {
 
 int server_var_decoder (std::map<std::string, mysql::Value> *my_var_map,
-                        std::vector<boost::uint8_t> variables)
+                        std::vector<uint8_t> variables)
 {
-  boost::uint8_t length, i;
+  uint8_t length, i;
   std::string name;
   mysql::system::enum_field_types field_type;
   /* To handle special case of 'terminating null byte'. */
   bool is_null_byte= 0;
 
 
-  std::vector<boost::uint8_t>::iterator it= variables.begin();
+  std::vector<uint8_t>::iterator it= variables.begin();
 
   while (it != variables.end())
   {

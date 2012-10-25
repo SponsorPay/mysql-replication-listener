@@ -45,7 +45,6 @@ public:
    */
   virtual int connect()= 0;
 
-
   /**
    * Blocking attempt to get the next binlog event from the stream
    * @param event [out] Pointer to a binary log event to be fetched.

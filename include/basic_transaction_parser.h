@@ -27,15 +27,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 
 #include <list>
-#include <boost/cstdint.hpp>
+#include <stdint.h>
 #include "binlog_event.h"
 #include "basic_content_handler.h"
-
 #include <iostream>
 
 namespace mysql {
-typedef std::pair<boost::uint64_t, Binary_log_event *> Event_index_element;
-typedef std::map<boost::uint64_t, Binary_log_event *> Int_to_Event_map;
+typedef std::pair<uint64_t, Binary_log_event *> Event_index_element;
+typedef std::map<uint64_t, Binary_log_event *> Int_to_Event_map;
 class Transaction_log_event : public Binary_log_event
 {
 public:
@@ -69,7 +68,7 @@ public:
   mysql::Binary_log_event *process_event(mysql::Binary_log_event *ev) {return ev; }
 
 private:
-  boost::uint32_t m_start_time;
+  uint32_t m_start_time;
   enum Transaction_states { STARTING, IN_PROGRESS, COMMITTING, NOT_IN_PROGRESS } ;
   enum Transaction_states m_transaction_state;
   std::list <mysql::Binary_log_event *> m_event_stack;

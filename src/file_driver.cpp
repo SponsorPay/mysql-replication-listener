@@ -21,11 +21,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "file_driver.h"
 
 namespace mysql { namespace system {
-
 using namespace std;
 
-
-  int Binlog_file_driver::connect()
+ int Binlog_file_driver::connect()
   {
     struct stat stat_buff;
 
@@ -93,7 +91,9 @@ using namespace std;
   {
     m_binlog_file.exceptions(ifstream::failbit | ifstream::badbit |
                              ifstream::eofbit);
-    try
+		*str=m_binlog_file_name;
+
+   try
     {
       if(position)
         *position= m_binlog_file.tellg();
@@ -117,15 +117,15 @@ using namespace std;
     {
       if(m_bytes_read < m_binlog_file_size && m_binlog_file.good())
       {
-        //Protocol_chunk<boost::uint8_t> prot_marker(m_event_log_header.marker);
-        Protocol_chunk<boost::uint32_t> prot_timestamp(m_event_log_header.timestamp);
-        Protocol_chunk<boost::uint8_t> prot_type_code(m_event_log_header.type_code);
-        Protocol_chunk<boost::uint32_t> prot_server_id(m_event_log_header.server_id);
-        Protocol_chunk<boost::uint32_t>
+        //Protocol_chunk<uint8_t> prot_marker(m_event_log_header.marker);
+        Protocol_chunk<uint32_t> prot_timestamp(m_event_log_header.timestamp);
+        Protocol_chunk<uint8_t> prot_type_code(m_event_log_header.type_code);
+        Protocol_chunk<uint32_t> prot_server_id(m_event_log_header.server_id);
+        Protocol_chunk<uint32_t>
           prot_event_length(m_event_log_header.event_length);
-        Protocol_chunk<boost::uint32_t>
+        Protocol_chunk<uint32_t>
           prot_next_position(m_event_log_header.next_position);
-        Protocol_chunk<boost::uint16_t> prot_flags(m_event_log_header.flags);
+        Protocol_chunk<uint16_t> prot_flags(m_event_log_header.flags);
 
         m_binlog_file >> prot_timestamp
                       >> prot_type_code
@@ -136,17 +136,17 @@ using namespace std;
 
         /*
         m_binlog_file.read(reinterpret_cast<char*>(&m_event_log_header.timestamp),
-                           sizeof(boost::uint32_t));
+                           sizeof(uint32_t));
         m_binlog_file.read(reinterpret_cast<char*>(&m_event_log_header.type_code),
-                           sizeof(boost::uint8_t));
+                           sizeof(uint8_t));
         m_binlog_file.read(reinterpret_cast<char*>(&m_event_log_header.server_id),
-                           sizeof(boost::uint32_t));
+                           sizeof(uint32_t));
         m_binlog_file.read(reinterpret_cast<char*>(&m_event_log_header.event_length),
-                           sizeof(boost::uint32_t));
+                           sizeof(uint32_t));
         m_binlog_file.read(reinterpret_cast<char*>(&m_event_log_header.next_position),
-                           sizeof(boost::uint32_t));
+                           sizeof(uint32_t));
         m_binlog_file.read(reinterpret_cast<char*>(&m_event_log_header.flags),
-                           sizeof(boost::uint16_t));
+                           sizeof(uint16_t));
                            */
 
         *event= parse_event(* static_cast<std::istream*> (&m_binlog_file),

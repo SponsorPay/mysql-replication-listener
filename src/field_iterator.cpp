@@ -34,7 +34,7 @@ bool is_null(unsigned char *bitmap, int index)
 }
 
 
-boost::uint32_t extract_metadata(const Table_map_event *map, int col_no)
+uint32_t extract_metadata(const Table_map_event *map, int col_no)
 {
   int offset= 0;
 
@@ -44,7 +44,7 @@ boost::uint32_t extract_metadata(const Table_map_event *map, int col_no)
     offset += lookup_metadata_field_size((enum mysql::system::enum_field_types)type);
   }
 
-  boost::uint32_t metadata= 0;
+  uint32_t metadata= 0;
   unsigned int type= (unsigned int)map->columns[col_no]&0xFF;
   switch(lookup_metadata_field_size((enum mysql::system::enum_field_types)type))
   {
@@ -54,9 +54,9 @@ boost::uint32_t extract_metadata(const Table_map_event *map, int col_no)
   case 2:
   {
     unsigned int tmp= ((unsigned int)map->metadata[offset])&0xFF;
-    metadata=  static_cast<boost::uint32_t >(tmp);
+    metadata=  static_cast<uint32_t >(tmp);
     tmp= (((unsigned int)map->metadata[offset+1])&0xFF) << 8;
-    metadata+= static_cast<boost::uint32_t >(tmp);
+    metadata+= static_cast<uint32_t >(tmp);
   }
   break;
   }
