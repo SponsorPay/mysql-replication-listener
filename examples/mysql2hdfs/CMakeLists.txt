@@ -1,0 +1,16 @@
+project (mysql2hdfs)
+
+find_package(HDFS)
+
+find_library(HDFS_LIBRARY libhdfs)
+find_path(Replication_INCLUDE_DIR binlog_api.h)
+include_directories(${HDFS_INCLUDE_DIR})
+include_directories(${HDFS_LIB_PATHS})
+set(LIBS ${LIBS} ${HDFS_LIBS})
+
+foreach(prog mysql2hdfs table_index hdfs_schema table_insert)
+  ADD_EXECUTABLE(${prog} ${prog}.cpp)
+  TARGET_LINK_LIBRARIES(${prog} ${LIBS})
+  TARGET_LINK_LIBRARIES(${prog} replication_static)
+endforeach()
+

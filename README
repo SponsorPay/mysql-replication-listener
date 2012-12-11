@@ -23,6 +23,7 @@ Directory structure
     .
     |-- doc                 Documentation
     |-- examples            Examples
+    |   |-- mysql2hdfs      Example application replicating rows to HDFS
     |   `-- mysql2lucene    Example application replicating rows to SOLR
     |-- include             Include files
     |-- src                 Source files for library
@@ -47,6 +48,32 @@ build directory and execute CMake there.
       cd build
       cmake <source directory>
       make -j4
+
+
+Building the mysql2hdfs Example
+-------------------------------
+
+To build the mysql2hdfs example, it is necessary to ensure that the
+'FindHDFS.cmake' is in the CMAKE_MODULE_PATH, for example:
+
+    cmake . -DCMAKE_MODULE_PATH:String=/usr/share/cmake-2.8/Modules
+
+In addition, CMake doesn't come with a 'find' module for libhdfs. But
+you can find one on the internet(in a file FindHDFS.cmake); and put
+the file in CMake module path.
+
+It is also required to set the Environment variable $HADOOP_HOME, which
+points to the Hadoop installation directory.
+
+For hadoop version 1.0.4, the path for libhdfs library and include files
+requires to be modified in the file FindHDFS.cmake, which is:
+
+    set(HDFS_LIB_PATHS $ENV{HADOOP_HOME}/c++/Linux-i386-32/lib)
+    find_path(HDFS_INCLUDE_DIR hdfs.h PATHS
+              $ENV{HADOOP_HOME}/src/c++/libhdfs
+              # make sure we don't accidentally pick up a different version
+              NO_DEFAULT_PATH
+             )
 
 
 Building the mysql2lucene Example

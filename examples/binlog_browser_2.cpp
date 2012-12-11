@@ -241,14 +241,14 @@ static void parse_args(int *argc, char **argv)
   {
     //getopt_long stores the option index here
     int option_index= 0;
-    int c= getopt_long(*argc, argv, "a:b:d:", long_options, &option_index);
+    int c= getopt_long(*argc, argv, "a:b:d:o:e:", long_options, &option_index);
     //Detect the end of options
     if (c == -1)
       break;
     switch (c)
     {
     case 'a':
-      if(!check_conversion(optarg, &opt_start_pos))
+      if (!check_conversion(optarg, &opt_start_pos))
       {
         cerr << optarg << "is not an integer" << endl;
         usage(long_options);
@@ -263,7 +263,7 @@ static void parse_args(int *argc, char **argv)
       }
       break;
     case 'b':
-      if(!check_conversion(optarg, &opt_stop_pos))
+      if (!check_conversion(optarg, &opt_stop_pos))
       {
         cerr << optarg << "is not an integer" << endl;
         usage(long_options);
@@ -292,7 +292,7 @@ static void parse_args(int *argc, char **argv)
       }
       break;
     case 'e':
-      if(!check_opt_event_type(optarg))
+      if (!check_opt_event_type(optarg))
       {
         usage(long_options);
         exit(2);

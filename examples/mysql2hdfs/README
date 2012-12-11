@@ -1,0 +1,45 @@
+This example application replicates rows inserted to a table
+to HDFS.
+
+Dependencies
+------------
+
+You need to have Hadoop installed. Since Hadoop is written in Java
+you will need to have Java installed on your machine, version 6 or
+later.
+
+You can download a stable release of Hadoop from the Apache Hadoop
+releases page (http://hadoop.apache.org/common/releases.html).
+
+The example uses an API provided by libhdfs library to manipulate the DFS.
+The library is part of the hadoop distribution and comes pre-compiled
+in ${HADOOP_HOME}/libhdfs/libhdfs.so .
+
+Make sure you set the CLASSPATH to all the hadoop jars needed to run
+Hadoop itself.
+
+        export CLASSPATH=$(hadoop classpath)
+
+
+Other Information
+------------------
+
+As an example, if the MySQL server is running on port 13000, and hdfs on port
+9000 on localhost, to connect to the MySQL server and HDFS file system,
+run the executable main as:
+
+       ./mysql2hdfs [options] mysql://root@127.0.0.1:13000 hdfs://localhost:9000
+
+For each row inserted in the  table dbname.tbname in MySQL, a
+corresponding entry will be made in hdfs, mapped to
+
+        hdfs://localhost:9000/tmp/dbname/datafile1.txt
+
+You can modify it in case you wish to store the  data at a
+different location.
+
+Data will be inserted in the file in a tabular format, with the 'timestamp'
+of the binary log event as the first field for each row.
+
+Since the inserts are performed on the occurence of WRITE_ROW_EVENT only,
+make sure to set the session binlog_format='ROW' on MySQL server.
