@@ -75,6 +75,9 @@ requires to be modified in the file FindHDFS.cmake, which is:
               NO_DEFAULT_PATH
              )
 
+The environment variable $HADOOP_HOME must be set, pointing to the hadoop
+installation directory on your machine.
+
 
 Building the mysql2lucene Example
 ---------------------------------

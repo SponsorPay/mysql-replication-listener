@@ -24,6 +24,7 @@
 #include <iomanip>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 #define MAX_BINLOG_SIZE 1073741824
 #define MAX_BINLOG_POSITION MAX_BINLOG_SIZE/4
 
@@ -117,6 +118,17 @@ void print_accepatble_event_type()
   }
 }
 
+/**
+  The function takes in takes in event name given as command line option, and
+  compares it to the acceptable event types.
+
+  @param optarg     The string given as command line option to --event_type
+
+  @return status
+    @retval true    Event type matches any of the acceptable event types
+    @retval false   Event type specified on the command line does not match any
+                    of the acceptable event types.
+*/
 bool check_opt_event_type(string optarg)
 {
   return binary_search(event_types, event_types+number_of_events, optarg);
@@ -322,7 +334,11 @@ static void parse_args(int *argc, char **argv)
 static void usage(const struct option *options)
 {
   const struct option *optp;
-  cerr << "Usage: ./binlog_browser [options]  log-files\n";
+  cerr << "Usage: ./binlog_browser [options]  (mysql_uri|log_files)\n\n"
+       << "Example:\n\n"
+       << "./binlog_browser_2 [options] mysql://root@127.0.0.1:13000\n"
+       << "./binlog_browser_2 [options] ../data/binary_log.000001\n\n";
+
   for (optp= options; optp->name; optp++)
   {
     cout << "-" << (char)optp->val
@@ -339,12 +355,22 @@ int main(int argc, char** argv)
 {
   string uri;
   int number_of_args= argc;
+  char cwd[PATH_MAX];
 
+  getcwd(cwd, PATH_MAX);
   parse_args(&argc, argv);
 
   while (argc != number_of_args)
   {
     uri= argv[argc++];
+    if( strncmp("mysql://", uri.c_str(), 8) != 0)
+    {
+      uri.insert(0, "file://");
+      uri.insert(7, cwd);
+      uri.insert((7 + strlen(cwd)), "/");
+      cout << uri << endl;
+    }
+
     Binary_log binlog(create_transport(uri.c_str()));
     if (binlog.connect() != ERR_OK)
     {

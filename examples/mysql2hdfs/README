@@ -33,7 +33,7 @@ run the executable main as:
 For each row inserted in the  table dbname.tbname in MySQL, a
 corresponding entry will be made in hdfs, mapped to
 
-        hdfs://localhost:9000/tmp/dbname/datafile1.txt
+        hdfs://localhost:9000/user/hive/warehouse/dbname.db/tbname/datafile1.txt
 
 You can modify it in case you wish to store the  data at a
 different location.
@@ -42,4 +42,4 @@ Data will be inserted in the file in a tabular format, with the 'timestamp'
 of the binary log event as the first field for each row.
 
 Since the inserts are performed on the occurence of WRITE_ROW_EVENT only,
-make sure to set the session binlog_format='ROW' on MySQL server.
+make sure to set the session variable binlog_format='ROW' on MySQL client.

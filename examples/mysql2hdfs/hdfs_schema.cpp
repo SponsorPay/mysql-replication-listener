@@ -67,12 +67,12 @@ HDFSSchema::HDFSSchema(const std::string& host, int port)
   m_fs= hdfsConnect(host.c_str(), port);
   m_host= host;
   m_port= port;
-  cout << "Connected to HDFS file system" << endl;
   if (m_fs == NULL)
   {
     std::runtime_error error("Couldnot connect to HDFS file system");
     throw error;
   }
+  cout << "Connected to HDFS file system" << endl;
 }
 
 /**
@@ -101,7 +101,7 @@ HDFSSchema::~HDFSSchema()
 int HDFSSchema::HDFS_data_insert(string DPath, const char* data)
 {
   std::stringstream stream_dir_path;
-  stream_dir_path << "hdfs://" << m_host << ":" << m_port << "/tmp/";
+  stream_dir_path << "hdfs://" << m_host << ":" << m_port << "/user/hive/warehouse/";
   stream_dir_path << DPath;
 
   if (hdfsSetWorkingDirectory(m_fs, (stream_dir_path.str()).c_str()))

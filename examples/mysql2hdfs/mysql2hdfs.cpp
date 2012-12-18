@@ -105,7 +105,7 @@ public:
     /* Create a fuly qualified table name */
     std::ostringstream os;
 
-    os << ti_it->second->db_name << '/' << ti_it->second->table_name;
+    os << ti_it->second->db_name << ".db/" << ti_it->second->table_name;
 
     mysql::Row_event_set::iterator it= rows.begin();
     do
@@ -142,7 +142,7 @@ void usage(const struct option *options)
   const struct option *optp;
   cerr <<  "Usage:\n\nmain [optios] MySQL_URL HDFS_URL \n\n"
        <<  "Example:\n\n"
-       <<  "./main [options] mysql://root@127.0.0.1:3306 "
+       <<  "./mysql2hdfs [options] mysql://root@127.0.0.1:3306 "
        <<  "hdfs://localhost:9000\n\n";
 
   for (optp= options; optp->name; optp++)
