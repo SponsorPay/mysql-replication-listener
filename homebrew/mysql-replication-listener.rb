@@ -1,7 +1,7 @@
 require 'formula'
 
 class MysqlReplicationListener < Formula
-  url 'https://bitbucket.org/winebarrel/mysql-replication-listener.git'
+  url 'https://bitbucket.org/winebarrel/mysql-replication-listener.git', :tag => '0.0.47-10'
   homepage 'https://bitbucket.org/winebarrel/mysql-replication-listener'
 
   depends_on 'cmake'
