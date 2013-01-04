@@ -396,11 +396,24 @@ void Converter::to(std::string &str, const Value &val) const
     }
       break;
     case MYSQL_TYPE_TIME:
-      str= "not implemented";
+    {
+      const char* val_storage = val.storage();
+      unsigned int time_val = (val_storage[0] & 0xff) + ((val_storage[1] & 0xff) << 8) + ((val_storage[2] & 0xff) << 16);
+      unsigned int time_sec = time_val % 100;
+      time_val -= time_sec;
+      unsigned int time_min = (time_val % 10000) / 100;
+      unsigned int time_hour = (time_val - time_min) / 10000;
+      str = boost::str(boost::format("%02d:%02d:%02d") % time_hour % time_min % time_sec);
       break;
+    }
     case MYSQL_TYPE_YEAR:
-      str= "not implemented";
+    {
+      const char* val_storage = val.storage();
+      unsigned int year_val = (val_storage[0] & 0xff);
+      year_val = year_val > 0 ? (year_val + 1900) : 0;
+      str = boost::str(boost::format("%04d") % year_val);
       break;
+    }
     case MYSQL_TYPE_NEWDATE:
       str= "not implemented";
       break;
