@@ -23,9 +23,27 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <iomanip>
 #include <boost/format.hpp>
 
+#define DIG_PER_DEC1 9
+
 using namespace mysql;
 using namespace mysql::system;
 namespace mysql {
+
+static const int dig2bytes[DIG_PER_DEC1 + 1] = {0, 1, 1, 2, 2, 3, 3, 4, 4, 4};
+
+int decimal_bin_size(int precision, int scale)
+{
+  int intg   = precision - scale;
+  int intg0  = intg / DIG_PER_DEC1;
+  int frac0  = scale / DIG_PER_DEC1;
+  int intg0x = intg - intg0 * DIG_PER_DEC1;
+  int frac0x = scale - frac0 * DIG_PER_DEC1;
+
+  return(
+    intg0 * sizeof(boost::int32_t) + dig2bytes[intg0x] +
+    frac0 * sizeof(boost::int32_t) + dig2bytes[frac0x]
+    );
+}
 
 int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, boost::uint32_t metadata)
 {
@@ -37,10 +55,12 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
     length= metadata;
     break;
   case mysql::system::MYSQL_TYPE_NEWDECIMAL:
-    //length= my_decimal_get_binary_size(metadata_ptr[col] >> 8,
-    //                                   metadata_ptr[col] & 0xff);
-    length= 0;
+  {
+    int precision = (metadata & 0xff);
+    int scale = metadata >> 8;
+    length = decimal_bin_size(precision, scale);
     break;
+  }
   case mysql::system::MYSQL_TYPE_DECIMAL:
   case mysql::system::MYSQL_TYPE_FLOAT:
   case mysql::system::MYSQL_TYPE_DOUBLE:
