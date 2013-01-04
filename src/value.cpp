@@ -83,9 +83,9 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
   case mysql::system::MYSQL_TYPE_LONG:
     length= 4;
     break;
-//  case MYSQL_TYPE_LONGLONG:
-//    length= 8;
-//    break;
+  case MYSQL_TYPE_LONGLONG:
+    length= 8;
+    break;
   case mysql::system::MYSQL_TYPE_NULL:
     length= 0;
     break;
