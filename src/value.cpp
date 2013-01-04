@@ -363,8 +363,16 @@ void Converter::to(std::string &str, const Value &val) const
       str= "not implemented";
       break;
     case MYSQL_TYPE_DATE:
-      str= "not implemented";
+    {
+      const char* val_storage = val.storage();
+      unsigned int date_val = (val_storage[0] & 0xff) + ((val_storage[1] & 0xff) << 8) + ((val_storage[2] & 0xff) << 16);
+      unsigned int date_year = date_val >> 9;
+      date_val -= (date_year << 9);
+      unsigned int date_month = date_val >> 5;
+      unsigned int date_day = date_val - (date_month << 5);
+      str = boost::str(boost::format("%04d-%02d-%02d") % date_year % date_month % date_day);
       break;
+    }
     case MYSQL_TYPE_DATETIME:
     {
       boost::uint64_t timestamp= val.as_int64();
