@@ -7,7 +7,8 @@ Summary:	A STL/Boost based C++ library used for connecting to a MySQL server and
 
 Group:		Development/Libraries
 License:	GNU GPL v2
-URL:		https://launchpad.net/mysql-replication-listener
+URL:		https://bitbucket.org/winebarrel/mysql-replication-listener
+#URL:		https://launchpad.net/mysql-replication-listener
 Source0:	mysql-replication-listener.tar.gz
 # git clone https://bitbucket.org/winebarrel/mysql-replication-listener.git
 # cd mysql-replication-listener/
