@@ -9,7 +9,7 @@ Group:		Development/Libraries
 License:	GNU GPL v2
 URL:		https://launchpad.net/mysql-replication-listener
 Source0:	mysql-replication-listener.tar.gz
-# git archive --format=tar --prefix=mysql-replication-listener/ --remote=git@bitbucket.org:winebarrel/mysql-replication-listener.git master | gzip > mysql-replication-listener.tar.gz
+# git archive --format=tar --prefix=mysql-replication-listener/ --remote=git@bitbucket.org:winebarrel/mysql-replication-listener.git 0.0.47-10 | gzip > mysql-replication-listener.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:	gcc-c++, make, cmake, boost-devel, openssl-devel
