@@ -215,7 +215,15 @@ char *Value::as_c_str(unsigned long &size) const
    Size is length of the character string; not of the entire storage
   */
   size= m_size - metadata_length;
-  return const_cast<char *>(m_storage + metadata_length);
+
+  char *str = const_cast<char *>(m_storage + metadata_length);
+
+  if (m_type == mysql::system::MYSQL_TYPE_VARCHAR && m_metadata > 255) {
+    str++;
+    size--;
+  }
+
+  return str;
 }
 
 unsigned char *Value::as_blob(unsigned long &size) const
