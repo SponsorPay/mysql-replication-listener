@@ -2,19 +2,14 @@
 
 Name:		mysql-replication-listener
 Version:	0.0.47
-Release:	9%{?dist}
+Release:	10%{?dist}
 Summary:	A STL/Boost based C++ library used for connecting to a MySQL server and process the replication stream as a slave.
 
 Group:		Development/Libraries
 License:	GNU GPL v2
 URL:		https://launchpad.net/mysql-replication-listener
 Source0:	mysql-replication-listener.tar.gz
-Patch0:		mysql-replication-listener-as_c_str.patch
-Patch1:		mysql-replication-listener-longlong.patch
-Patch2:		mysql-replication-listener-enum.patch
-Patch3:		mysql-replication-listener-date.patch
-Patch4:		mysql-replication-listener-time-year.patch
-Patch5:		mysql-replication-listener-decimal.patch
+# git archive --format=tar --prefix=mysql-replication-listener/ --remote=git@bitbucket.org:winebarrel/mysql-replication-listener.git master | gzip > mysql-replication-listener.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:	gcc-c++, make, cmake, boost-devel, openssl-devel
@@ -28,12 +23,6 @@ simple client.
 
 %prep
 %setup -q -n %{name}
-%patch0
-%patch1
-%patch2
-%patch3
-%patch4
-%patch5
 
 %build
 %cmake
@@ -45,6 +34,9 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%post -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 %files
 %defattr(-,root,root,-)
