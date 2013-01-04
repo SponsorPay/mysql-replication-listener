@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <boost/foreach.hpp>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <boost/lexical_cast.hpp>
 
 #include "protocol.h"
 #include "binlog_event.h"
@@ -175,7 +176,19 @@ tcp::socket *sync_connect_and_authenticate(boost::asio::io_service &io_service, 
   Protocol_chunk<boost::uint16_t> prot_connection_port(port);
   Protocol_chunk<boost::uint32_t> prot_rpl_recovery_rank(0);
   Protocol_chunk<boost::uint32_t> prot_server_id(1);
-  Protocol_chunk<boost::uint32_t> prot_master_server_id(1);
+
+  const char* env_libreplication_server_id = std::getenv("LIBREPLICATION_SERVER_ID");
+
+  if (env_libreplication_server_id != 0) {
+    try {
+      boost::uint32_t libreplication_server_id = boost::lexical_cast<boost::uint32_t>(env_libreplication_server_id);
+      prot_server_id = libreplication_server_id;
+    } catch (boost::bad_lexical_cast e) {
+      // XXX: nothing to do
+    }
+  }
+
+  Protocol_chunk<boost::uint32_t> prot_master_server_id(0);
 
   Protocol_chunk<boost::uint8_t> prot_report_host_strlen(host.size());
   Protocol_chunk<boost::uint8_t> prot_user_strlen(user.size());
