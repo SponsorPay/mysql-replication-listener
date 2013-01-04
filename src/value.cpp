@@ -55,9 +55,13 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
   case mysql::system::MYSQL_TYPE_ENUM:
   case mysql::system::MYSQL_TYPE_STRING:
   {
-    unsigned char type= metadata >> 8U;
+    //unsigned char type= metadata >> 8U;
+    unsigned char type = metadata & 0xff;
     if ((type == mysql::system::MYSQL_TYPE_SET) || (type == mysql::system::MYSQL_TYPE_ENUM))
-      length= metadata & 0x00ff;
+    {
+      //length= metadata & 0x00ff;
+      length = (metadata & 0xff00) >> 8;
+    }
     else
     {
       /*
@@ -406,6 +410,21 @@ void Converter::to(std::string &str, const Value &val) const
     break;
     case MYSQL_TYPE_STRING:
     {
+      unsigned char str_type = 0;
+
+      if (val.metadata()) {
+        str_type = val.metadata() & 0xff;
+      }
+
+      if (str_type == mysql::system::MYSQL_TYPE_SET) {
+        str = "not implemented";
+        break;
+      } else if (str_type == mysql::system::MYSQL_TYPE_ENUM) {
+        unsigned int val_storage = static_cast<unsigned int>(*val.storage());
+        str = boost::str(boost::format("%u") % val_storage);
+        break;
+      }
+
       unsigned long size;
       char *ptr= val.as_c_str(size);
       str.append(ptr, size);
