@@ -1,3 +1,6 @@
+This repository was forked from https://launchpad.net/mysql-replication-listener.
+---
+
 The MySQL Replicant Library is a C++ library for reading MySQL
 replication events, either by connecting to a server or by reading
 from a file. To handle reading from a server, it includes a very
