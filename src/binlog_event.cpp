@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include "binlog_event.h"
 #include <iostream>
+typedef unsigned long ulong;
 
 namespace mysql
 {
@@ -67,9 +68,8 @@ Binary_log_event::~Binary_log_event()
 {
 }
 
-
-Binary_log_event * create_incident_event(unsigned int type, const char *message,
-                                         unsigned long pos)
+Binary_log_event * create_incident_event(unsigned int type,
++                                         const char *message, ulong pos)
 {
   Incident_event *incident= new Incident_event();
   incident->header()->type_code= INCIDENT_EVENT;

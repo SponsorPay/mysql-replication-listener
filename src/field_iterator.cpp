@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -38,63 +38,63 @@ uint32_t extract_metadata(const Table_map_event *map, int col_no)
 {
   int offset= 0;
 
-  for (int i=0; i < col_no; ++i)
+  for (int i= 0; i < col_no; ++i)
   {
-    unsigned int type= (unsigned int)map->columns[i]&0xFF;
-    offset += lookup_metadata_field_size((enum mysql::system::enum_field_types)type);
+    unsigned int type= (unsigned int)map->columns[i] & 0xFF;
+    offset += lookup_metadata_field_size((enum_field_types)type);
   }
 
   uint32_t metadata= 0;
-  unsigned int type= (unsigned int)map->columns[col_no]&0xFF;
-  switch(lookup_metadata_field_size((enum mysql::system::enum_field_types)type))
+  unsigned int type= (unsigned int)map->columns[col_no] & 0xFF;
+  switch (lookup_metadata_field_size((enum_field_types)type))
   {
   case 1:
     metadata= map->metadata[offset];
   break;
   case 2:
-  {
-    unsigned int tmp= ((unsigned int)map->metadata[offset])&0xFF;
-    metadata=  static_cast<uint32_t >(tmp);
-    tmp= (((unsigned int)map->metadata[offset+1])&0xFF) << 8;
-    metadata+= static_cast<uint32_t >(tmp);
-  }
+    {
+      unsigned int tmp= ((unsigned int)map->metadata[offset]) & 0xFF;
+      metadata=  static_cast<uint32_t >(tmp);
+      tmp= (((unsigned int)map->metadata[offset+1]) & 0xFF) << 8;
+      metadata+= static_cast<uint32_t >(tmp);
+    }
   break;
   }
   return metadata;
 }
 
-int lookup_metadata_field_size(enum mysql::system::enum_field_types field_type)
+int lookup_metadata_field_size(enum_field_types field_type)
 {
-  switch(field_type)
+  switch (field_type)
   {
-    case mysql::system::MYSQL_TYPE_DOUBLE:
-    case mysql::system::MYSQL_TYPE_FLOAT:
-    case mysql::system::MYSQL_TYPE_BLOB:
-    case mysql::system::MYSQL_TYPE_GEOMETRY:
+    case MYSQL_TYPE_DOUBLE:
+    case MYSQL_TYPE_FLOAT:
+    case MYSQL_TYPE_BLOB:
+    case MYSQL_TYPE_GEOMETRY:
      return 1;
-    case mysql::system::MYSQL_TYPE_BIT:
-    case mysql::system::MYSQL_TYPE_VARCHAR:
-    case mysql::system::MYSQL_TYPE_NEWDECIMAL:
-    case mysql::system::MYSQL_TYPE_STRING:
-    case mysql::system::MYSQL_TYPE_VAR_STRING:
+    case MYSQL_TYPE_BIT:
+    case MYSQL_TYPE_VARCHAR:
+    case MYSQL_TYPE_NEWDECIMAL:
+    case MYSQL_TYPE_STRING:
+    case MYSQL_TYPE_VAR_STRING:
      return 2;
-    case mysql::system::MYSQL_TYPE_DECIMAL:
-    case mysql::system::MYSQL_TYPE_SET:
-    case mysql::system::MYSQL_TYPE_ENUM:
-    case mysql::system::MYSQL_TYPE_YEAR:
-    case mysql::system::MYSQL_TYPE_TINY:
-    case mysql::system::MYSQL_TYPE_SHORT:
-    case mysql::system::MYSQL_TYPE_INT24:
-    case mysql::system::MYSQL_TYPE_LONG:
-    case mysql::system::MYSQL_TYPE_NULL:
-    case mysql::system::MYSQL_TYPE_NEWDATE:
-    case mysql::system::MYSQL_TYPE_DATE:
-    case mysql::system::MYSQL_TYPE_TIME:
-    case mysql::system::MYSQL_TYPE_TIMESTAMP:
-    case mysql::system::MYSQL_TYPE_DATETIME:
-    case mysql::system::MYSQL_TYPE_TINY_BLOB:
-    case mysql::system::MYSQL_TYPE_MEDIUM_BLOB:
-    case mysql::system::MYSQL_TYPE_LONG_BLOB:
+    case MYSQL_TYPE_DECIMAL:
+    case MYSQL_TYPE_SET:
+    case MYSQL_TYPE_ENUM:
+    case MYSQL_TYPE_YEAR:
+    case MYSQL_TYPE_TINY:
+    case MYSQL_TYPE_SHORT:
+    case MYSQL_TYPE_INT24:
+    case MYSQL_TYPE_LONG:
+    case MYSQL_TYPE_NULL:
+    case MYSQL_TYPE_NEWDATE:
+    case MYSQL_TYPE_DATE:
+    case MYSQL_TYPE_TIME:
+    case MYSQL_TYPE_TIMESTAMP:
+    case MYSQL_TYPE_DATETIME:
+    case MYSQL_TYPE_TINY_BLOB:
+    case MYSQL_TYPE_MEDIUM_BLOB:
+    case MYSQL_TYPE_LONG_BLOB:
     default:
       return 0;
   }

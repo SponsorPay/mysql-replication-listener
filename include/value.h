@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -22,7 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #define	_VALUE_ADAPTER_H
 
 #include "protocol.h"
-#include <boost/any.hpp>
+#include <my_global.h>
+#include <mysql.h>
 #include <iostream>
 
 using namespace mysql;
@@ -45,7 +46,8 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
 
 
 /**
- * A value object class which encapsluate a tuple (value type, metadata, storage)
+ * A value object class which encapsluate a tuple
+ * (value type, metadata, storage)
  * and provide for views to this storage through a well defined interface.
  *
  * Can be used with a Converter to convert between different Values.
@@ -53,7 +55,7 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
 class Value
 {
 public:
-    Value(enum system::enum_field_types type, uint32_t metadata, const char *storage) :
+    Value(enum_field_types type, uint32_t metadata, const char *storage) :
       m_type(type), m_storage(storage), m_metadata(metadata), m_is_null(false)
     {
       m_size= calc_field_size((unsigned char)type,
@@ -91,32 +93,32 @@ public:
      * atual data)
      */
     size_t length() const { return m_size; }
-    enum system::enum_field_types type() const { return m_type; }
+    enum_field_types type() const { return m_type; }
     uint32_t metadata() const { return m_metadata; }
 
     /**
      * Returns the integer representation of a storage of a pre-specified
      * type.
      */
-    boost::int32_t as_int32() const;
+    int32_t as_int32() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int64_t as_int64() const;
+    int64_t as_int64() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int8_t as_int8() const;
+    int8_t as_int8() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int16_t as_int16() const;
+    int16_t as_int16() const;
 
     /**
      * Returns a pointer to the character data of a string type stored
@@ -141,9 +143,9 @@ public:
 
     float as_float() const;
     double as_double() const;
-    
+
 private:
-    enum system::enum_field_types m_type;
+    enum_field_types m_type;
     size_t m_size;
 		const char *m_storage;
     uint32_t m_metadata;

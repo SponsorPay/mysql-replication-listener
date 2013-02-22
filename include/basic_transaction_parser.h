@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -26,11 +26,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
   used to retrive table names.
 */
 
-#include <list>
-#include <stdint.h>
 #include "binlog_event.h"
 #include "basic_content_handler.h"
+#include <list>
+#include <stdint.h>
+#ifdef min //definition of min() and max() in std and libmysqlclient
+           //can be/are different
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 #include <iostream>
+#include <map>
 
 namespace mysql {
 typedef std::pair<uint64_t, Binary_log_event *> Event_index_element;
@@ -38,8 +46,12 @@ typedef std::map<uint64_t, Binary_log_event *> Int_to_Event_map;
 class Transaction_log_event : public Binary_log_event
 {
 public:
-    Transaction_log_event() : Binary_log_event() {}
-    Transaction_log_event(Log_event_header *header) : Binary_log_event(header) {}
+    Transaction_log_event()
+    : Binary_log_event()
+    {
+    }
+    Transaction_log_event(Log_event_header *header)
+    : Binary_log_event(header) {}
     virtual ~Transaction_log_event();
 
     Int_to_Event_map &table_map() { return m_table_map; }
@@ -74,14 +86,23 @@ public:
   mysql::Binary_log_event *process_event(mysql::Row_event *ev);
   mysql::Binary_log_event *process_event(mysql::Table_map_event *ev);
   mysql::Binary_log_event *process_event(mysql::Xid *ev);
-  mysql::Binary_log_event *process_event(mysql::Binary_log_event *ev) {return ev; }
+  mysql::Binary_log_event *process_event(mysql::Binary_log_event *ev)
+  {
+    return ev;
+  }
 
 private:
   uint32_t m_start_time;
-  enum Transaction_states { STARTING, IN_PROGRESS, COMMITTING, NOT_IN_PROGRESS } ;
+  enum Transaction_states
+       { STARTING,
+         IN_PROGRESS,
+         COMMITTING,
+         NOT_IN_PROGRESS
+         };
   enum Transaction_states m_transaction_state;
   std::list <mysql::Binary_log_event *> m_event_stack;
-  mysql::Binary_log_event *process_transaction_state(mysql::Binary_log_event *ev);
+  mysql::Binary_log_event
+         *process_transaction_state(mysql::Binary_log_event *ev);
 };
 
 } // end namespace

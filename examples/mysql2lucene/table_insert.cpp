@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include <stdlib.h>
 #include <CLucene.h>
-#include <boost/foreach.hpp>
 
 CL_NS_USE(index)
 CL_NS_USE(util)
@@ -100,14 +99,18 @@ void table_insert(std::string table_name, mysql::Row_of_fields &fields)
         combined_key.append("_");
         combined_key.append(key);
         w_table_name= STRDUP_AtoW(table_name.c_str());
-        Field *table_field= new Field(_T("table"),w_table_name, Field::STORE_YES | Field::INDEX_UNTOKENIZED);
+        Field *table_field= new Field(_T("table"),w_table_name,
+                                Field::STORE_YES | Field::INDEX_UNTOKENIZED);
         doc->add( *table_field );
         found_searchable= true;
         w_key_str= STRDUP_AtoW(key.c_str());
-        Field *key_field= new Field(_T("row_id"),w_key_str, Field::STORE_YES | Field::INDEX_UNTOKENIZED);
+        Field *key_field= new Field(_T("row_id"),w_key_str,
+                              Field::STORE_YES | Field::INDEX_UNTOKENIZED);
         doc->add(*key_field);
         w_combined_key= STRDUP_AtoW(combined_key.c_str());
-        Field *combined_key_field= new Field(_T("id"),w_combined_key, Field::STORE_YES | Field::INDEX_UNTOKENIZED);
+        Field *combined_key_field= new Field(_T("id"),w_combined_key,
+                                       Field::STORE_YES |
+                                       Field::INDEX_UNTOKENIZED);
         doc->add(*combined_key_field);
       }
       /*
@@ -131,7 +134,8 @@ void table_insert(std::string table_name, mysql::Row_of_fields &fields)
               << std::endl;
     std::cout.flush ();
     w_str= STRDUP_AtoW(aggstr.c_str());
-    Field *content_field= new Field(_T("text"),w_str, Field::STORE_YES | Field::INDEX_TOKENIZED);
+    Field *content_field= new Field(_T("text"),w_str,
+                              Field::STORE_YES | Field::INDEX_TOKENIZED);
     doc->add( *content_field );
   }
   writer->addDocument(doc);

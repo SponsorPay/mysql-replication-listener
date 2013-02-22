@@ -1,6 +1,6 @@
 project (mysql-5.6-labs-binary-log-api)
 cmake_minimum_required (VERSION 2.6)
-
+find_package(MySQL)
 set(MySQL_BINLOG_VERSION_MAJOR "0")
 set(MySQL_BINLOG_VERSION_MINOR "0.1")
 set(MRL_VERSION "${MySQL_BINLOG_VERSION_MAJOR}.${MySQL_BINLOG_VERSION_MINOR}")
@@ -28,19 +28,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 include_directories(include)
 link_directories(${PROJECT_BINARY_DIR}/lib)
 
-# ---------- Find Boost Headers/Libraries -----------------------
-SET(Boost_DEBUG FALSE)
-SET(Boost_FIND_REQUIRED TRUE)
-SET(Boost_FIND_QUIETLY TRUE)
-SET(Boost_USE_STATIC_LIBS FALSE)
-SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
-FIND_PACKAGE(Boost REQUIRED system thread)
-
-# --------- Find crypt
-FIND_LIBRARY(LIB_CRYPTO crypto /opt/local/lib /opt/lib /usr/lib /usr/local/lib)
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-
 # Locate Google Test package and enable tests if it is found
 find_package(GTest ${GTEST_VERSION} QUIET)
 
@@ -48,7 +35,7 @@ if (NOT GTEST_FOUND)
   if (NOT ENABLE_DOWNLOADS)
     # Give one-time warning
     if (NOT ONETIME_GTEST_WARNING)
-      message(STATUS 
+      message(STATUS
         "Googletest was not found. gtest-based unit tests will be disabled. "
         "You can run cmake . -DENABLE_DOWNLOADS=1 to automatically download and "
         "build required components from source.")
@@ -83,11 +70,11 @@ if (NOT GTEST_FOUND)
       endif(${CMAKE_VERSION_STRING} LESS "2.8")
 
       if (NOT DOWNLOAD_SUCCEEDED)
-        message(STATUS 
+        message(STATUS
           "To enable google test, please download ${GTEST_DOWNLOAD_URL} "
           "to the directory ${DOWNLOAD_ROOT}")
       else (NOT DOWNLOAD_SUCCEEDED)
-        message(STATUS 
+        message(STATUS
           "Successfully downloaded ${GTEST_DOWNLOAD_URL} to ${DOWNLOAD_ROOT}")
         # Unpack tarball
         execute_process (
@@ -109,11 +96,11 @@ endif (NOT GTEST_FOUND)
 if (GTEST_DOWNLOADED)
   # Build gtest library
   include_directories(
-    ${GTEST_SOURCE_DIR} 
+    ${GTEST_SOURCE_DIR}
     ${GTEST_SOURCE_DIR}/include
   )
   add_library(gtest STATIC ${GTEST_SOURCE_DIR}/src/gtest-all.cc)
-  
+
   # Set CMake variables to make FindPackage(GTest) happy next time.
   SET(GTEST_FOUND 1 CACHE INTERNAL "")
   SET(GTEST_LIBRARY gtest CACHE INTERNAL "")
@@ -146,9 +133,9 @@ SET(CPACK_PACKAGE_VERSION_MAJOR "${MySQL_BINLOG_VERSION_MAJOR}")
 SET(CPACK_PACKAGE_VERSION_MINOR "${MySQL_BINLOG_VERSION_MINOR}")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY
     "mysql-5.6-labs-binary-log-api: a MySQL client library for interfacing with the binary log mechanism.")
- 
+
 SET(CPACK_GENERATOR "STGZ;TGZ;TZ;DEB;RPM")
- 
+
 # Get package name correctly formatted with name, version, and platform
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
 SET(CPACK_PACKAGE_FILE_NAME

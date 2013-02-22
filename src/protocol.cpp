@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,77 +18,24 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 #include "protocol.h"
-#include <stdint.h>
-#include <boost/array.hpp>
-#include <vector>
+#include <my_global.h>
+#include <mysql_com.h>
 #include <iostream>
+#include <stdint.h>
+#include <vector>
 
 using namespace mysql;
 using namespace mysql::system;
 using namespace std;
 namespace mysql { namespace system {
 
-int proto_read_package_header(tcp::socket *socket, unsigned long *packet_length, unsigned char *packet_no)
+
+int proto_get_one_package(MYSQL *mysql, char *buff,
+                           uint8_t *packet_no)
 {
-  unsigned char buf[4];
-
-  try {
-    boost::asio::read(*socket, boost::asio::buffer(buf, 4),
-                      boost::asio::transfer_at_least(4));
-  } catch (boost::system::system_error e)
-  {
-    return 1;
-  }
-  *packet_length=  (unsigned long)(buf[0] &0xFF);
-  *packet_length+= (unsigned long)((buf[1] &0xFF)<<8);
-  *packet_length+= (unsigned long)((buf[2] &0xFF)<<16);
-  *packet_no= (unsigned char)buf[3];
-  return 0;
-}
-
-int proto_read_package_header(tcp::socket *socket, boost::asio::streambuf &buff, unsigned long *packet_length, unsigned char *packet_no)
-{
-  std::streamsize inbuff= buff.in_avail();
-  if( inbuff < 0)
-    inbuff= 0;
-
-  if (4 > inbuff)
-  {
-    try {
-      boost::asio::read(*socket, buff,
-                        boost::asio::transfer_at_least(4-inbuff));
-    } catch (boost::system::system_error e)
-    {
-      return 1;
-    }
-  }
-  char ch;
-  std::istream is(&buff);
-  is.get(ch);
-  *packet_length= (unsigned long)ch;
-  is.get(ch);
-  *packet_length+= (unsigned long)(ch<<8);
-  is.get(ch);
-  *packet_length+= (unsigned long)(ch<<16);
-  is.get(ch);
-  *packet_no= (unsigned char)ch;
-  return 0;
-}
-
-
-int proto_get_one_package(tcp::socket *socket, boost::asio::streambuf &buff,
-                          uint8_t *packet_no)
-{
-  unsigned long packet_length;
-  if (proto_read_package_header(socket, buff, &packet_length, packet_no))
-    return 0;
-  std::streamsize inbuffer= buff.in_avail();
-  if (inbuffer < 0)
-    inbuffer= 0;
-  if (packet_length > inbuffer)
-    boost::asio::read(*socket, buff,
-                      boost::asio::transfer_at_least(packet_length-inbuffer));
-
+  ulong packet_length;
+  packet_length= cli_safe_read(mysql);
+  buff= (char*)mysql->net.buff;
   return packet_length;
 }
 
@@ -113,7 +60,8 @@ void prot_parse_error_message(std::istream &is, struct st_error_package &err,
   err.message[message_size]= '\0';
 }
 
-void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok, int packet_length)
+void prot_parse_ok_message(std::istream &is, struct st_ok_package &ok,
+                           int packet_length)
 {
  // TODO: Assure that zero length messages can be but on the input stream.
 
@@ -383,8 +331,8 @@ Query_event *proto_query_event(std::istream &is, Log_event_header *header)
         Execution time (pre-defined, 4) +
         Placeholder to store database length (pre-defined, 1) +
         Error code (pre-defined, 2) +
-        Placeholder to store length taken by status variable blk (pre-defined, 2) +
-        Status variable block length (calculated, var_size) +
+        Placeholder to store length taken by status variable blk
+        (pre-defined, 2)+ Status variable block length (calculated, var_size) +
         Database name length (calculated, db_name_len) +
         Null terninator (pre-defined, 1) +
     )
@@ -400,17 +348,18 @@ Query_event *proto_query_event(std::istream &is, Log_event_header *header)
   is >> proto_payload;
 
   Protocol_chunk_string proto_query_event_db_name(qev->db_name,
-                                                  (unsigned long)db_name_len);
+                                                  (ulong)db_name_len);
 
   Protocol_chunk_string proto_query_event_query_str
-    (qev->query, (unsigned long)query_len);
+    (qev->query, (ulong)query_len);
 
   char zero_marker;
   is >> proto_query_event_db_name
      >> zero_marker
      >> proto_query_event_query_str;
   // Following is not really required now,
-  //qev->query.resize(qev->query.size() - 1); // Last character is a '\0' character.
+  //qev->query.resize(qev->query.size() - 1);
+  // Last character is a '\0' character.
 
   return qev;
 }
@@ -429,7 +378,8 @@ Rotate_event *proto_rotate_event(std::istream &is, Log_event_header *header)
   return rev;
 }
 
-Incident_event *proto_incident_event(std::istream &is, Log_event_header *header)
+Incident_event *proto_incident_event(std::istream &is,
+                                     Log_event_header *header)
 {
   Incident_event *incident= new Incident_event(header);
   Protocol_chunk<uint8_t> proto_incident_code(incident->type);
@@ -470,16 +420,17 @@ Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
 
   if (header->type_code == UPDATE_ROWS_EVENT)
   {
-    Protocol_chunk_vector proto_columns_before_image(rev->columns_before_image, used_column_len);
+    Protocol_chunk_vector proto_columns_before_image(rev->columns_before_image,
+                                                     used_column_len);
     is >> proto_columns_before_image;
   }
 
-  int bytes_read=proto_table_id.size() + proto_flags.size() + proto_column_len.size() + used_column_len;
+  int bytes_read=proto_table_id.size() + proto_flags.size() +
+                 proto_column_len.size() + used_column_len;
   if (header->type_code == UPDATE_ROWS_EVENT)
     bytes_read+=used_column_len;
 
-  unsigned long row_len= header->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;
-  //std::cout << "Bytes read: " << bytes_read << " Bytes expected: " << rev->row_len << std::endl;
+  ulong row_len= header->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;
   Protocol_chunk_vector proto_row(rev->row, row_len);
   is >> proto_row;
 
@@ -530,9 +481,10 @@ User_var_event *proto_uservar_event(std::istream &is, Log_event_header *header)
   return event;
 }
 
-Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *header)
+Table_map_event *proto_table_map_event(std::istream &is,
+                                       Log_event_header *header)
 {
-  Table_map_event *tmev=new Table_map_event(header);
+  Table_map_event *tmev= new Table_map_event(header);
   uint64_t columns_len= 0;
   uint64_t metadata_len= 0;
   union
@@ -542,7 +494,7 @@ Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *heade
   } table_id;
   char zero_marker= 0;
 
-  table_id.integer=0L;
+  table_id.integer= 0L;
   Protocol_chunk<uint8_t> proto_table_id(&table_id.bytes[0], 6);
   Protocol_chunk<uint16_t> proto_flags(tmev->flags);
   Protocol_chunk_string_len proto_db_name(tmev->db_name);
@@ -558,16 +510,16 @@ Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *heade
      >> proto_table_name
      >> proto_marker
      >> proto_columns_len;
-  tmev->table_id=table_id.integer;
+  tmev->table_id= table_id.integer;
   Protocol_chunk_vector proto_columns(tmev->columns, columns_len);
   Protocol_chunk<uint64_t> proto_metadata_len(metadata_len);
   proto_metadata_len.set_length_encoded_binary(true);
 
   is >> proto_columns
      >> proto_metadata_len;
-  Protocol_chunk_vector proto_metadata(tmev->metadata, (unsigned long)metadata_len);
+  Protocol_chunk_vector proto_metadata(tmev->metadata, (ulong)metadata_len);
   is >> proto_metadata;
-  unsigned long null_bits_len=(int) ((tmev->columns.size() + 7) / 8);
+  ulong null_bits_len= (int)((tmev->columns.size() + 7) / 8);
 
   Protocol_chunk_vector proto_null_bits(tmev->null_bits, null_bits_len);
 
@@ -577,8 +529,8 @@ Table_map_event *proto_table_map_event(std::istream &is, Log_event_header *heade
 
 std::istream &operator>>(std::istream &is, Protocol_chunk_vector &chunk)
 {
-  unsigned long size= chunk.m_size;
-  for(int i=0; i< size; i++)
+  ulong size= chunk.m_size;
+  for(int i= 0; i < size; i++)
   {
     char ch;
     is.get(ch);

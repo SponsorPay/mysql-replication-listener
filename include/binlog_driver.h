@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -30,7 +30,8 @@ class Binary_log_driver
 {
 public:
   template <class FilenameT>
-  Binary_log_driver(const FilenameT& filename = FilenameT(), unsigned int offset = 0)
+  Binary_log_driver(const FilenameT& filename = FilenameT(),
+                    unsigned int offset = 0)
     : m_binlog_file_name(filename), m_binlog_offset(offset)
   {
   }
@@ -44,7 +45,7 @@ public:
    * @retval >0 Error code (to be specified)
    */
   virtual int connect()= 0;
-
+  virtual int connect(const std::string &filename, ulong position)= 0;
   /**
    * Blocking attempt to get the next binlog event from the stream
    * @param event [out] Pointer to a binary log event to be fetched.
@@ -63,13 +64,16 @@ public:
   /**
    * Get the read position.
    *
-   * @param[out] string_ptr Pointer to location where the filename will be stored.
-   * @param[out] position_ptr Pointer to location where the position will be stored.
+   * @param[out] string_ptr Pointer to location where the
+     filename will be stored.
+   * @param[out] position_ptr Pointer to location where
+     the position will be stored.
    *
    * @retval 0 Success
    * @retval >0 Error code
    */
-  virtual int get_position(std::string *filename_ptr, unsigned long *position_ptr) = 0;
+  virtual int get_position(std::string *filename_ptr,
+                           unsigned long *position_ptr) = 0;
 
   Binary_log_event* parse_event(std::istream &sbuff, Log_event_header *header);
 

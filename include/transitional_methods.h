@@ -18,36 +18,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _UTILITIES_H
-#define _UTILITIES_H
+#include <cstring>
+#ifdef min //definition of min() and max() in std and libmysqlclient 
+           //can be/are different
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+/**
+  Copies the first length character from source to destination
 
-#include "value.h"
-#include "protocol.h"
-#include <map>
+  @param destination  pointer to the destination where the content
+                      is to be copied
+  @param source       C string to be copied
+  
+  @param length       length of the characters to be copied from source
+  
+  @retval             destination is returned 
+*/
 
-using namespace mysql;
-
-namespace mysql {
-
-typedef enum
+uchar *net_store_data(uchar *destination, const uchar *source, size_t length)
 {
-  Q_FLAGS2_CODE= 0,
-  Q_SQL_MODE_CODE,
-  Q_CATALOG_CODE,
-  Q_AUTO_INCREMENT,
-  Q_CHARSET_CODE,
-  Q_TIME_ZONE_CODE,
-  Q_CATALOG_NZ_CODE,
-  Q_LC_TIME_NAMES_CODE,
-  Q_CHARSET_DATABASE_CODE,
-  Q_TABLE_MAP_FOR_UPDATE_CODE,
-  Q_MASTER_DATA_WRITTEN_CODE,
-  Q_INVOKER
-} enum_var_types;
-
-int server_var_decoder (std::map<std::string, mysql::Value> *my_var_map,
-                        std::vector<uint8_t > variables);
-
+  destination= net_store_length(destination, length);
+  memcpy(destination, source, length);
+  return destination + length;
 }
-
-#endif                                          /* _UTILITIES_H */

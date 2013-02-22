@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -21,15 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _REPEVENT_H
 #define	_REPEVENT_H
 
-#include <iosfwd>
-#include <boost/iostreams/categories.hpp>
-#include <boost/iostreams/positioning.hpp>
-#include <boost/iostreams/concepts.hpp>
-#include <boost/asio.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <list>
-#include <cassert>
 #include "binlog_event.h"
 #include "binlog_driver.h"
 #include "tcp_driver.h"
@@ -39,9 +30,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "field_iterator.h"
 #include "rowset.h"
 #include "access_method_factory.h"
-
-namespace io = boost::iostreams;
-
+#include <iosfwd>
+#include <list>
+#include <cassert>
+#include <algorithm>
 namespace mysql
 {
 
@@ -58,7 +50,6 @@ enum Error_code {
 /**
  * Returns true if the event is consumed
  */
-typedef boost::function< bool (Binary_log_event *& )> Event_content_handler;
 
 class Dummy_driver : public system::Binary_log_driver
 {
@@ -66,17 +57,27 @@ public:
   Dummy_driver() : Binary_log_driver("", 0) {}
   virtual ~Dummy_driver() {}
 
-  virtual int connect() { return 1; }
+  virtual int connect()
+  {
+    return 1;
+  }
 
-  virtual int wait_for_next_event(mysql::Binary_log_event **event) {
+  virtual int wait_for_next_event(mysql::Binary_log_event **event)
+  {
     return ERR_EOF;
   }
 
-  virtual int set_position(const std::string &str, unsigned long position) {
+  virtual int set_position(const std::string &str, unsigned long position)
+  {
     return ERR_OK;
   }
 
-  virtual int get_position(std::string *str, unsigned long *position) {
+  virtual int get_position(std::string *str, unsigned long *position)
+  {
+    return ERR_OK;
+  }
+  virtual int connect(const std::string &filename, ulong position)
+  {
     return ERR_OK;
   }
 };
@@ -95,8 +96,8 @@ private:
 public:
   Binary_log(system::Binary_log_driver *drv);
   ~Binary_log() {}
-
   int connect();
+  int connect(ulong position);
 
   /**
    * Blocking attempt to get the next binlog event from the stream
@@ -140,7 +141,7 @@ public:
    * Fetch the current active binlog file name.
    * @param[out] filename
    * TODO replace reference with a pointer.
-   * @return The file position
+   * @return The current binlog file position
    */
   unsigned long get_position(std::string &filename);
 

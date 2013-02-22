@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -21,10 +21,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #define	_BINLOG_EVENT_H
 
 #include <stdint.h>
+#ifdef min //definition of min() and max() in std and libmysqlclient
+           //can be/are different
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 #include <list>
-#include <boost/asio.hpp>
-#include <boost/function.hpp>
 #include <vector>
+#include <cstring>
 #include <sstream>
 
 namespace mysql
@@ -375,7 +381,9 @@ public:
     void print_long_info(std::ostream& info);
 };
 
-Binary_log_event *create_incident_event(unsigned int type, const char *message, unsigned long pos= 0);
+Binary_log_event *create_incident_event(unsigned int type,
+                                        const char *message,
+                                        unsigned long pos= 0);
 
 } // end namespace mysql
 

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -23,22 +23,60 @@ namespace mysql {
 
 Content_handler::Content_handler () {}
 Content_handler::~Content_handler () {}
-mysql::Binary_log_event *Content_handler::process_event(mysql::Query_event *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::Row_event *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::Table_map_event *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::Xid *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::User_var_event *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::Incident_event *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::Rotate_event *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::Int_var_event *ev) { return ev; }
-mysql::Binary_log_event *Content_handler::process_event(mysql::Binary_log_event *ev) { return ev; }
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Query_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Row_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Table_map_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Xid *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::User_var_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Incident_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Rotate_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Int_var_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
+process_event(mysql::Binary_log_event *ev)
+{
+  return ev;
+}
 
-Injection_queue *Content_handler::get_injection_queue(void)
+Injection_queue *Content_handler::
+get_injection_queue(void)
 {
   return m_reinject_queue;
 }
 
-void Content_handler::set_injection_queue(Injection_queue *queue)
+void Content_handler::
+set_injection_queue(Injection_queue *queue)
 {
   m_reinject_queue= queue;
 }

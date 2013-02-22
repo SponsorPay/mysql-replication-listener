@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013,, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,15 +18,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-/*
- * File:   main.cpp
- * Author: thek
- *
- * Created on den 12 maj 2010, 14:47
- */
-
 #include <stdlib.h>
-#include <boost/foreach.hpp>
 #include "binlog_api.h"
 
 #include "table_update.h"
@@ -74,7 +66,7 @@ public:
 
  mysql::Binary_log_event *process_event(mysql::Row_event *rev)
  {
-   boost::uint64_t table_id= rev->table_id;
+   uint64_t table_id= rev->table_id;
    Int2event_map::iterator ti_it= m_table_index->find(table_id);
    if (ti_it == m_table_index->end ())
    {
@@ -125,7 +117,8 @@ int main(int argc, char** argv)
 {
   if (argc != 3)
   {
-    fprintf(stderr,"Usage:\n\nmysql2lucene URL\n\nExample:\n\nmysql2lucene mysql://root@127.0.0.1:3306 myindexfile\n\n");
+    fprintf(stderr,"Usage:\n\nmysql2lucene URL\n\nExample:\n\nmysql2lucene"
+                   "mysql://root@127.0.0.1:3306 myindexfile\n\n");
     return (EXIT_FAILURE);
   }
 
@@ -179,14 +172,16 @@ int main(int argc, char** argv)
     {
     case mysql::QUERY_EVENT:
       {
-        const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
+        const mysql::Query_event *qev=
+        static_cast<const mysql::Query_event *>(event);
         std::cout << "query= "
                   << qev->query
                   << " db= "
                   << qev->db_name
                   <<  std::endl
                   <<  std::endl;
-        if (qev->query.find("DROP TABLE REPLICATION_LISTENER") != std::string::npos)
+        if (qev->query.find("DROP TABLE REPLICATION_LISTENER") !=
+            std::string::npos)
         {
           quit= true;
         }

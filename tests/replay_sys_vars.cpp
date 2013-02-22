@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -19,7 +19,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 
 #include <cstdlib>
-#include <boost/foreach.hpp>
 #include "binlog_api.h"
 #include "utilities.h"
 
@@ -63,7 +62,8 @@ int main (int argc, char* argv[])
     {
       case mysql::QUERY_EVENT:
         {
-          const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
+          const mysql::Query_event *qev=
+          static_cast<const mysql::Query_event *>(event);
           std::cout << "Query = "
                     << qev->query
                     << " DB = "
@@ -77,8 +77,11 @@ int main (int argc, char* argv[])
           mysql::Converter converter;
 
           typedef std::map<std::string, mysql::Value>::value_type my_pair;
-          BOOST_FOREACH (my_pair &ref, my_var_map)
+          std::map<std::string, mysql::Value>::iterator it= my_var_map.begin();
+
+          for (; it != my_var_map.end(); it++)
           {
+            my_pair ref= *it;
             std::string value;
             converter.to(value, ref.second);
             std::cout << ref.first

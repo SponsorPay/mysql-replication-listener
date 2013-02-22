@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -21,47 +21,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _RESULTSET_ITERATOR_H
 #define	_RESULTSET_ITERATOR_H
 
-#include <iostream>
-
-// if error; try #include <boost/iterator.hpp>
-
-#include <boost/iterator/iterator_facade.hpp>
-#include <boost/asio.hpp>
 #include "value.h"
 #include "rowset.h"
 #include "row_of_fields.h"
+#include <iostream>
 
 using namespace mysql;
 
 namespace mysql
 {
-
-struct Field_packet
-{
-    std::string catalog;  // Length Coded String
-    std::string db;       // Length Coded String
-    std::string table;    // Length Coded String
-    std::string org_table;// Length Coded String
-    std::string name;     // Length Coded String
-    std::string org_name; // Length Coded String
-    uint8_t marker;       // filler
-    uint16_t charsetnr;   // charsetnr
-    uint32_t length;      // length
-    uint8_t type;         // field type
-    uint16_t flags;
-    uint8_t decimals;
-    uint16_t filler;      // filler, always 0x00
-    //uint64_t default_value;  // Length coded binary; only in table descr.
-};
-
-typedef std::list<std::string > String_storage;
-
-namespace system {
-    void digest_result_header(std::istream &is, uint64_t &field_count, uint64_t extra);
-    void digest_field_packet(std::istream &is, Field_packet &field_packet);
-    void digest_marker(std::istream &is);
-    void digest_row_content(std::istream &is, int field_count, Row_of_fields &row, String_storage &storage, bool &is_eof);
-}
 
 template <class T>
 class Result_set_iterator;
@@ -72,39 +40,25 @@ public:
     typedef Result_set_iterator<Row_of_fields > iterator;
     typedef Result_set_iterator<Row_of_fields const > const_iterator;
 
-    Result_set(tcp::socket *socket) { source(socket); }
-    void source(tcp::socket *socket) { m_socket= socket; digest_row_set(); }
+    Result_set(MYSQL *mysql)
+    : m_mysql(mysql)
+    {
+    }
     iterator begin();
     iterator end();
     const_iterator begin() const;
     const_iterator end() const;
 
 private:
-    void digest_row_set();
     friend class Result_set_iterator<Row_of_fields >;
     friend class Result_set_iterator<Row_of_fields const>;
-
-    std::vector<Field_packet > m_field_types;
     int m_row_count;
     std::vector<Row_of_fields > m_rows;
-    String_storage m_storage;
-    tcp::socket *m_socket;
-    typedef enum { RESULT_HEADER,
-                   FIELD_PACKETS,
-                   MARKER,
-                   ROW_CONTENTS,
-                   EOF_PACKET
-                 } state_t;
-    state_t m_current_state;
-
+    MYSQL *m_mysql;
     /**
      * The number of fields in the field packets block
      */
     uint64_t m_field_count;
-    /**
-     * Used for SHOW COLUMNS to return the number of rows in the table
-     */
-    uint64_t m_extra;
 };
 
 template <class Iterator_value_type >

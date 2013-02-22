@@ -8,7 +8,7 @@ set(MySQL_SIMPLE_TESTS test-transport)
 foreach(test ${MySQL_BINLOG_TESTS} ${MySQL_SERVER_TESTS} ${MySQL_SIMPLE_TESTS})
   message("Adding test ${test}")
   add_executable(${test} ${test}.cpp)
-  target_link_libraries(${test} replication_static gtest)
+  target_link_libraries(${test} replication_static gtest mysqlclient)
 endforeach()
 
 if(WITH_SERVER_TESTS)

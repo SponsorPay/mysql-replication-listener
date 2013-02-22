@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,12 +18,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-/*
- * File:   table_insert.h
- * Author: thek
- *
- * Created on den 15 juni 2010, 09:34
- */
 
 #ifndef _TABLE_INSERT_H
 #define	_TABLE_INSERT_H

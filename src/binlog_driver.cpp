@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+  Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
   reserved.
 
   This program is free software; you can redistribute it and/or
@@ -22,16 +22,10 @@
 
 namespace mysql { namespace system {
 
-/*
-Binary_log_event* Binary_log_driver::parse_event(boost::asio::streambuf
-                                                 &sbuff, Log_event_header
-                                                 *header)
-                                                 */
 Binary_log_event* Binary_log_driver::parse_event(std::istream &is,
-                                                 Log_event_header *header)
+                                                Log_event_header *header)
 {
   Binary_log_event *parsed_event= 0;
-
   switch (header->type_code) {
     case FORMAT_DESCRIPTION_EVENT:
       parsed_event= proto_format_desc_event(is, header);
@@ -54,7 +48,7 @@ Binary_log_event* Binary_log_driver::parse_event(std::istream &is,
       {
         Rotate_event *rot= proto_rotate_event(is, header);
         m_binlog_file_name= rot->binlog_file;
-        m_binlog_offset= (unsigned long)rot->binlog_pos;
+        m_binlog_offset= (ulong)rot->binlog_pos;
         parsed_event= rot;
       }
       break;

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -21,15 +21,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _FILE_DRIVER_H
 #define	_FILE_DRIVER_H
 
+#include "binlog_api.h"
+#include "binlog_driver.h"
+#include "protocol.h"
 #include <iostream>
 #include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include "binlog_api.h"
-#include "binlog_driver.h"
-#include "protocol.h"
 
 #define MAGIC_NUMBER_SIZE 4
 
@@ -52,7 +51,7 @@ public:
     int wait_for_next_event(mysql::Binary_log_event **event);
     int set_position(const std::string &str, unsigned long position);
     int get_position(std::string *str, unsigned long *position);
-
+    int connect(const std::string &filename, ulong offset);
 private:
 
     unsigned long m_binlog_file_size;

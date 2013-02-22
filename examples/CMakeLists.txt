@@ -8,7 +8,7 @@ include_directories(${PROJECT_BUILD_DIR}/include)
 
 foreach(prog basic-1 basic-2 binlog-browser)
   ADD_EXECUTABLE(${prog} ${prog}.cpp)
-  TARGET_LINK_LIBRARIES(${prog} replication_static)
+  TARGET_LINK_LIBRARIES(${prog} replication_static mysqlclient)
 endforeach()
 
 add_subdirectory(mysql2lucene EXCLUDE_FROM_ALL)

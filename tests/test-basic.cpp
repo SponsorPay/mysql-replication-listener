@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <gtest/gtest.h>
 #include <iostream>
 #include <stdlib.h>
+
 class TestBinaryLog : public ::testing::Test {
  protected:
   TestBinaryLog() {
@@ -51,7 +52,8 @@ class TestBinaryLog : public ::testing::Test {
 TEST_F(TestBinaryLog, ConnectTo_Bogus)
 {
   using mysql::system::create_transport;
-  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("bogus-url"));
+  mysql::Binary_log *binlog=
+  new mysql::Binary_log(create_transport("bogus-url"));
   EXPECT_GT(binlog->connect(), 0);
   delete(binlog);
 }
@@ -59,7 +61,8 @@ TEST_F(TestBinaryLog, ConnectTo_Bogus)
 TEST_F(TestBinaryLog, ConnectTo_TcpIp)
 {
   using mysql::system::create_transport;
-  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
+  mysql::Binary_log *binlog=
+  new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   delete binlog;
 }
@@ -67,7 +70,8 @@ TEST_F(TestBinaryLog, ConnectTo_TcpIp)
 TEST_F(TestBinaryLog, Connected_TcpIp)
 {
   using mysql::system::create_transport;
-  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
+  mysql::Binary_log *binlog=
+  new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   mysql::Binary_log_event *event;
   binlog->wait_for_next_event(&event);
@@ -82,7 +86,8 @@ TEST_F(TestBinaryLog, SetPosition)
 {
   using mysql::system::create_transport;
   mysql::Binary_log_event *event;
-  mysql::Binary_log *binlog= new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
+  mysql::Binary_log *binlog=
+  new mysql::Binary_log(create_transport("mysql://root@127.0.0.1:13000"));
   EXPECT_EQ(binlog->connect(),0);
   std::string filename;
   unsigned long position= binlog->get_position(filename);
@@ -100,8 +105,8 @@ int main(int argc, char **argv) {
   // TODO require that the connection string is passed as an argument to the
   // test suite.
   std::cout << "Important: Make sure that the MySQL server is started using "
-    "'mysql-test-run --mysqld=--log_bin=searchbin --mysqld=--binlog_format=row --start "
-    "alias' and that the server is listening on IP 127.0.0.1 and port"
+    "'mysql-test-run --mysqld=--log_bin=searchbin --mysqld=--binlog_format=row"
+    " --start alias' and that the server is listening on IP 127.0.0.1 and port"
     " 13000." << std::endl;
   return RUN_ALL_TESTS();
 }

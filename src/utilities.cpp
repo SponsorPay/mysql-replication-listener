@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@ int server_var_decoder (std::map<std::string, mysql::Value> *my_var_map,
 {
   uint8_t length, i;
   std::string name;
-  mysql::system::enum_field_types field_type;
+  enum_field_types field_type;
   /* To handle special case of 'terminating null byte'. */
   bool is_null_byte= 0;
 
@@ -41,94 +41,98 @@ int server_var_decoder (std::map<std::string, mysql::Value> *my_var_map,
     switch (*it++)
     {
       case Q_FLAGS2_CODE:
-        length= 4;
-        name= "flag2";
-        field_type= mysql::system::MYSQL_TYPE_LONG;
-        break;
+        {
+          length= 4;
+          name= "flag2";
+          field_type= MYSQL_TYPE_LONG;
+          break;
+        }
       case Q_SQL_MODE_CODE:
-        length= 8;
-        name= "sql_mode";
-        field_type= mysql::system::MYSQL_TYPE_LONGLONG;
-        break;
+        {
+          length= 8;
+          name= "sql_mode";
+          field_type= MYSQL_TYPE_LONGLONG;
+          break;
+        }
       case Q_CATALOG_CODE:
         length= *it++;
         name= "catalog_name_old";
-        field_type= mysql::system::MYSQL_TYPE_VAR_STRING;
+        field_type= MYSQL_TYPE_VAR_STRING;
         is_null_byte= 1;
         break;
       case Q_AUTO_INCREMENT:
         length= 2;
         my_var_map->insert(std::make_pair
                            ("auto_increment_increment",
-                            mysql::Value(mysql::system::MYSQL_TYPE_SHORT,
+                            mysql::Value(MYSQL_TYPE_SHORT,
                                          length, (char*) &(*it))));
         for (i= 0; i < length; i++)
           it++;
 
         name= "auto_increment_offset";
-        field_type= mysql::system::MYSQL_TYPE_SHORT;
+        field_type= MYSQL_TYPE_SHORT;
         break;
       case Q_CHARSET_CODE:
         length= 2;
         my_var_map->insert(std::make_pair
                            ("character_set_client",
-                            mysql::Value(mysql::system::MYSQL_TYPE_SHORT,
+                            mysql::Value(MYSQL_TYPE_SHORT,
                                          length, (char*) &(*it))));
         for (i= 0; i < length; i++)
           it++;
 
         my_var_map->insert(std::make_pair
                            ("collation_connection",
-                            mysql::Value(mysql::system::MYSQL_TYPE_SHORT,
+                            mysql::Value(MYSQL_TYPE_SHORT,
                                          length, (char*) &(*it))));
         for (i= 0; i < length; i++)
           it++;
 
         name= "collation_server";
-        field_type= mysql::system::MYSQL_TYPE_SHORT;
+        field_type= MYSQL_TYPE_SHORT;
         break;
       case Q_TIME_ZONE_CODE:
         length= *it++;
         name= "time_zone";
-        field_type= mysql::system::MYSQL_TYPE_VAR_STRING;
+        field_type= MYSQL_TYPE_VAR_STRING;
         break;
       case Q_CATALOG_NZ_CODE:
         length= *it++;
         name= "catalog_name";
-        field_type= mysql::system::MYSQL_TYPE_VAR_STRING;
+        field_type= MYSQL_TYPE_VAR_STRING;
         break;
       case Q_LC_TIME_NAMES_CODE:
         length= 2;
         name= "lc_time_names";
-        field_type= mysql::system::MYSQL_TYPE_SHORT;
+        field_type= MYSQL_TYPE_SHORT;
         break;
       case Q_CHARSET_DATABASE_CODE:
         length= 2;
         name= "collation_database";
-        field_type= mysql::system::MYSQL_TYPE_SHORT;
+        field_type= MYSQL_TYPE_SHORT;
         break;
       case Q_TABLE_MAP_FOR_UPDATE_CODE:
         length= 8;
         name= "table_map_for_update";
-        field_type= mysql::system::MYSQL_TYPE_LONGLONG;
+        field_type= MYSQL_TYPE_LONGLONG;
         break;
       case Q_MASTER_DATA_WRITTEN_CODE:
         length= 4;
         name= "master_data_written";
-        field_type= mysql::system::MYSQL_TYPE_LONG;
+        field_type= MYSQL_TYPE_LONG;
         break;
       case Q_INVOKER:
         length= *it++;
         my_var_map->insert(std::make_pair
                            ("user",
-                            mysql::Value(mysql::system::MYSQL_TYPE_VAR_STRING,
+                            mysql::Value(MYSQL_TYPE_VAR_STRING,
                                          length, (char*) &(*it))));
         for (i= 0; i < length; i++)
           it++;
 
         length= *it++;
         name= "host";
-        field_type= mysql::system::MYSQL_TYPE_VARCHAR;
+        field_type= MYSQL_TYPE_VARCHAR;
         break;
       default:
         /* Unknown status variables. Error!! */

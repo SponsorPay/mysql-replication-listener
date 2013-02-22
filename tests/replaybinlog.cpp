@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,15 +18,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 #include <stdlib.h>
-#include <boost/foreach.hpp>
 #include "binlog_api.h"
 
 bool is_text_field(Value &val)
 {
-  if (val.type() == mysql::system::MYSQL_TYPE_VARCHAR ||
-      val.type() == mysql::system::MYSQL_TYPE_BLOB ||
-      val.type() == mysql::system::MYSQL_TYPE_MEDIUM_BLOB ||
-      val.type() == mysql::system::MYSQL_TYPE_LONG_BLOB)
+  if (val.type() == MYSQL_TYPE_VARCHAR ||
+      val.type() == MYSQL_TYPE_BLOB ||
+      val.type() == MYSQL_TYPE_MEDIUM_BLOB ||
+      val.type() == MYSQL_TYPE_LONG_BLOB)
     return true;
   return false;
 }
@@ -60,7 +59,8 @@ void table_insert(const std::string& table_name, mysql::Row_of_fields &fields)
 
 
 void table_update(const std::string& table_name,
-                  mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
+                  mysql::Row_of_fields &old_fields,
+                  mysql::Row_of_fields &new_fields)
 {
   std::cout << "UPDATE "
            << table_name
@@ -168,21 +168,25 @@ public:
             << " length: " << event->header()->event_length
             << " next pos: " << event->header()->next_position
             << std::endl;
-    mysql::Transaction_log_event *trans= static_cast<mysql::Transaction_log_event *>(event);
+    mysql::Transaction_log_event *trans=
+    static_cast<mysql::Transaction_log_event *>(event);
     int row_count=0;
     /*
       The transaction event we created has aggregated all row events in an
       ordered list.
     */
-    BOOST_FOREACH(mysql::Binary_log_event * event, trans->m_events)
+    std::list<Binary_log_event *>::iterator it= (trans->m_events).begin();
+    mysql::Binary_log_event * event1;
+    for (; it != (trans->m_events).end(); it++)
     {
+      event1= *it;
       switch (event->get_event_type())
       {
         case mysql::WRITE_ROWS_EVENT:
         case mysql::DELETE_ROWS_EVENT:
         case mysql::UPDATE_ROWS_EVENT:
-        mysql::Row_event *rev= static_cast<mysql::Row_event *>(event);
-        boost::uint64_t table_id= rev->table_id;
+        mysql::Row_event *rev= static_cast<mysql::Row_event *>(event1);
+        uint64_t table_id= rev->table_id;
         // BUG: will create a new event header if the table id doesn't exist.
         Binary_log_event * tmevent= trans->table_map()[table_id];
         mysql::Table_map_event *tm;
@@ -222,7 +226,7 @@ public:
             table_delete(os.str(),fields);
         } while (++it != rows.end());
       } // end switch
-    } // end BOOST_FOREACH
+    } // end for loop
     /* Consume the event */
     delete trans;
     return 0;
@@ -235,7 +239,8 @@ int main(int argc, char** argv)
 {
   if (argc != 2)
   {
-    fprintf(stderr,"Usage:\n\treplaybinlog URL\n\nExample:\n\treplaybinlog mysql://root:mypasswd@127.0.0.1:3306\n\n");
+    fprintf(stderr,"Usage:\n\treplaybinlog URL\n\nExample:"
+            "\n\treplaybinlog mysql://root:mypasswd@127.0.0.1:3306\n\n");
     return (EXIT_FAILURE);
   }
 
@@ -296,15 +301,18 @@ int main(int argc, char** argv)
     {
     case mysql::QUERY_EVENT:
       {
-        const mysql::Query_event *qev= static_cast<const mysql::Query_event *>(event);
+        const mysql::Query_event *qev=
+        static_cast<const mysql::Query_event *>(event);
         std::cout << "query= "
                   << qev->query
                   << " db= "
                   << qev->db_name
                   <<  std::endl
                   <<  std::endl;
-        if (qev->query.find("DROP TABLE REPLICATION_LISTENER") != std::string::npos ||
-            qev->query.find("DROP TABLE `REPLICATION_LISTENER`") != std::string::npos)
+        if (qev->query.find("DROP TABLE REPLICATION_LISTENER") !=
+            std::string::npos ||
+            qev->query.find("DROP TABLE `REPLICATION_LISTENER`") !=
+            std::string::npos)
         {
           quit= true;
         }

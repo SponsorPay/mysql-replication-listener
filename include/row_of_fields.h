@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -20,9 +20,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #ifndef _ROW_OF_FIELDS_H
 #define	_ROW_OF_FIELDS_H
 
+#include "value.h"
 #include <vector>
 #include <iostream>
-#include "value.h"
+
 using namespace mysql;
 
 namespace mysql
