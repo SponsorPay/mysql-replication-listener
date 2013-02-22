@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 
 #include "binlog_event.h"
 #include <iostream>
+
 namespace mysql
 {
 
@@ -67,7 +68,8 @@ Binary_log_event::~Binary_log_event()
 }
 
 
-Binary_log_event * create_incident_event(unsigned int type, const char *message, unsigned long pos)
+Binary_log_event * create_incident_event(unsigned int type, const char *message,
+                                         unsigned long pos)
 {
   Incident_event *incident= new Incident_event();
   incident->header()->type_code= INCIDENT_EVENT;
@@ -76,6 +78,185 @@ Binary_log_event * create_incident_event(unsigned int type, const char *message,
   incident->type= type;
   incident->message.append(message);
   return incident;
+}
+
+
+void Binary_log_event::print_event_info(std::ostream& info) {}
+void Binary_log_event::print_long_info(std::ostream& info) {}
+
+void Unknown_event::print_event_info(std::ostream& info)
+{
+  info << "Unhandled event";
+}
+
+void Unknown_event::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  this->print_event_info(info);
+}
+
+void Query_event::print_event_info(std::ostream& info)
+{
+  if (strcmp(query.c_str(), "BEGIN") != 0 &&
+      strcmp(query.c_str(), "COMMIT") != 0)
+  {
+    info << "use `" << db_name << "`; ";
+  }
+  info << query;
+}
+
+void Query_event::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  info << "\tThread id: " << (int)thread_id;
+  info << "\tExec time: " << (int)exec_time;
+  info << "\nDatabase: " << db_name;
+  info << "\tQuery: ";
+  this->print_event_info(info);
+}
+
+void Rotate_event::print_event_info(std::ostream& info)
+{
+  info << "Binlog Position: " << binlog_pos;
+  info << ", Log name: " << binlog_file;
+}
+
+void Rotate_event::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  info << "\t";
+  this->print_event_info(info);
+}
+
+void Format_event::print_event_info(std::ostream& info)
+{
+  info << "Server ver: " << master_version;
+  info << ", Binlog ver: " << binlog_version;
+}
+
+void Format_event::print_long_info(std::ostream& info)
+{
+  Log_event_type event_type;
+  int enum_index= 1;
+  this->print_event_info(info);
+  info << "\nCreated timestamp: " << created_ts;
+  info << "\tCommon Header Length: " << (int)log_header_len;
+  info << "\nPost header length for events: \n";
+
+  for (int i= 0; i < post_header_len.size(); i++)
+  {
+    event_type= static_cast<Log_event_type>(i);
+    info << mysql::system::get_event_type_str(event_type)
+         << "= "
+         << (int)post_header_len[static_cast<Log_event_type>(i)]
+         <<  "\n";
+  }
+}
+
+void User_var_event::print_event_info(std::ostream& info)
+{
+  info << "@`" << name << "`=";
+  if(type == STRING_TYPE)
+    info  << value;
+  else
+    info << "<Binary encoded value>";
+  //TODO: value is binary encoded, requires decoding
+}
+
+void User_var_event::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  info << "\tType: "
+       << get_value_type_string(static_cast<Value_type>(type));
+  info << "\n";
+  this->print_event_info(info);
+}
+
+void Table_map_event::print_event_info(std::ostream& info)
+{
+  info << "table id: " << table_id << " ("
+       << db_name << "."
+       << table_name << ")";
+}
+
+void Table_map_event::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  info << "\tFlags: " << flags;
+  info << "\tColumn Type: ";
+  /**
+    TODO: Column types are stored as integers. To be
+    replaced by string representation of types.
+  */
+  std::vector<uint8_t>::iterator it;
+  for (it= columns.begin(); it != columns.end(); ++it)
+  {
+    info << "\t" << (int)*it;
+  }
+  info << "\n";
+  this->print_event_info(info);
+}
+
+void Row_event::print_event_info(std::ostream& info)
+{
+  info << "table id: " << table_id << " flags: ";
+  info << get_flag_string(static_cast<enum_flag>(flags));
+}
+
+void Row_event::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  info << "\n";
+  this->print_event_info(info);
+
+  //TODO: Extract table names and column data.
+  if (this->get_event_type() == PRE_GA_WRITE_ROWS_EVENT ||
+      this->get_event_type() == WRITE_ROWS_EVENT)
+    info << "\nType: Insert" ;
+
+  if (this->get_event_type() == PRE_GA_DELETE_ROWS_EVENT ||
+      this->get_event_type() == DELETE_ROWS_EVENT)
+    info << "\nType: Delete" ;
+
+  if (this->get_event_type() == PRE_GA_UPDATE_ROWS_EVENT ||
+      this->get_event_type() == UPDATE_ROWS_EVENT)
+    info << "\nType: Update" ;
+}
+
+void Int_var_event::print_event_info(std::ostream& info)
+{
+  info << get_type_string(static_cast<Int_event_type>(type));
+  info << "\tValue: " << value;
+}
+
+void Int_var_event::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  info << "\t";
+  this->print_event_info(info);
+}
+
+void Incident_event::print_event_info(std::ostream& info)
+{
+  info << message;
+}
+
+void Incident_event::print_long_info(std::ostream& info)
+{
+  this->print_event_info(info);
+}
+
+void Xid::print_event_info(std::ostream& info)
+{
+  //TODO: Write process_event function for Xid events
+  info << "Xid ID=" << xid_id;
+}
+
+void Xid::print_long_info(std::ostream& info)
+{
+  info << "Timestamp: " << this->header()->timestamp;
+  info << "\t";
+  this->print_event_info(info);
 }
 
 } // end namespace mysql

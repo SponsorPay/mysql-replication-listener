@@ -33,6 +33,9 @@ Binary_log_event* Binary_log_driver::parse_event(std::istream &is,
   Binary_log_event *parsed_event= 0;
 
   switch (header->type_code) {
+    case FORMAT_DESCRIPTION_EVENT:
+      parsed_event= proto_format_desc_event(is, header);
+      break;
     case TABLE_MAP_EVENT:
       parsed_event= proto_table_map_event(is, header);
       break;
@@ -64,7 +67,7 @@ Binary_log_event* Binary_log_driver::parse_event(std::istream &is,
     default:
       {
         // Create a dummy driver.
-        parsed_event= new Binary_log_event(header);
+        parsed_event= new Unknown_event(header);
       }
   }
 

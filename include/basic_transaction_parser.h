@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA 
+02110-1301  USA
 */
 #ifndef _BASIC_TRANSACTION_PARSER_H
 #define	_BASIC_TRANSACTION_PARSER_H
@@ -49,6 +49,15 @@ public:
     Int_to_Event_map m_table_map;
 
     std::list<Binary_log_event *> m_events;
+
+    void print_event_info(std::ostream& info)
+    {
+      Binary_log_event::print_event_info(info);
+    }
+    void print_long_info(std::ostream& info)
+    {
+      Binary_log_event::print_long_info(info);
+    }
 };
 
 Transaction_log_event *create_transaction_log_event(void);

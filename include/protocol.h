@@ -421,6 +421,7 @@ void proto_get_handshake_package(std::istream &is, struct st_handshake_package &
   Allocates a new event and copy the header. The caller must be responsible for
   releasing the allocated memory.
 */
+Format_event *proto_format_desc_event(std::istream &is, Log_event_header *header);
 Query_event *proto_query_event(std::istream &is, Log_event_header *header);
 Rotate_event *proto_rotate_event(std::istream &is, Log_event_header *header);
 Incident_event *proto_incident_event(std::istream &is, Log_event_header *header);

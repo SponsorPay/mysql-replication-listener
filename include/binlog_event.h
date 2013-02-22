@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <vector>
+#include <sstream>
 
 namespace mysql
 {
@@ -142,6 +143,14 @@ public:
         m_header= *header;
     }
 
+    /**
+      Returns short information about the event
+    */
+    virtual void print_event_info(std::ostream& info)=0;
+    /**
+      Returns detailed information about the event
+    */
+    virtual void print_long_info(std::ostream& info);
     virtual ~Binary_log_event();
 
     /**
@@ -161,6 +170,15 @@ private:
     Log_event_header m_header;
 };
 
+class Unknown_event: public Binary_log_event
+{
+public:
+    Unknown_event(Log_event_header *header) : Binary_log_event(header) {}
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
+};
+
 class Query_event: public Binary_log_event
 {
 public:
@@ -172,6 +190,9 @@ public:
 
     std::string db_name;
     std::string query;
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
 };
 
 class Rotate_event: public Binary_log_event
@@ -180,7 +201,9 @@ public:
     Rotate_event(Log_event_header *header) : Binary_log_event(header) {}
     std::string binlog_file;
     uint64_t binlog_pos;
-};
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);};
 
 class Format_event: public Binary_log_event
 {
@@ -190,6 +213,12 @@ public:
     std::string master_version;
     uint32_t created_ts;
     uint8_t log_header_len;
+    std::vector<uint8_t> post_header_len;
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
+
+
 };
 
 class User_var_event: public Binary_log_event
@@ -210,6 +239,22 @@ public:
     uint8_t type;
     uint32_t charset; /* charset of the string */
     std::string value; /* encoded in binary speak, depends on .type */
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
+    std::string static get_value_type_string(enum Value_type type)
+    {
+      switch(type)
+      {
+        case STRING_TYPE:return "String";
+        case REAL_TYPE:return "Real";
+        case INT_TYPE:return "Integer";
+        case ROW_TYPE:return "Row";
+        case DECIMAL_TYPE:return "Decimal";
+        case VALUE_TYPE_COUNT:return "Value type count";
+        default:return "Unknown";
+      }
+    }
 };
 
 class Table_map_event: public Binary_log_event
@@ -223,11 +268,30 @@ public:
     std::vector<uint8_t> columns;
     std::vector<uint8_t> metadata;
     std::vector<uint8_t> null_bits;
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
 };
 
 class Row_event: public Binary_log_event
 {
 public:
+    //TODO: Use the enum defined in log_event.h instead
+    enum enum_flag
+    {
+      /* Last event of a statement */
+      STMT_END_F = (1U << 0),
+      /* Value of the OPTION_NO_FOREIGN_KEY_CHECKS flag in thd->options */
+      NO_FOREIGN_KEY_CHECKS_F = (1U << 1),
+      /* Value of the OPTION_RELAXED_UNIQUE_CHECKS flag in thd->options */
+      RELAXED_UNIQUE_CHECKS_F = (1U << 2),
+      /**
+        Indicates that rows in this event are complete, that is contain
+        values for all columns of the table.
+      */
+      COMPLETE_ROWS_F = (1U << 3)
+    };
+
     Row_event(Log_event_header *header) : Binary_log_event(header) {}
     uint64_t table_id;
     uint16_t flags;
@@ -236,6 +300,25 @@ public:
     std::vector<uint8_t> columns_before_image;
     std::vector<uint8_t> used_columns;
     std::vector<uint8_t> row;
+
+    static std::string get_flag_string(enum enum_flag flag)
+    {
+      switch (flag)
+      {
+      case STMT_END_F:
+        return "Last event of the statement";
+      case NO_FOREIGN_KEY_CHECKS_F:
+        return "No foreign Key checks";
+      case RELAXED_UNIQUE_CHECKS_F:
+        return "No unique key checks";
+      case COMPLETE_ROWS_F:
+        return "Complete Rows";
+      default:
+        return "Unknown Flag";
+      }
+    }
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
 };
 
 class Int_var_event: public Binary_log_event
@@ -244,6 +327,30 @@ public:
     Int_var_event(Log_event_header *header) : Binary_log_event(header) {}
     uint8_t  type;
     uint64_t value;
+    enum Int_event_type
+    {
+      INVALID_INT_EVENT,
+      LAST_INSERT_ID_EVENT,
+      INSERT_ID_EVENT
+    };
+
+    static std::string get_type_string(enum Int_event_type type)
+    {
+      switch(type)
+      {
+      case INVALID_INT_EVENT:
+        return "INVALID_INT";
+      case LAST_INSERT_ID_EVENT:
+        return "LAST_INSERT_ID";
+      case INSERT_ID_EVENT:
+        return "INSERT_ID";
+      default: /* impossible */
+        return "UNKNOWN";
+      }
+    }
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
 };
 
 class Incident_event: public Binary_log_event
@@ -253,6 +360,9 @@ public:
     Incident_event(Log_event_header *header) : Binary_log_event(header) {}
     uint8_t type;
     std::string message;
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
 };
 
 class Xid: public Binary_log_event
@@ -260,6 +370,9 @@ class Xid: public Binary_log_event
 public:
     Xid(Log_event_header *header) : Binary_log_event(header) {}
     uint64_t xid_id;
+
+    void print_event_info(std::ostream& info);
+    void print_long_info(std::ostream& info);
 };
 
 Binary_log_event *create_incident_event(unsigned int type, const char *message, unsigned long pos= 0);

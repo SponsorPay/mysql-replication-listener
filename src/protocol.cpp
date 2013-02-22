@@ -17,14 +17,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
+#include "protocol.h"
 #include <stdint.h>
 #include <boost/array.hpp>
 #include <vector>
-#include "protocol.h"
 #include <iostream>
+
 using namespace mysql;
 using namespace mysql::system;
-
+using namespace std;
 namespace mysql { namespace system {
 
 int proto_read_package_header(tcp::socket *socket, unsigned long *packet_length, unsigned char *packet_no)
@@ -295,7 +296,7 @@ std::istream &operator>>(std::istream &is, Protocol_chunk_string &str)
     is.get(ch);
     str.m_str->at(ct)= ch;
   }
-  
+
   return is;
 }
 
@@ -317,6 +318,41 @@ std::ostream &operator<<(std::ostream &os, Protocol &chunk)
   return os;
 }
 
+/* Removes trailing whitspaces from the input string */
+void trim2(std::string& str)
+{
+  std::string::size_type pos = str.find_last_not_of('\0');
+  if (pos != std::string::npos)
+    str.erase(pos + 1);
+  else
+    str.clear();
+}
+
+Format_event *proto_format_desc_event(std::istream &is, Log_event_header *header)
+{
+  Format_event *fdev= new Format_event(header);
+  int event_length= (fdev->header())->event_length;
+  Protocol_chunk<uint16_t> proto_format_event_binlog_version(fdev->binlog_version);
+  Protocol_chunk_string proto_format_event_master_version(fdev->master_version, 50);
+  Protocol_chunk<uint32_t> proto_format_event_created_ts(fdev->created_ts);
+  Protocol_chunk<uint8_t> proto_format_event_header_len(fdev->log_header_len);
+  Protocol_chunk_vector proto_format_event_post_header(fdev->post_header_len,
+                                                       event_length - 76);
+  is >> proto_format_event_binlog_version
+     >> proto_format_event_master_version
+     >> proto_format_event_created_ts
+     >> proto_format_event_header_len
+     >> proto_format_event_post_header;
+
+  /*
+    Add an element at the beginning of the vector for UNKNOWN_EVENT
+    in Log_event_type.
+  */
+  fdev->post_header_len.insert(fdev->post_header_len.begin(), 0);
+  trim2(fdev->master_version);
+  return fdev;
+
+}
 Query_event *proto_query_event(std::istream &is, Log_event_header *header)
 {
   uint8_t db_name_len;
@@ -324,7 +360,6 @@ Query_event *proto_query_event(std::istream &is, Log_event_header *header)
   // Length of query stored in the payload.
   uint32_t query_len;
   Query_event *qev=new Query_event(header);
-
   Protocol_chunk<uint32_t> proto_query_event_thread_id(qev->thread_id);
   Protocol_chunk<uint32_t> proto_query_event_exec_time(qev->exec_time);
   Protocol_chunk<uint8_t> proto_query_event_db_name_len(db_name_len);
