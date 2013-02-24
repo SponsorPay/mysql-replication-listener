@@ -69,7 +69,7 @@ Binary_log_event::~Binary_log_event()
 }
 
 Binary_log_event * create_incident_event(unsigned int type,
-+                                         const char *message, ulong pos)
+                                         const char *message, ulong pos)
 {
   Incident_event *incident= new Incident_event();
   incident->header()->type_code= INCIDENT_EVENT;
