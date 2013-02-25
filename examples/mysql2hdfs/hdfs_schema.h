@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012, Oracle and/or its affiliates. All rights
+Copyright (c) 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -28,9 +28,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 class HDFSSchema
 {
 public:
-  HDFSSchema(const std::string& host, int port);
+  HDFSSchema(const std::string& host, int port, const std::string& user,
+                                        const std::string& parent_path);
   ~HDFSSchema();
-  int HDFS_data_insert(std::string DPath, const char* data);
+  int HDFS_data_insert(const std::string& DPath, const char* data);
+
+  std::string get_data_warehouse_dir()
+  {
+    return m_parent_path;
+  }
 
   std::string hdfs_field_delim;
   std::string hdfs_row_delim;
@@ -38,7 +44,9 @@ public:
 private:
   hdfsFS m_fs;
   std::string m_host;
+  std::string m_user;
+  std::string m_parent_path;
   int m_port;
 };
 
-#endif  /* HDFS_SCHEMA_H */
+#endif  /* HDFS_SCHEMA_INCLUDED */

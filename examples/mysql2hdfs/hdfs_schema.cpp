@@ -1,4 +1,5 @@
-/*Copyright (c) 2012, Oracle and/or its affiliates. All rights
+/*
+Copyright (c) 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,9 +19,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 
 /*
-   A table is mapped into a directory in HDFS. The data to be inserted in
-   a table are files with a .txt extension. Databases are represented as
-   separate directories.
+   A table is mapped as a file into a directory in HDFS. The data to be
+   inserted in a table are files with a .txt extension. Databases are
+   represented as separate directories.
 
    A directory in HDFS file system is created in the following events:
 
@@ -53,37 +54,50 @@ using namespace std;
 
 /**
   The constructor connects to HDFS File system.
-  @param host A string containing either a host name, or an IP address
-              of the namenode of a hdfs cluster. 'host' should be passed as
-              NULL if you want to connect to local filesystem. 'host' should
-              be passed as 'default' (and port as 0) to used the 'configured'
-              filesystem (core-site/core-default.xml).
-  @param port The port on which the server is listening.
+  @param host           A string containing either a host name, or an IP address
+                        of the namenode of a hdfs cluster. 'host' should be passed as
+                        NULL if you want to connect to local filesystem. 'host' should
+                        be passed as 'default' (and port as 0) to used the 'configured'
+                        filesystem (core-site/core-default.xml).
+  @param port           The port on which the server is listening.
+  @param user           The user name (this is hadoop domain user)
+  @param parent_path    Data warehouse directory to build the database schema.
 */
 
-HDFSSchema::HDFSSchema(const std::string& host, int port)
+HDFSSchema::HDFSSchema(const std::string& host, int port,
+                       const std::string& user,
+                       const std::string& parent_path)
+ : m_user(user), m_parent_path(parent_path)
 {
   /* Connect to HDFS File system */
-  m_fs= hdfsConnect(host.c_str(), port);
+  if (user.empty())
+    m_fs= hdfsConnect(host.c_str(), port);
+
+  else
+    m_fs= hdfsConnectAsUser(host.c_str(), port, user.c_str());
+
   m_host= host;
   m_port= port;
+
+  /* The default data  warehouse diectory is set. */
+  if (m_parent_path.empty())
+    m_parent_path= "/user/hive/warehouse";
+
   if (m_fs == NULL)
   {
     std::runtime_error error("Couldnot connect to HDFS file system");
     throw error;
   }
-  cout << "Connected to HDFS file system" << endl;
+  else
+    cout << "Connected to HDFS file system" << endl;
+
 }
 
-/**
-  Disconnect from hdfs.
-*/
+/* Disconnect from hdfs. */
 HDFSSchema::~HDFSSchema()
 {
   if (m_fs)
-  {
     hdfsDisconnect(m_fs);
-  }
 }
 
 /**
@@ -98,10 +112,10 @@ HDFSSchema::~HDFSSchema()
 
 */
 
-int HDFSSchema::HDFS_data_insert(string DPath, const char* data)
+int HDFSSchema::HDFS_data_insert(const string& DPath, const char* data)
 {
   std::stringstream stream_dir_path;
-  stream_dir_path << "hdfs://" << m_host << ":" << m_port << "/user/hive/warehouse/";
+  stream_dir_path << "hdfs://" << m_host << ":" << m_port << m_parent_path << "/";
   stream_dir_path << DPath;
 
   if (hdfsSetWorkingDirectory(m_fs, (stream_dir_path.str()).c_str()))
@@ -109,14 +123,13 @@ int HDFSSchema::HDFS_data_insert(string DPath, const char* data)
     cerr << "Failed to set working directory as " << stream_dir_path.str();
     return 0;
   }
-
   const char* write_path= "datafile1.txt";
   hdfsFile writeFile;
 
   /*
-    The file in which the data is stored is named Datafile.txt here;
-    you can name is anything you want. The working directory where this
-    datafile goes is hive_warehouse/db_name/tb_name.
+    The file in which the data is stored is named datafile1.txt here;
+    you can name it anything you want. The working directory where this
+    datafile goes is hive_warehouse/db_name.db/tb_name.
     There is no restriction on the maximum size of the file.
     should there be?
   */
@@ -144,7 +157,6 @@ int HDFSSchema::HDFS_data_insert(string DPath, const char* data)
        << " bytes to datafile in the following directory: "
        << stream_dir_path.str()
        << endl;
-
   if (hdfsFlush(m_fs, writeFile))
   {
     cerr <<  "Failed to 'flush' " << write_path << "\n";

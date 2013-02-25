@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012, Oracle and/or its affiliates. All rights
+Copyright (c) 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,19 +18,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#include "table_index.cpp"
-#include "table_insert.cpp"
+#include "table_index.h"
+#include "table_insert.h"
 #include "binlog_api.h"
 #include <getopt.h>
 #include <iostream>
 #include <iomanip>
 #include <stdlib.h>
-#include <string>
-
+#include <string.h>
+#include <vector>
 
 using mysql::system::create_transport;
 using mysql::Binary_log;
 using namespace std;
+
 
 /*
   The following classes inherit the content_handler class. They accept
@@ -61,8 +62,8 @@ public:
               << (unsigned)incident->type
               << " message= "
               << incident->message
-              <<  std::endl
-              <<  std::endl;
+              << std::endl
+              << std::endl;
     /* Consume the event */
     delete incident;
     return 0;
@@ -102,10 +103,8 @@ public:
     */
     mysql::Row_event_set rows(rev, ti_it->second);
 
-    /* Create a fuly qualified table name */
-    std::ostringstream os;
-
-    os << ti_it->second->db_name << ".db/" << ti_it->second->table_name;
+    string table_name= ti_it->second->table_name;
+    string db_name= ti_it->second->db_name;
 
     mysql::Row_event_set::iterator it= rows.begin();
     do
@@ -113,7 +112,7 @@ public:
       mysql::Row_of_fields fields= *it;
       long int timestamp= rev->header()->timestamp;
       if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT)
-        table_insert(os.str(), fields, timestamp, m_hdfs_schema);
+        table_insert(db_name, table_name, fields, timestamp, m_hdfs_schema);
     } while (++it != rows.end());
 
     /* Consume the event */
@@ -129,114 +128,350 @@ private:
 string field_delim="\x01";
 string row_delim="\x0A";
 
-static struct option long_options[]=
+std::vector<long int> field_index;
+std::map<std::string, tname_vec> dbname2tbname_map;
+std::vector<std::string> opt_db_name;
+
+/* The structure my_option contains additional description
+   to long option name */
+struct my_option{
+  const char *name;
+  int has_arg;
+  int *flag;
+  int val;
+  std::string arg;
+  std::string description;
+};
+
+static struct my_option my_long_options[]=
 {
-  /* These options take an argument */
-  {"fields_delimited_by", required_argument, 0, 'f'},
-  {"row_delimited_by", required_argument, 0, 'r'},
+  {"field-delimiter", required_argument, 0, 'r', "DELIM",
+   "Use DELIM instead of ctrl-A for field delimiter"},
+  {"row-delimiter", required_argument, 0, 'w', "DELIM",
+   "Use DELIM instead of LINE FEED for row delimiter"},
+  {"databases", required_argument, 0, 'd',"DB_LIST", "Import entries for"
+   " just these databases, optionally include only specified tables."},
+  {"fields", required_argument, 0, 'f', "LIST",
+   "\tImport entries for just these fields "},
+  {"help", no_argument, 0, 'h', "", "Display help"},
   {0, 0, 0, 0}
 };
 
-void usage(const struct option *options)
+/* long_options structure is used by getopt_long */
+static struct option
+ long_options[sizeof(my_long_options)/sizeof(my_long_options[0])];
+
+void usage(const struct my_option *options)
 {
-  const struct option *optp;
-  cerr <<  "Usage:\n\nmain [optios] MySQL_URL HDFS_URL \n\n"
+  const struct my_option *optp;
+
+  cerr <<  "Usage:\n\nhapplier [options] [MySQL_URL] [HDFS_URL] \n\n"
        <<  "Example:\n\n"
-       <<  "./mysql2hdfs [options] mysql://root@127.0.0.1:3306 "
+       <<  "./happlier [options] mysql://root@127.0.0.1:3306 "
        <<  "hdfs://localhost:9000\n\n";
 
   for (optp= options; optp->name; optp++)
   {
-    cerr << "-" << (char)optp->val
+    cerr << setw(2) << right
+         << "-" << (char)optp->val
          << (strlen(optp->name) ? ", " : "  ")
+         << setw(2) << right
          << "--" << optp->name;
 
     if (optp->has_arg  == 1)
-      cerr << "=hex_arg Ex: 0xnn";
+      cerr << "=" << optp->arg;
+    cerr << "\t"
+         << optp->description << endl;
    }
+
+   cerr << "\nDELIM can be a string or an ASCII value in the format '\\nnn'\n"
+        << "Escape sequences are not allowed.\n";
+
+   cerr << "\nDB-LIST is made up of one database name, "
+        << " or many names separated by commas.\n"
+        << "Each database name can be optionally followed by table names.\n"
+        << "The table names must follow the database name, "
+        << " separated by HYPHENS\n\n"
+        << "Example: -d=db_name1-table1-table2,dbname2-table1,dbname3\n";
+
+   cerr << "LIST is made up of one range, or many ranges separated by commas."
+        << "Each range is one of:\n"
+        <<  " N     N'th byte, character or field, counted from 1\n"
+        << " N-    from N'th byte, character or field, to end of line\n"
+        << " N-M   from N'th to M'th (included) byte, character or field\n"
+        << "-M    from first to M'th (included) byte, character or field\n";
+}
+
+
+bool check_conversion(const char* optarg, long int *position)
+{
+  char *endp;
+
+  errno= 0;
+  *position= strtol(optarg, &endp, 10);
+  if ((errno == ERANGE &&
+     (*position == LONG_MAX || *position == LONG_MIN)) ||
+     (errno == EINVAL) ||
+     (errno != 0 && *position == 0) || *endp != '\0' )
+  {
+    return false;
+  }
+  return true;
 }
 
 /* Parse the arguments */
-
-void parse_args(int *argc, char **argv)
+void parse_args(int *argc, char **argv, std::string* mysql_uri,
+                                         std::string* hdfs_uri)
 {
-  char c;
-  string as;
-  ostringstream s;
+  /* Create an array of structure 'option' for the sake of getopt_long */
+  for (int i= 0; i < (sizeof(my_long_options)/sizeof(my_long_options[0])); i++)
+  {
+    long_options[i].name= (my_long_options[i]).name;
+    long_options[i].has_arg=(my_long_options[i]).has_arg;
+    long_options[i].flag=(my_long_options[i]).flag;
+    long_options[i].val= (my_long_options[i]).val;
+  }
 
+  string optarg_str, delim_str;
+  long int delim_int;
   while (true)
   {
     /* getopt_long stores the option index here */
     int option_index= 0;
-    int c= getopt_long(*argc, argv, "r:f:", long_options, &option_index);
+    int c= getopt_long(*argc, argv, "r:d:f:w:h", long_options, &option_index);
     /* Detect the end of options */
     if (c == -1)
       break;
-    /*
-       Using stringstream to convert hexadecimal delimiters taken as input,
-       to a single character.
-    */
-    int delim;
-    std::stringstream delim_str;
 
     switch (c)
     {
-    case 'f':
-      delim_str << hex << optarg;
-      delim_str >> delim;
-      if (delim == 0 && optarg != "0x00")
+    case 'r':                                   // field-delimiter
+      optarg_str= optarg;
+      /* Check if the delimiter is a non printable character */
+      if (optarg[0] == '\\')
       {
-        cerr << "Incorrect hexadecimal format used" << endl;
-        usage(long_options);
-        exit(2);
+        delim_str= optarg_str.substr(1);
+        if (!check_conversion(delim_str.c_str(), &delim_int))
+        {
+          cerr << "Delimiter must be a string or ascii value in format '\\nnn'"
+               << endl;
+          usage(my_long_options);
+          exit(2);
+        }
+        field_delim= (char)delim_int;
       }
-      field_delim= (char)delim;
+      /* The delimiter is a string, and requires no conversion. */
+      else
+        field_delim= optarg;
       break;
-    case 'r':
-      delim_str << hex << optarg;
-      delim_str >> delim;
-      if (delim == 0 && optarg != "0x00")
+    case 'w':                                   // row-delimiter
+      optarg_str= optarg;
+      /* Check if the delimiter is a non printable cahracter */
+      if (optarg[0]== '\\')
       {
-        cerr << "Incorrect hexadecimal format used" << endl;
-        usage(long_options);
-        exit(2);
+        delim_str= optarg_str.substr(1);
+        if (!check_conversion(delim_str.c_str(), &delim_int))
+        {
+          cerr << "invalid field list" << endl;
+          usage(my_long_options);
+          exit(2);
+        }
+        row_delim= (char)delim_int;
       }
-      row_delim= (char)delim;
+      /* The delimiter is a string, and requires no conversion. */
+      else
+        row_delim= optarg;
       break;
+    case 'f':                                   // field index
+    {
+      /*
+        The user can specify option as -f=2,6-8,11-
+        These are the fields which the user wants to import. It is stored
+        in the vector as 2,6,7,8. 11 is assigned to a variable, opt_field_min.
+      */
+      string word, elem1, elem2;
+      stringstream stream(optarg);
+      while (getline(stream, word, ','))
+      {
+        vector<long int>::iterator it= field_index.begin();
+        /*
+           Find the index numbers specified in the form N-M,i.e.
+           include N'th to M'th (included) field. The field indexes are stored
+           in a vector. N-M is stored as (M-N + 1) different numbers
+           in the vector.
+        */
+        size_t found= word.find("-");
+
+        if (found != string::npos)
+        {
+          elem1= word.substr(0, found);
+          elem2= word.substr((found+1));
+          long int el1, el2;
+          if (!check_conversion(elem1.c_str(), &el1) ||
+              !check_conversion(elem2.c_str(), &el2) ||
+              el1 >= el2 && el1 != 0 && el2 != 0)
+          {
+            cerr << "invalid field list" << endl;
+            usage(my_long_options);
+            exit(2);
+          }
+          // Entries in the form of N-M is found.
+          if (!elem1.empty() && !elem2.empty())
+          {
+            for (int i= el1; i <= el2; i++)
+              it= field_index.insert(it, i);
+          }
+          // Entries in the form of N- or -M is found
+          else
+          {
+            if (!elem1.empty())
+              opt_field_min= el1;
+            else
+              opt_field_max= el2;
+          }
+        }
+        // Entries is in the form of N, only one number.
+        else
+        {
+          long int int_str;
+          if (!check_conversion(word.c_str(), &int_str))
+          {
+            cerr << word << "is not an integer" << endl;
+            usage(my_long_options);
+            exit(2);
+          }
+          if (int_str == 0)
+          {
+            cerr << "Fields are numbered from 1" << endl;
+            usage(my_long_options);
+            exit(2);
+          }
+          it= field_index.insert(it, int_str);
+        }
+      } // end of inner while loop
+      opt_field_flag= 1;
+      break;
+    }
+    case 'd':
+    {
+      /*
+        The user can specify this parameter as
+        -d=db1-t1-t2,db2-t3-t4-t5, ...
+        The information is stored in a map where key is the db_name
+        and the value is a vector of table names in that database as given
+        by the user. FOr ex: Here the map would contain
+           <key>db1  <value> (t1,t2)
+           <key>db2  <value> (t3,t4,t5)
+           ...
+      */
+      string db_str, db_name;
+      stringstream stream(optarg);
+      tname_vec vec1;
+      tname_vec::iterator tn_it= vec1.begin();
+      while (getline(stream, db_str, ','))
+      {
+        if (!vec1.empty())
+         vec1.clear();
+        size_t found= db_str.find("-");
+        /* Database name is followed by table names. */
+        if (found != string::npos)
+        {
+          string tb_names, tname;
+          db_name= db_str.substr(0, found);
+          tb_names= db_str.substr(found+1);
+          stringstream db_stream(tb_names);
+
+          while (getline(db_stream, tname, '-'))
+            vec1.push_back(tname);
+          dbname2tbname_map.insert(opt_dname_element(db_name, vec1));
+        }
+        /* All tables must be included. */
+        else
+        {
+          db_name= db_str;
+          dbname2tbname_map.insert(opt_dname_element(db_name, vec1));
+        }
+      }
+      opt_db_flag= 1;
+      break;
+    }
+    case 'h':
+      usage(my_long_options);
+      exit(2);
     case '?':
     default:
       /* getopt has already printed out the error */
-      usage(long_options);
+      usage(my_long_options);
       exit(2);
     } // end of switch
   } // end of while loop
 
-  if (optind == *argc || *argc - optind != 2)
+  if (*argc == optind || *argc - optind == 1)
   {
-    usage(long_options);
-    exit(2);
+    if (*argc - optind ==1) //one of the uri is provided
+    {
+      if (strncmp(argv[optind], "hdfs://", 7) == 0)  //the uri is hdfs uri
+      {
+         *hdfs_uri= argv[optind];
+         *mysql_uri= "mysql://user@127.0.0.1:3306";
+      }
+      else if (strncmp(argv[optind], "mysql://", 8) == 0 ||
+               strncmp(argv[optind], "file://", 7) == 0)
+      {
+         *mysql_uri= argv[optind];
+         *hdfs_uri= "hdfs://default:0";
+      }
+      else
+      {
+        usage(my_long_options);
+        exit(2);
+      }
+    }
+    if (*argc == optind)  //neither of the uri is provided
+    {
+      *mysql_uri= "mysql://user@127.0.0.1:3306";
+      *hdfs_uri= "hdfs://default:0";
+    }
+  }
+  else if (*argc - optind == 2)
+  {
+    *argc= optind;
+    *mysql_uri= argv[optind];
+    *hdfs_uri= argv[optind+1];
   }
   else
   {
-    *argc= optind;
+    usage(my_long_options);
+    exit(2);
   }
 } // end parse_args
 
 
-void parse_hdfs_url(const char *body, size_t len, string &hdfs_host, unsigned int *hdfs_port)
+void parse_hdfs_url(const char *body, size_t len, string* hdfs_host,
+                          string* hdfs_user, unsigned int *hdfs_port)
 {
 
   if (strncmp(body, "hdfs://", 7) != 0)
   {
-    usage(long_options);
+    usage(my_long_options);
     exit(2);
   }
 
-  const char *host = body+7;
+  const char *user = body + 7;
+
+  const char *user_end= strpbrk(user, ":@");
+  if (*user_end == ':' || user_end == user)
+    hdfs_user->clear();
+  else
+    hdfs_user->assign(user, user_end - user);
+  const char *host = *user_end == '@' ? user_end + 1 : user;
   const char *host_end = strchr(host, ':');
+
   if (host == host_end)
   {
-    usage(long_options);
+    cerr << "HDFS host name is required"
+         << endl;
+    usage(my_long_options);
     exit(2);
   } // No hostname was found.
 
@@ -244,54 +479,76 @@ void parse_hdfs_url(const char *body, size_t len, string &hdfs_host, unsigned in
     If no ':' was found there is no port, so the host ends at the end
     of the string.
   */
-
   if (host_end == 0)
     host_end = body + len;
 
   /* Find the port number */
-  unsigned long portno = 9100;
+  unsigned long portno = 0;
 
   if (*host_end == ':')
     portno = strtoul(host_end + 1, NULL, 10);
 
-  hdfs_host= std::string(host, host_end - host);
+  hdfs_host->assign(host, host_end - host);
   *hdfs_port= portno;
   /*
     Host name is now the string [host, port-1) if port != NULL and
     [host, EOS) otherwise.
     Port number is stored in portno, either the default, or a parsed one.
+    User name is now the string [user,host-1).
   */
 }
 
 int main(int argc, char** argv)
 {
   string mysql_uri, hdfs_uri;
-  string hdfs_host;
+  string hdfs_host, hdfs_user;
+  string data_dir_path;
   unsigned int hdfs_port;
+  char type;
 
-  parse_args(&argc, argv);
-
-  mysql_uri= argv[argc++];
-  hdfs_uri= argv[argc++];
-
+  parse_args(&argc, argv, &mysql_uri, &hdfs_uri);
   parse_hdfs_url(hdfs_uri.c_str(), strlen(hdfs_uri.c_str()),
-                 hdfs_host, &hdfs_port);
+                 &hdfs_host, &hdfs_user, &hdfs_port);
 
   Binary_log binlog(create_transport(mysql_uri.c_str()));
+  cout << "The default data warehouse directory"
+       << " in HDFS is /usr/hive/warehouse"
+       << endl;
+  cout << "Change the default data warehouse directory? (Y or N) ";
 
-  try
+  while (1)
   {
-    HDFSSchema sqltohdfs_obj(hdfs_host, hdfs_port);
+    cin >> type;
+    switch (type)
+    {
+      case 'Y':
+        cout << "Enter the absolute path to the data warehouse directory :";
+        cin >> data_dir_path;
+        break;
+      case 'N':
+        break;
+      default:
+        cout << "Enter either Y or N:";
+        continue;
+    }
+    break;
+  }
 
+ try
+ {
+    HDFSSchema sqltohdfs_obj(hdfs_host, hdfs_port, hdfs_user, data_dir_path);
+
+    cout << "The data warehouse directory is set as "
+         << sqltohdfs_obj.get_data_warehouse_dir()
+         << endl;
+    sqltohdfs_obj.hdfs_field_delim= field_delim;
+    sqltohdfs_obj.hdfs_row_delim= row_delim;
     /*
-      Attach a custom event content handlers
+      Attach custom event content handlers
     */
     Incident_handler incident_hndlr;
     Table_index table_event_hdlr;
     Applier replay_hndlr(&table_event_hdlr, &sqltohdfs_obj);
-
-    sqltohdfs_obj.hdfs_field_delim= field_delim;
-    sqltohdfs_obj.hdfs_row_delim= row_delim;
 
     /*
       The content handlers are registered using content_handler_pipeline.

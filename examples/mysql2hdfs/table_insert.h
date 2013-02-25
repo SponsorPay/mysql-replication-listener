@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2012, Oracle and/or its affiliates. All rights
+Copyright (c) 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -24,8 +24,23 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "binlog_api.h"
 #include "hdfs_schema.h"
 #include <string>
+#include <map>
 
-void table_insert(std::string table_name, mysql::Row_of_fields &fields,
+extern std::vector<long int> field_index;
+extern std::vector<std::string> opt_db_name;
+
+typedef std::vector<std::string> tname_vec;
+typedef std::pair<std::string, tname_vec> opt_dname_element;
+
+extern std::map<std::string, tname_vec> dbname2tbname_map;
+
+extern long int opt_field_max;
+extern long int opt_field_min;
+extern int opt_field_flag;
+extern int opt_db_flag;
+
+void table_insert(const std::string& db_name, const std::string& table_name,
+                  const mysql::Row_of_fields &fields,
                   long int timestamp, HDFSSchema *mysqltohdfs_obj);
 
-#endif	/* TABLE_INSERT_H */
+#endif	/* TABLE_INSERT_INCLUDED */
