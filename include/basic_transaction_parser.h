@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef _BASIC_TRANSACTION_PARSER_H
-#define	_BASIC_TRANSACTION_PARSER_H
+#ifndef BASIC_TRANSACTION_PARSER_INCLUDED
+#define	BASIC_TRANSACTION_PARSER_INCLUDED
 
 /*
   TODO The Transaction_log_event and Basic_transaction_parser will be removed
@@ -107,5 +107,5 @@ private:
 
 } // end namespace
 
-#endif	/* _BASIC_TRANSACTION_PARSER_H */
+#endif	/* BASIC_TRANSACTION_PARSER_INCLUDED */
 

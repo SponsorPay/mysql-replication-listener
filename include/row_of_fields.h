@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef _ROW_OF_FIELDS_H
-#define	_ROW_OF_FIELDS_H
+#ifndef ROW_OF_FIELDS_INCLUDED
+#define	ROW_OF_FIELDS_INCLUDED
 
 #include "value.h"
 #include <vector>
@@ -45,4 +45,4 @@ private:
 
 }
 
-#endif	/* _ROW_OF_FIELDS_H */
+#endif	/* ROW_OF_FIELDS_INCLUDED */

@@ -18,8 +18,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _TCP_DRIVER_H
-#define	_TCP_DRIVER_H
+#ifndef TCP_DRIVER_INCLUDED
+#define	TCP_DRIVER_INCLUDED
+
 #include "binlog_driver.h"
 #include "protocol.h"
 #include <my_global.h>
@@ -178,4 +179,4 @@ int sync_connect_and_authenticate(MYSQL *mysql, const std::string &user,
 
 
 
-#endif	/* _TCP_DRIVER_H */
+#endif	/* TCP_DRIVER_INCLUDED */

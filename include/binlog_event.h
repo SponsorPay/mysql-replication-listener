@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef _BINLOG_EVENT_H
-#define	_BINLOG_EVENT_H
+#ifndef BINLOG_EVENT_INCLUDED
+#define	BINLOG_EVENT_INCLUDED
 
 #include <stdint.h>
 #ifdef min //definition of min() and max() in std and libmysqlclient
@@ -387,4 +387,4 @@ Binary_log_event *create_incident_event(unsigned int type,
 
 } // end namespace mysql
 
-#endif	/* _BINLOG_EVENT_H */
+#endif	/* BINLOG_EVENT_INCLUDED */

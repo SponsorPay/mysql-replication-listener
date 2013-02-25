@@ -18,8 +18,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _FIELD_ITERATOR_H
-#define	_FIELD_ITERATOR_H
+#ifndef FIELD_ITERATOR_INCLUDED
+#define	FIELD_ITERATOR_INCLUDED
+
 #include "binlog_event.h"
 #include "value.h"
 #include "row_of_fields.h"
@@ -196,4 +197,4 @@ bool Row_event_iterator< Iterator_value_type >::operator!=(const Row_event_itera
 }
 
 
-#endif	/* _FIELD_ITERATOR_H */
+#endif	/* FIELD_ITERATOR_INCLUDED */

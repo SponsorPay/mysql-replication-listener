@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef _ROWSET_H
-#define	_ROWSET_H
+#ifndef ROWSET_INCLUDED
+#define	ROWSET_INCLUDED
 
 #include "field_iterator.h"
 #include "resultset_iterator.h"
@@ -69,4 +69,4 @@ private:
 };
 
 }
-#endif	/* _ROWSET_H */
+#endif	/* ROWSET_INCLUDED */

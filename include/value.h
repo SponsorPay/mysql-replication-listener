@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _VALUE_ADAPTER_H
-#define	_VALUE_ADAPTER_H
+#ifndef VALUE_ADAPTER_INCLUDED
+#define	VALUE_ADAPTER_INCLUDED
 
 #include "protocol.h"
 #include <my_global.h>
@@ -179,4 +179,4 @@ public:
 
 
 } // end namespace mysql
-#endif	/* _VALUE_ADAPTER_H */
+#endif	/* VALUE_ADAPTER_INCLUDED */

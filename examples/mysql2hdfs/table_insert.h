@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _TABLE_INSERT_H
-#define	_TABLE_INSERT_H
+#ifndef TABLE_INSERT_INCLUDED
+#define	TABLE_INSERT_INCLUDED
 
 #include "binlog_api.h"
 #include "hdfs_schema.h"
@@ -28,4 +28,4 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 void table_insert(std::string table_name, mysql::Row_of_fields &fields,
                   long int timestamp, HDFSSchema *mysqltohdfs_obj);
 
-#endif	/* _TABLE_INSERT_H */
+#endif	/* TABLE_INSERT_H */

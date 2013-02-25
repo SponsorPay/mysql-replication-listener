@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA 
 */
-#ifndef BASIC_CONTENT_HANDLER_H
-#define	BASIC_CONTENT_HANDLER_H
+#ifndef BASIC_CONTENT_HANDLER_INCLUDED
+#define	BASIC_CONTENT_HANDLER_INCLUDED
 
 #include "binlog_event.h"
 
@@ -77,4 +77,4 @@ private:
 };
 
 } // end namespace
-#endif	/* BASIC_CONTENT_HANDLER_H */
+#endif	/* BASIC_CONTENT_HANDLER_INCLUDED */

@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _FILE_DRIVER_H
-#define	_FILE_DRIVER_H
+#ifndef FILE_DRIVER_INCLUDED
+#define	FILE_DRIVER_INCLUDED
 
 #include "binlog_api.h"
 #include "binlog_driver.h"
@@ -70,4 +70,4 @@ private:
 } // namespace mysql::system
 } // namespace mysql
 
-#endif	/* _FILE_DRIVER_H */
+#endif	/* FILE_DRIVER_INCLUDED */

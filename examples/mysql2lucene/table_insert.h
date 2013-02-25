@@ -19,12 +19,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 
 
-#ifndef _TABLE_INSERT_H
-#define	_TABLE_INSERT_H
+#ifndef TABLE_INSERT_INCLUDED
+#define	TABLE_INSERT_INCLUDED
 
 #include <string>
 #include "binlog_api.h"
 
 void table_insert(std::string table_name, mysql::Row_of_fields &fields);
 
-#endif	/* _TABLE_INSERT_H */
+#endif	/* TABLE_INSERT_H */

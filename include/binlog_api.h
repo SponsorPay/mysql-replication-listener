@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _REPEVENT_H
-#define	_REPEVENT_H
+#ifndef REPEVENT_INCLUDED
+#define	REPEVENT_INCLUDED
 
 #include "binlog_event.h"
 #include "binlog_driver.h"
@@ -149,4 +149,4 @@ public:
 
 }
 
-#endif	/* _REPEVENT_H */
+#endif	/* REPEVENT_INCLUDED */

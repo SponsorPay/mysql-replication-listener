@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _UTILITIES_H
-#define _UTILITIES_H
+#ifndef UTILITIES_INCLUDED
+#define UTILITIES_INCLUDED
 
 #include "value.h"
 #include "protocol.h"
@@ -50,4 +50,4 @@ int server_var_decoder (std::map<std::string, mysql::Value> *my_var_map,
 
 }
 
-#endif                                          /* _UTILITIES_H */
+#endif                                          /* UTILITIES_INCLUDED */

@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef TABLE_INDEX_H
-#define	TABLE_INDEX_H
+#ifndef TABLE_INDEX_INCLUDED
+#define	TABLE_INDEX_INCLUDED
 
 #include "binlog_event.h"
 #include "basic_content_handler.h"

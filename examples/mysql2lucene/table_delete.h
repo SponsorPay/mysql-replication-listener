@@ -19,11 +19,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 
 
-#ifndef _TABLE_DELETE_H
-#define	_TABLE_DELETE_H
+#ifndef TABLE_DELETE_INCLUDED
+#define	TABLE_DELETE_INCLUDED
+
 #include <string>
 #include "binlog_api.h"
 
 void table_delete(std::string table_name, mysql::Row_of_fields &fields);
 
-#endif	/* _TABLE_DELETE_H */
+#endif	/* TABLE_DELETE_H */

@@ -19,10 +19,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 
 
-#ifndef _GLOBALS_H
-#define	_GLOBALS_H
+#ifndef GLOBALS_INCLUDED
+#define	GLOBALS_INCLUDED
 #include <string>
 #include "binlog_api.h"
 extern std::string cl_index_file;
 
-#endif	/* _GLOBALS_H */
+#endif	/* GLOBALS_H */

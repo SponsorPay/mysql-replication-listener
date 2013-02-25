@@ -17,8 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef _PROTOCOL_H
-#define	_PROTOCOL_H
+#ifndef PROTOCOL_INCLUDED
+#define	PROTOCOL_INCLUDED
 
 #include "binlog_event.h"
 #include <my_global.h>
@@ -335,4 +335,4 @@ User_var_event *proto_uservar_event(std::istream &is, Log_event_header *header);
 } // end namespace system
 } // end namespace mysql
 
-#endif	/* _PROTOCOL_H */
+#endif	/* PROTOCOL_INCLUDED */

@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _RESULTSET_ITERATOR_H
-#define	_RESULTSET_ITERATOR_H
+#ifndef RESULTSET_ITERATOR_INCLUDED
+#define	RESULTSET_ITERATOR_INCLUDED
 
 #include "value.h"
 #include "rowset.h"
@@ -136,4 +136,4 @@ public:
 
 
 
-#endif	/* _RESULTSET_ITERATOR_H */
+#endif	/* RESULTSET_ITERATOR_INCLUDED */

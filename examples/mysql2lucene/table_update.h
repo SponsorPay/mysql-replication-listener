@@ -19,11 +19,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 */
 
 
-#ifndef _TABLE_UPDATE_H
-#define	_TABLE_UPDATE_H
+#ifndef TABLE_UPDATE_INCLUDED
+#define	TABLE_UPDATE_INCLUDED
+
 #include <string>
 #include "binlog_api.h"
 void table_update(std::string table_name, mysql::Row_of_fields &old_fields,
                   mysql::Row_of_fields &new_fields);
 
-#endif	/* _TABLE_UPDATE_H */
+#endif	/* TABLE_UPDATE_H */
