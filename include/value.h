@@ -61,7 +61,6 @@ public:
       m_size= calc_field_size((unsigned char)type,
                               (const unsigned char*)storage,
                               metadata);
-      //std::cout << "TYPE: " << type << " SIZE: " << m_size << std::endl;
     };
 
     Value()

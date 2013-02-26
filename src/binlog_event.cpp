@@ -50,14 +50,23 @@ const char *get_event_type_str(Log_event_type type)
   case PRE_GA_WRITE_ROWS_EVENT: return "Write_rows_event_old";
   case PRE_GA_UPDATE_ROWS_EVENT: return "Update_rows_event_old";
   case PRE_GA_DELETE_ROWS_EVENT: return "Delete_rows_event_old";
-  case WRITE_ROWS_EVENT: return "Write_rows";
-  case UPDATE_ROWS_EVENT: return "Update_rows";
-  case DELETE_ROWS_EVENT: return "Delete_rows";
+  case WRITE_ROWS_EVENT_V1: return "Write_rows_v1";
+  case UPDATE_ROWS_EVENT_V1: return "Update_rows_v1";
+  case DELETE_ROWS_EVENT_V1: return "Delete_rows_v1";
   case BEGIN_LOAD_QUERY_EVENT: return "Begin_load_query";
   case EXECUTE_LOAD_QUERY_EVENT: return "Execute_load_query";
   case INCIDENT_EVENT: return "Incident";
+  case IGNORABLE_LOG_EVENT: return "Ignorable";
+  case ROWS_QUERY_LOG_EVENT: return "Rows_query";
+  case WRITE_ROWS_EVENT: return "Write_rows";
+  case UPDATE_ROWS_EVENT: return "Update_rows";
+  case DELETE_ROWS_EVENT: return "Delete_rows";
+  case GTID_LOG_EVENT: return "Gtid";
+  case ANONYMOUS_GTID_LOG_EVENT: return "Anonymous_Gtid";
+  case PREVIOUS_GTIDS_LOG_EVENT: return "Previous_gtids";
+  case HEARTBEAT_LOG_EVENT: return "Heartbeat";
   case USER_DEFINED: return "User defined";
-  default: return "Unknown";
+  default: return "Unknown";                            /* impossible */
   }
 }
 
@@ -211,14 +220,17 @@ void Row_event::print_long_info(std::ostream& info)
 
   //TODO: Extract table names and column data.
   if (this->get_event_type() == PRE_GA_WRITE_ROWS_EVENT ||
+      this->get_event_type() == WRITE_ROWS_EVENT_V1 ||
       this->get_event_type() == WRITE_ROWS_EVENT)
     info << "\nType: Insert" ;
 
   if (this->get_event_type() == PRE_GA_DELETE_ROWS_EVENT ||
+      this->get_event_type() == DELETE_ROWS_EVENT_V1 ||
       this->get_event_type() == DELETE_ROWS_EVENT)
     info << "\nType: Delete" ;
 
   if (this->get_event_type() == PRE_GA_UPDATE_ROWS_EVENT ||
+      this->get_event_type() == UPDATE_ROWS_EVENT_V1 ||
       this->get_event_type() == UPDATE_ROWS_EVENT)
     info << "\nType: Update" ;
 }

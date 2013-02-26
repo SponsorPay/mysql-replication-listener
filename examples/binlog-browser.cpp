@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <string.h>
 #include <regex.h>
+#include <algorithm>
 #define MAX_BINLOG_SIZE 1073741824
 #define MAX_BINLOG_POSITION MAX_BINLOG_SIZE/4
 
@@ -263,8 +264,11 @@ static bool check_event_db(Binary_log_event **event)
   case PRE_GA_UPDATE_ROWS_EVENT:
   case PRE_GA_DELETE_ROWS_EVENT:
   case WRITE_ROWS_EVENT:
+  case WRITE_ROWS_EVENT_V1:
   case UPDATE_ROWS_EVENT:
+  case UPDATE_ROWS_EVENT_V1:
   case DELETE_ROWS_EVENT:
+  case DELETE_ROWS_EVENT_V1:
     {
       Row_event *row_event= dynamic_cast<Row_event*>(*event);
       if (row_event == 0)
@@ -627,7 +631,12 @@ int main(int argc, char** argv)
     }
 
     Binary_log binlog(create_transport(uri.c_str()));
-    if (binlog.connect() != ERR_OK)
+    int error_number= binlog.connect();
+
+    if (const char* msg= str_error(error_number))
+        cerr << msg << endl;
+
+    if (error_number != ERR_OK)
     {
       cerr << "Unable to setup connection" << endl;
       exit(2);
@@ -664,15 +673,17 @@ int main(int argc, char** argv)
     while (true)
     {
       Binary_log_event *event;
-      const int result= binlog.wait_for_next_event(&event);
       long int event_start_pos;
       string event_type;
       string database_dot_table;
 
-      if (result == ERR_EOF)
-        break;
+      error_number= binlog.wait_for_next_event(&event);
 
+      if (const char* msg=  str_error(error_number))
+        cerr << msg << endl;
 
+      if (error_number != ERR_OK)
+        exit(2);
 
       if (event->get_event_type() == mysql::INCIDENT_EVENT ||
          (event->get_event_type() == mysql::ROTATE_EVENT &&
@@ -707,8 +718,11 @@ int main(int argc, char** argv)
           event->get_event_type() == mysql::PRE_GA_UPDATE_ROWS_EVENT ||
           event->get_event_type() == mysql::PRE_GA_DELETE_ROWS_EVENT ||
           event->get_event_type() == mysql::WRITE_ROWS_EVENT ||
+          event->get_event_type() == mysql::WRITE_ROWS_EVENT_V1 ||
           event->get_event_type() == mysql::UPDATE_ROWS_EVENT ||
-          event->get_event_type() == mysql::DELETE_ROWS_EVENT))
+          event->get_event_type() == mysql::UPDATE_ROWS_EVENT_V1 ||
+          event->get_event_type() == mysql::DELETE_ROWS_EVENT ||
+          event->get_event_type() == mysql::DELETE_ROWS_EVENT_V1))
       {
 
          if (event->get_event_type() == mysql::TABLE_MAP_EVENT)

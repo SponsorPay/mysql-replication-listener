@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
   while (true) {
     Binary_log_event *event;
     int result = binlog.wait_for_next_event(&event);
-    if (result == ERR_EOF)
+    if (result != ERR_OK)
       break;
     switch (event->get_event_type()) {
     case QUERY_EVENT:

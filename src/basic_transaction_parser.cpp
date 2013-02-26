@@ -114,8 +114,11 @@ process_transaction_state(mysql::Binary_log_event *incomming_event)
           }
           break;
           case mysql::WRITE_ROWS_EVENT:
+          case mysql::WRITE_ROWS_EVENT_V1:
           case mysql::DELETE_ROWS_EVENT:
+          case mysql::DELETE_ROWS_EVENT_V1:
           case mysql::UPDATE_ROWS_EVENT:
+          case mysql::UPDATE_ROWS_EVENT_V1:
           {
             trans->m_events.push_back(event);
              /*

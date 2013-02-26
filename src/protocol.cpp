@@ -18,6 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 #include "protocol.h"
+#include "transitional_methods.h"
+#include "binlog_api.h"
 #include <my_global.h>
 #include <mysql_com.h>
 #include <iostream>
@@ -28,6 +30,37 @@ using namespace mysql;
 using namespace mysql::system;
 using namespace std;
 namespace mysql { namespace system {
+
+
+
+/**
+  Checks the Format Description event to determine if the master
+  has binlog checksums enabled or not.
+*/
+int check_checksum_value(mysql::Binary_log_event **event)
+{
+
+  Format_event *fdev= static_cast<Format_event*>(*event);
+
+  uchar version_split[3];
+  do_server_version_split((fdev->master_version).c_str(), version_split);
+  if (version_product(version_split) >= checksum_version_product)
+  {
+    /*
+      Last four bytes is the check sum value which is to be removed
+      from post_header_len.
+    */
+    fdev->post_header_len.erase(fdev->post_header_len.end() -
+                                BINLOG_CHECKSUM_LEN,
+                                fdev->post_header_len.end());
+
+    // Last element in post_header_len is the checksum algorithm descriptor.
+    if ((int)fdev->post_header_len.back() ==
+        mysql::system::BINLOG_CHECKSUM_ALG_CRC32)
+      return mysql::ERR_CHECKSUM_ENABLED;
+  }
+  return mysql::ERR_OK;
+}
 
 
 int proto_get_one_package(MYSQL *mysql, char *buff,
@@ -418,7 +451,8 @@ Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
 
   is >> proto_used_columns;
 
-  if (header->type_code == UPDATE_ROWS_EVENT)
+  if (header->type_code == UPDATE_ROWS_EVENT ||
+      header->type_code == UPDATE_ROWS_EVENT_V1)
   {
     Protocol_chunk_vector proto_columns_before_image(rev->columns_before_image,
                                                      used_column_len);
@@ -427,7 +461,8 @@ Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
 
   int bytes_read=proto_table_id.size() + proto_flags.size() +
                  proto_column_len.size() + used_column_len;
-  if (header->type_code == UPDATE_ROWS_EVENT)
+  if (header->type_code == UPDATE_ROWS_EVENT ||
+      header->type_code == UPDATE_ROWS_EVENT_V1)
     bytes_read+=used_column_len;
 
   ulong row_len= header->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;

@@ -53,6 +53,19 @@ using namespace std;
 
       m_bytes_read= MAGIC_NUMBER_SIZE;
 
+      // Read the first event to check the binlog version
+      if (m_bytes_read < m_binlog_file_size && m_binlog_file.good())
+      {
+        Protocol_chunk<uint32_t> prot_timestamp(m_event_log_header.timestamp);
+        Protocol_chunk<uint8_t> prot_type_code(m_event_log_header.type_code);
+
+        m_binlog_file >> prot_timestamp
+                      >> prot_type_code;
+
+        if (m_event_log_header.type_code != mysql::FORMAT_DESCRIPTION_EVENT)
+          return ERR_BINLOG_VERSION;
+      }
+
     } catch (...)
     {
       return ERR_FAIL;
@@ -85,7 +98,22 @@ using namespace std;
       if(memcmp(magic, magic_buf, MAGIC_NUMBER_SIZE))
         return ERR_FAIL;                        // Not a valid binlog file.
 
-       m_binlog_file.seekg(position, ios::beg );
+      m_bytes_read= MAGIC_NUMBER_SIZE;
+
+      // Read the first event to check the binlog version
+      if (m_bytes_read < m_binlog_file_size && m_binlog_file.good())
+      {
+        Protocol_chunk<uint32_t> prot_timestamp(m_event_log_header.timestamp);
+        Protocol_chunk<uint8_t> prot_type_code(m_event_log_header.type_code);
+
+        m_binlog_file >> prot_timestamp
+                      >> prot_type_code;
+
+        if (m_event_log_header.type_code != mysql::FORMAT_DESCRIPTION_EVENT)
+          return ERR_BINLOG_VERSION;
+      }
+
+      m_binlog_file.seekg(position, ios::beg );
 
     } catch (...)
     {
@@ -197,7 +225,15 @@ using namespace std;
         m_bytes_read= m_binlog_file.tellg();
 
         if(*event)
-          return ERR_OK;
+        {
+          if ((*event)->header()->type_code == mysql::FORMAT_DESCRIPTION_EVENT)
+          {
+            // Check server version and the checksum value
+            int ret= check_checksum_value(event);
+            return ret; // ret is the error code
+          }
+        }
+        return ERR_OK;
       }
     } catch(...)
     {

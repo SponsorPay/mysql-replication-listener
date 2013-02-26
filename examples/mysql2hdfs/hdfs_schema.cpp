@@ -48,6 +48,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "binlog_api.h"
 #include "hdfs_schema.h"
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 

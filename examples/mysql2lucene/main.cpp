@@ -89,15 +89,18 @@ public:
    mysql::Row_event_set::iterator it= rows.begin();
    do {
      mysql::Row_of_fields fields= *it;
-     if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT)
+     if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT ||
+         rev->get_event_type() == mysql::WRITE_ROWS_EVENT_V1)
        table_insert(os.str(),fields);
-     if (rev->get_event_type() == mysql::UPDATE_ROWS_EVENT)
+     if (rev->get_event_type() == mysql::UPDATE_ROWS_EVENT ||
+         rev->get_event_type() == mysql::UPDATE_ROWS_EVENT_V1)
      {
        ++it;
        mysql::Row_of_fields fields2= *it;
        table_update(os.str(),fields,fields2);
      }
-     if (rev->get_event_type() == mysql::DELETE_ROWS_EVENT)
+     if (rev->get_event_type() == mysql::DELETE_ROWS_EVENT ||
+         rev->get_event_type() == mysql::DELETE_ROWS_EVENT_V1)
        table_delete(os.str(),fields);
      } while (++it != rows.end());
 

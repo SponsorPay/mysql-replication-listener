@@ -25,6 +25,26 @@ using namespace mysql;
 using namespace mysql::system;
 namespace mysql
 {
+/*
+  Get a string describing an error from BAPI.
+
+  @param  error_no   the error number
+
+  @retval buf        buffer containing the error message
+*/
+const char* str_error(int error_no)
+{
+  char *msg= NULL;
+  if (error_no != ERR_OK)
+  {
+    if ((error_no > ERR_OK) && (error_no < ERROR_CODE_COUNT))
+      msg= (char*)bapi_error_messages[error_no];
+    else
+      msg= "Unknown error";
+   }
+   return msg;
+}
+
 Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4),
                                                  m_binlog_file("")
 {

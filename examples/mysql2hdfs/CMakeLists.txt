@@ -10,5 +10,5 @@ set(LIBS ${LIBS} ${HDFS_LIBS})
 
 ADD_EXECUTABLE(happlier mysql2hdfs.cpp table_index.cpp hdfs_schema.cpp table_insert.cpp) 
 TARGET_LINK_LIBRARIES(happlier ${LIBS})
-TARGET_LINK_LIBRARIES(happlier replication_static)
+TARGET_LINK_LIBRARIES(happlier replication_static mysqlclient)
 

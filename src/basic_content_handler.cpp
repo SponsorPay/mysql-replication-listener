@@ -64,6 +64,11 @@ process_event(mysql::Int_var_event *ev)
   return ev;
 }
 mysql::Binary_log_event *Content_handler::
+process_event(mysql::Format_event *ev)
+{
+  return ev;
+}
+mysql::Binary_log_event *Content_handler::
 process_event(mysql::Binary_log_event *ev)
 {
   return ev;
@@ -90,8 +95,11 @@ mysql::Binary_log_event*
    processed_event= process_event(static_cast<mysql::Query_event*>(ev));
    break;
  case mysql::WRITE_ROWS_EVENT:
+ case mysql::WRITE_ROWS_EVENT_V1:
  case mysql::UPDATE_ROWS_EVENT:
+ case mysql::UPDATE_ROWS_EVENT_V1:
  case mysql::DELETE_ROWS_EVENT:
+ case mysql::DELETE_ROWS_EVENT_V1:
    processed_event= process_event(static_cast<mysql::Row_event*>(ev));
    break;
  case mysql::USER_VAR_EVENT:
@@ -109,10 +117,10 @@ mysql::Binary_log_event*
  case mysql::TABLE_MAP_EVENT:
    processed_event= process_event(static_cast<mysql::Table_map_event *>(ev));
    break;
- /* TODO ********************************************************************/
  case mysql::FORMAT_DESCRIPTION_EVENT:
-   processed_event= process_event(ev);
+   processed_event= process_event(static_cast<mysql::Format_event *>(ev));
    break;
+ /* TODO ********************************************************************/
  case mysql::BEGIN_LOAD_QUERY_EVENT:
    processed_event= process_event(ev);
    break;

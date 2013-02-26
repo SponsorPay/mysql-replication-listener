@@ -34,6 +34,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <list>
 #include <cassert>
 #include <algorithm>
+
+#define BAPI_STRERROR_SIZE (256)
 namespace mysql
 {
 
@@ -44,8 +46,34 @@ enum Error_code {
   ERR_OK = 0,                                   /* All OK */
   ERR_EOF,                                      /* End of file */
   ERR_FAIL,                                     /* Unspecified failure */
+  ERR_CHECKSUM_ENABLED,
+  ERR_CHECKSUM_QUERY_FAIL,
+  ERR_CONNECT,
+  ERR_BINLOG_VERSION,
+  ERR_PACKET_LENGTH,
   ERROR_CODE_COUNT
 };
+
+/**
+ *Errors you can get from the API
+ */
+static const char *bapi_error_messages[]=
+{
+  "All OK",
+  "End of File",
+  "Unexpected failure",
+  "binlog_checksum is enabled on the master. Set them to NONE.",
+  "Could not notify master about checksum awareness.\n"
+  "Master returned no rows for the query\n"
+  "SHOW GLOBAL VARIABLES LIKE 'BINLOG_CHECKSUM.",
+  "Unable to set up connection",
+  "Binlog Version not supported",
+  "Error in packet length. Binlog checksums may be enabled on the master.\n"
+  "Please set it to NONE.",
+  ""
+};
+
+extern const char *str_error(int error_no);
 
 /**
  * Returns true if the event is consumed

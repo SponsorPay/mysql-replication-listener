@@ -27,8 +27,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <sql_common.h>
 #include <list>
 
+#define BINLOG_CHECKSUM_LEN 4
+
 namespace mysql {
 namespace system {
+
+//TODO:Replace this by enum declaration in log_event.h
+enum enum_binlog_checksum_alg {
+  BINLOG_CHECKSUM_ALG_OFF= 0,                  // Events are without checksum
+                                               // though its generator is
+                                               // checksum-capable New Master (NM).
+  BINLOG_CHECKSUM_ALG_CRC32= 1,                // CRC32 of zlib algorithm.
+  BINLOG_CHECKSUM_ALG_ENUM_END,                // the cut line: valid alg range
+                                               // is [1, 0x7f].
+  BINLOG_CHECKSUM_ALG_UNDEF= 255               // special value to tag undetermined
+                                               // yet checksum or events from
+                                               // checksum-unaware servers
+};
+
+/**
+  Checks the Format Description event to determine if the master
+  has binlog checksums enabled or not.
+*/
+int check_checksum_value( mysql::Binary_log_event **event);
 
 /**
   Storage structure for the handshake package sent from the server to

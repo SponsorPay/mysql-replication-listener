@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
+#include <stdexcept>
 
 using mysql::system::create_transport;
 using mysql::Binary_log;
@@ -91,7 +92,7 @@ public:
     Int2event_map::iterator ti_it= m_table_index->find(table_id);
     if (ti_it == m_table_index->end ())
     {
-      std::cout << "Table id "
+      std::cerr << "Table id "
                 << table_id
                 << " was not registered by any preceding table map event."
                 << std::endl;
@@ -111,7 +112,8 @@ public:
     {
       mysql::Row_of_fields fields= *it;
       long int timestamp= rev->header()->timestamp;
-      if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT)
+      if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT ||
+          rev->get_event_type() == mysql::WRITE_ROWS_EVENT_V1)
         table_insert(db_name, table_name, fields, timestamp, m_hdfs_schema);
     } while (++it != rows.end());
 
@@ -573,7 +575,10 @@ int main(int argc, char** argv)
         Pull events from the master. This is the heart beat of the event listener.
       */
       Binary_log_event  *event;
-      binlog.wait_for_next_event(&event);
+      int res= binlog.wait_for_next_event(&event);
+      if (res != ERR_OK)
+        break;
+
       delete event;
     } // end loop
   }

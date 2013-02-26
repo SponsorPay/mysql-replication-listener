@@ -40,8 +40,11 @@ Binary_log_event* Binary_log_driver::parse_event(std::istream &is,
       parsed_event= proto_incident_event(is, header);
       break;
     case WRITE_ROWS_EVENT:
+    case WRITE_ROWS_EVENT_V1:
     case UPDATE_ROWS_EVENT:
+    case UPDATE_ROWS_EVENT_V1:
     case DELETE_ROWS_EVENT:
+    case DELETE_ROWS_EVENT_V1:
       parsed_event= proto_rows_event(is, header);
       break;
     case ROTATE_EVENT:

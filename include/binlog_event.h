@@ -82,27 +82,51 @@ enum Log_event_type
   PRE_GA_DELETE_ROWS_EVENT = 22,
 
   /*
-    These event numbers are used from 5.1.16 and forward
+   These event numbers are used from 5.1.16 until mysql-trunk-xx
    */
-  WRITE_ROWS_EVENT = 23,
-  UPDATE_ROWS_EVENT = 24,
-  DELETE_ROWS_EVENT = 25,
+  WRITE_ROWS_EVENT_V1 = 23,
+  UPDATE_ROWS_EVENT_V1 = 24,
+  DELETE_ROWS_EVENT_V1 = 25,
 
   /*
     Something out of the ordinary happened on the master
    */
   INCIDENT_EVENT= 26,
 
-          /*
-           * A user defined event
-           */
-          USER_DEFINED= 27,
+  /*
+    Heartbeat event to be send by master at its idle time
+    to ensure master's online status to slave
+  */
+  HEARTBEAT_LOG_EVENT= 27,
+
+  /*
+    In some situations, it is necessary to send over ignorable
+    data to the slave: data that a slave can handle in case there
+    is code for handling it, but which can be ignored if it is not
+    recognized.
+  */
+  IGNORABLE_LOG_EVENT= 28,
+  ROWS_QUERY_LOG_EVENT= 29,
+
+  /* Version 2 of the Row events */
+  WRITE_ROWS_EVENT = 30,
+  UPDATE_ROWS_EVENT = 31,
+  DELETE_ROWS_EVENT = 32,
+
+  GTID_LOG_EVENT= 33,
+  ANONYMOUS_GTID_LOG_EVENT= 34,
+
+  PREVIOUS_GTIDS_LOG_EVENT= 35,
+
+  /*
+   * A user defined event
+   */
+  USER_DEFINED= 36,
+
   /*
     Add new events here - right above this comment!
     Existing events (except ENUM_END_EVENT) should never change their numbers
   */
-
-
   ENUM_END_EVENT /* end marker */
 };
 

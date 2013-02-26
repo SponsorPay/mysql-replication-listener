@@ -183,8 +183,11 @@ public:
       switch (event->get_event_type())
       {
         case mysql::WRITE_ROWS_EVENT:
+        case mysql::WRITE_ROWS_EVENT_V1:
         case mysql::DELETE_ROWS_EVENT:
+        case mysql::DELETE_ROWS_EVENT_V1:
         case mysql::UPDATE_ROWS_EVENT:
+        case mysql::UPDATE_ROWS_EVENT_V1:
         mysql::Row_event *rev= static_cast<mysql::Row_event *>(event1);
         uint64_t table_id= rev->table_id;
         // BUG: will create a new event header if the table id doesn't exist.
@@ -214,15 +217,18 @@ public:
         do {
           mysql::Row_of_fields fields= *it;
 
-          if (event->get_event_type() == mysql::WRITE_ROWS_EVENT)
+          if (event->get_event_type() == mysql::WRITE_ROWS_EVENT ||
+              event->get_event_type() == mysql::WRITE_ROWS_EVENT_V1)
                  table_insert(os.str(),fields);
-          if (event->get_event_type() == mysql::UPDATE_ROWS_EVENT)
+          if (event->get_event_type() == mysql::UPDATE_ROWS_EVENT ||
+              event->get_event_type() == mysql::UPDATE_ROWS_EVENT_V1)
           {
             ++it;
             mysql::Row_of_fields fields2= *it;
             table_update(os.str(),fields,fields2);
           }
-          if (event->get_event_type() == mysql::DELETE_ROWS_EVENT)
+          if (event->get_event_type() == mysql::DELETE_ROWS_EVENT ||
+              event->get_event_type() == mysql::DELETE_ROWS_EVENT_V1)
             table_delete(os.str(),fields);
         } while (++it != rows.end());
       } // end switch

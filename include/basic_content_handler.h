@@ -54,6 +54,7 @@ public:
   virtual mysql::Binary_log_event *process_event(mysql::Incident_event *ev);
   virtual mysql::Binary_log_event *process_event(mysql::Rotate_event *ev);
   virtual mysql::Binary_log_event *process_event(mysql::Int_var_event *ev);
+  virtual mysql::Binary_log_event *process_event(mysql::Format_event *ev);
 
   /**
     Process any event which hasn't been registered yet.
