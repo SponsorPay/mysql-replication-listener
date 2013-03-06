@@ -514,7 +514,7 @@ int main(int argc, char** argv)
 
   Binary_log binlog(create_transport(mysql_uri.c_str()));
   cout << "The default data warehouse directory"
-       << " in HDFS is /usr/hive/warehouse"
+       << " in HDFS will be set to /usr/hive/warehouse"
        << endl;
   cout << "Change the default data warehouse directory? (Y or N) ";
 

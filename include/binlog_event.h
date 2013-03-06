@@ -327,6 +327,8 @@ public:
     uint16_t flags;
     uint64_t columns_len;
     uint32_t null_bits_len;
+    uint16_t var_header_len;
+    std::vector<uint8_t> extra_header_data;
     std::vector<uint8_t> columns_before_image;
     std::vector<uint8_t> used_columns;
     std::vector<uint8_t> row;

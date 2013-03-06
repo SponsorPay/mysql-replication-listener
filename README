@@ -65,7 +65,7 @@ the file in CMake module path.
 It is also required to set the Environment variable $HADOOP_HOME, which
 points to the Hadoop installation directory.
 
-For hadoop version 1.0.4, the path for libhdfs library and include files
+For hadoop version 1.x, the path for libhdfs library and include files
 requires to be modified in the file FindHDFS.cmake, which is:
 
     set(HDFS_LIB_PATHS $ENV{HADOOP_HOME}/c++/Linux-i386-32/lib)
@@ -78,6 +78,11 @@ requires to be modified in the file FindHDFS.cmake, which is:
 The environment variable $HADOOP_HOME must be set, pointing to the hadoop
 installation directory on your machine.
 
+Since libhdfs is JNI based API, it requires JNI header files and libraries to
+build. If there exists a module FindJNI.cmake in the CMAKE_MODULE_PATH and
+JAVA_HOME is set; the headers will be included, and the libraries would be
+linked to. If not, it will be required to include the headers and load the
+libraries separately (modify LD_LIBRARY_PATH).
 
 Building the mysql2lucene Example
 ---------------------------------

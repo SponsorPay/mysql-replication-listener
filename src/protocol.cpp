@@ -434,15 +434,41 @@ Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
     uint8_t bytes[6];
   } table_id;
 
-  table_id.integer=0L;
+  int bytes_read;
+  table_id.integer= 0L;
   Protocol_chunk<uint8_t>  proto_table_id(&table_id.bytes[0], 6);
   Protocol_chunk<uint16_t> proto_flags(rev->flags);
+
+  is >> proto_table_id
+     >> proto_flags;
+
+  bytes_read= proto_table_id.size() + proto_flags.size();
+
+  if (header->type_code == WRITE_ROWS_EVENT ||
+      header->type_code == DELETE_ROWS_EVENT ||
+      header->type_code == UPDATE_ROWS_EVENT)
+  {
+    /*
+      Have variable length header, check length,
+      which includes length bytes
+    */
+    Protocol_chunk<uint16_t> proto_var_header_len(rev->var_header_len);
+    is >> proto_var_header_len;
+
+    if (rev->var_header_len < 2)
+      return NULL;
+
+    Protocol_chunk_vector proto_extra_header_data(rev->extra_header_data,
+                                                  rev->var_header_len - 2);
+    is >> proto_extra_header_data;
+
+    bytes_read+= proto_var_header_len.size() + proto_extra_header_data.size();
+  }
+
   Protocol_chunk<uint64_t> proto_column_len(rev->columns_len);
   proto_column_len.set_length_encoded_binary(true);
 
-  is >> proto_table_id
-     >> proto_flags
-     >> proto_column_len;
+  is >> proto_column_len;
 
   rev->table_id=table_id.integer;
   int used_column_len=(int) ((rev->columns_len + 7) / 8);
@@ -450,6 +476,7 @@ Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
   rev->null_bits_len= used_column_len;
 
   is >> proto_used_columns;
+  bytes_read+= proto_column_len.size() + used_column_len;
 
   if (header->type_code == UPDATE_ROWS_EVENT ||
       header->type_code == UPDATE_ROWS_EVENT_V1)
@@ -457,13 +484,8 @@ Row_event *proto_rows_event(std::istream &is, Log_event_header *header)
     Protocol_chunk_vector proto_columns_before_image(rev->columns_before_image,
                                                      used_column_len);
     is >> proto_columns_before_image;
-  }
-
-  int bytes_read=proto_table_id.size() + proto_flags.size() +
-                 proto_column_len.size() + used_column_len;
-  if (header->type_code == UPDATE_ROWS_EVENT ||
-      header->type_code == UPDATE_ROWS_EVENT_V1)
     bytes_read+=used_column_len;
+  }
 
   ulong row_len= header->event_length - bytes_read - LOG_EVENT_HEADER_SIZE + 1;
   Protocol_chunk_vector proto_row(rev->row, row_len);

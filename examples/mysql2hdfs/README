@@ -32,9 +32,12 @@ Follow these steps to install and run the Hadoop Applier:
 4. Edit the file 'FindHDFS.cmake', if necessary, to have  HDFS_LIB_PATHS set
    as a path to libhdfs.so, and HDFS_INCLUDE_DIRS have the path pointing to
    the location of hdfs.h.
-5. Build and install the Binlog API library using CMake.
-6. Set the CLASSPATH as mentioned above.
-7. Load the libraries(modify LD_LIBRARY_PATH), and run the command
+5. If you have 'FindJNI.cmake' in CMAKE_MODULE_PATH and JAVA_HOME set, JNI
+   headers will be included and target (happlier)  would be linked to JNI libraries.
+   Else, you will need to link them separately.
+6. Build and install the Binlog API library using CMake.
+7. Set the CLASSPATH as mentioned above.
+8. Load the libraries(modify LD_LIBRARY_PATH if required), and run the command
    'make happlier' on the terminal. This wil create an executable file in
    the mysql2hdfs folder.
 
@@ -92,3 +95,11 @@ Hive Query:
 Now, when any row is inserted into table on MySQL databases, a corresponding
 entry is made in the Hive tables. You can also create an external table in hive
 and load data into the tables.
+
+Caveats
+-------
+
+You may get a memory leak while running the hadoop applier. This would be because
+of a posible bug in libhdfs library; the library provided by hadoop. A bug report
+related to the above is filed here.
+       https://issues.apache.org/jira/browse/HDFS-4467
