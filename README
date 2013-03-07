@@ -34,7 +34,13 @@ Building
 --------
 
 To build the entire package, it is first necessary to run CMake to build all the makefiles.
+Before running CMake set this environment variable MYSQL_DIR to point to the libmysql
+library or the MySQL directory and then you can figure out where to find the right files 
+in the cmake code.
 
+If you have libmysql installed on your system you can skip this step.
+       
+        export MYSQL_DIR=<path of mysql directory or libmysql> 
         cmake .
         make -j4
 
