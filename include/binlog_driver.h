@@ -76,6 +76,7 @@ public:
   virtual int get_position(std::string *filename_ptr,
                            unsigned long *position_ptr) = 0;
 
+  virtual int disconnect()= 0;
   Binary_log_event* parse_event(std::istream &sbuff, Log_event_header *header);
 
 protected:

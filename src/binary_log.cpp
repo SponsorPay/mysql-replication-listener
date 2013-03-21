@@ -70,7 +70,7 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
   do {
       // Return in case of non-ERR_OK.
       if (rc= m_driver->wait_for_next_event(&event))
-				return rc;
+        return rc;
 
     m_binlog_position= event->header()->next_position;
     std::list<mysql::Content_handler *>::iterator it=
@@ -126,6 +126,10 @@ int Binary_log::connect(ulong pos)
   return m_driver->connect((const std::string&)"", pos);
 }
 
+int Binary_log::disconnect()
+{
+  return m_driver->disconnect();
+}
 int Binary_log::connect()
 {
   return m_driver->connect();

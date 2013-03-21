@@ -108,6 +108,10 @@ public:
   {
     return ERR_OK;
   }
+  virtual int disconnect()
+  {
+    return ERR_OK;
+  }
 };
 
 class Content_handler;
@@ -172,7 +176,7 @@ public:
    * @return The current binlog file position
    */
   unsigned long get_position(std::string &filename);
-
+  int disconnect();
 };
 
 }

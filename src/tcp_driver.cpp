@@ -180,13 +180,13 @@ int sync_connect_and_authenticate(MYSQL *conn, const std::string &user,
   {
 
     if (mysql_query(conn, "SHOW GLOBAL VARIABLES LIKE 'BINLOG_CHECKSUM'")
-        || !(res = mysql_store_result(conn)))
+        || !(res= mysql_store_result(conn)))
       return ERR_CHECKSUM_QUERY_FAIL;
 
-    if (!(row = mysql_fetch_row(res)))
+    if (!(row= mysql_fetch_row(res)))
       return ERR_CHECKSUM_QUERY_FAIL;
 
-    if (!(checksum = row[0]))
+    if (!(checksum= row[0]))
       return ERR_CHECKSUM_QUERY_FAIL;
 
     checksum= row[1];
@@ -290,11 +290,11 @@ void Binlog_tcp_driver::reconnect()
   connect(m_user, m_passwd, m_host, m_port);
 }
 
-void Binlog_tcp_driver::disconnect()
+int Binlog_tcp_driver::disconnect()
 {
-  Binary_log_event * event;
   m_waiting_event= 0;
   mysql_close(m_mysql);
+  return ERR_OK;
 }
 
 

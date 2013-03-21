@@ -152,7 +152,7 @@ using namespace std;
   {
     m_binlog_file.exceptions(ifstream::failbit | ifstream::badbit |
                              ifstream::eofbit);
-		*str=m_binlog_file_name;
+    *str= m_binlog_file_name;
 
    try
     {
@@ -235,6 +235,8 @@ using namespace std;
         }
         return ERR_OK;
       }
+      else
+        disconnect();
     } catch(...)
     {
       return ERR_FAIL;

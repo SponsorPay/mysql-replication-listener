@@ -53,7 +53,7 @@ public:
 
     ~Binlog_tcp_driver()
     {
-        delete m_mysql;
+      delete m_mysql;
     }
 
     /**
@@ -74,9 +74,14 @@ public:
      * Reconnects to the master with a new binlog dump request.
      */
     int set_position(const std::string &str, unsigned long position);
+    /**
+     * Disconnect from the server. The io service must have been stopped before
+     * this function is called.
+     * The event queue is emptied.
+     */
+    int disconnect(void);
 
     int get_position(std::string *str, unsigned long *position);
-
     const std::string& user() const { return m_user; }
     const std::string& password() const { return m_passwd; }
     const std::string& host() const { return m_host; }
@@ -109,13 +114,6 @@ private:
      * Reconnect to the server by first calling disconnect and then connect.
      */
     void reconnect(void);
-
-    /**
-     * Disconnet from the server. The io service must have been stopped before
-     * this function is called.
-     * The event queue is emptied.
-     */
-    void disconnect(void);
 
     /**
      * Terminates the io service and sets the shudown flag.
@@ -158,8 +156,6 @@ private:
     uint m_port;
     MYSQL *m_mysql;
     uint64_t m_total_bytes_transferred;
-
-
 };
 
 /**
