@@ -642,7 +642,14 @@ int main(int argc, char** argv)
       exit(2);
     }
 
-    binlog.set_position(opt_start_pos);
+    if (binlog.set_position(opt_start_pos) != ERR_OK)
+    {
+      cerr << "The specified position "
+           << opt_start_pos
+           << " cannot be set"
+           << endl;
+      exit(2);
+    }
 
     if (opt_format_flag)
     {
@@ -676,7 +683,6 @@ int main(int argc, char** argv)
       long int event_start_pos;
       string event_type;
       string database_dot_table;
-
       error_number= binlog.wait_for_next_event(&event);
 
       if (const char* msg=  str_error(error_number))
@@ -687,6 +693,7 @@ int main(int argc, char** argv)
 
       if (event->get_event_type() == mysql::INCIDENT_EVENT ||
          (event->get_event_type() == mysql::ROTATE_EVENT &&
+          event->header()->next_position == 0 ||
           event->header()->next_position == 0))
       {
           /*
