@@ -656,9 +656,9 @@ int Binlog_tcp_driver::set_position(const std::string &str, unsigned long positi
     By posting to the io service we guarantee that the operations are
     executed in the same thread as the io_service is running in.
   */
-  m_io_service.post(boost::bind(&Binlog_tcp_driver::shutdown, this));
   if (m_event_loop)
   {
+    m_io_service.post(boost::bind(&Binlog_tcp_driver::shutdown, this));
     m_event_loop->join();
     delete(m_event_loop);
   }
