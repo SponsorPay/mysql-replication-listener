@@ -167,6 +167,8 @@ private:
 bool fetch_master_status(MYSQL *mysql, std::string *filename,
                          unsigned long *position);
 
+bool fetch_binlog_name_and_size(MYSQL *mysql, std::map<std::string, unsigned long> *binlog_map);
+
 int sync_connect_and_authenticate(MYSQL *mysql, const std::string &user,
                                   const std::string &passwd,
                                   const std::string &host, uint port,

@@ -128,6 +128,7 @@ int Binlog_tcp_driver::connect(const std::string& user,
   return ERR_OK;
 }
 
+
 /**
   Connects to the mysql database, register as a slave,
   and create a network stream using COM_BINLOG_DUMP to read the events.
@@ -305,32 +306,45 @@ void Binlog_tcp_driver::shutdown(void)
 
 int Binlog_tcp_driver::set_position(const std::string &str, ulong position)
 {
-  /*
-    Validate the new position before we attempt to set. Once we set the
-    position we won't know if it succeded because the binlog dump is
-    running in another thread asynchronously.
-  */
-  if(position >= m_binlog_offset)
-    return ERR_FAIL;
+  //validate the new position before we attempt to set.
 
+  MYSQL *mysql= mysql_init(NULL);
+  if (mysql)
+    return ERR_FAIL;
+  int err= sync_connect_and_authenticate(mysql, m_user, m_passwd, m_host, m_port);
+  if (err != ERR_OK)
+    return err;
+
+  std::map<std::string, unsigned long> binlog_map;
+  if (fetch_binlog_name_and_size(mysql, &binlog_map))
+    return ERR_MYSQL_QUERY_FAIL;
+
+  mysql_close(mysql);
+
+  std::map<std::string, unsigned long>::iterator binlog_itr= binlog_map.find(str);
+  if (binlog_itr == binlog_map.end())
+    return ERR_FAIL;
+  if (position > binlog_itr->second)
+    return ERR_FAIL;
   disconnect();
+  
   if (connect(m_user, m_passwd, m_host, m_port, str, position))
-    return ERR_FAIL;
-
-
+    return ERR_CONNECT;
+  return ERR_OK;
 }
 int Binlog_tcp_driver::get_position(std::string *filename_ptr,
                                     ulong *position_ptr)
 {
-  MYSQL *mysql;
-  mysql= mysql_init(NULL);
-
+  MYSQL *mysql= mysql_init(NULL);
+  if (!mysql)
+    return ERR_FAIL;  
   int err= sync_connect_and_authenticate(mysql, m_user, m_passwd, m_host, m_port);
   if (err != ERR_OK)
     return err;
 
   if (fetch_master_status(mysql, &m_binlog_file_name, &m_binlog_offset))
-    return ERR_FAIL;
+    return ERR_MYSQL_QUERY_FAIL;
+
   mysql_close(mysql);
    if (filename_ptr)
     *filename_ptr= m_binlog_file_name;
@@ -341,14 +355,36 @@ int Binlog_tcp_driver::get_position(std::string *filename_ptr,
 bool fetch_master_status(MYSQL *mysql, std::string *filename,
                          unsigned long *position)
 {
-  MYSQL_RES *res;
-  mysql_query(mysql, "show master status");
-  res=mysql_use_result(mysql);
+  if (mysql_query(mysql, "show master status"))
+    return ERR_MYSQL_QUERY_FAIL;
+  MYSQL_RES *res= mysql_use_result(mysql);
+  if (!res)
+    return ERR_MYSQL_QUERY_FAIL;
   MYSQL_ROW row= mysql_fetch_row(res);
-
+  if (!row)
+    return ERR_MYSQL_QUERY_FAIL;
   *filename= row[0];
   *position= strtoul(row[1], NULL, 0);
   return ERR_OK;
 }
 
+bool fetch_binlog_name_and_size(MYSQL *mysql, std::map<std::string, unsigned long> *binlog_map)
+{
+  if (mysql_query(mysql, "show binary logs"))
+    return ERR_MYSQL_QUERY_FAIL;
+  MYSQL_RES *res= mysql_use_result(mysql);
+  if (!res)
+    return ERR_MYSQL_QUERY_FAIL;
+  while (MYSQL_ROW row= mysql_fetch_row(res))
+  {
+    unsigned long position;
+    std::string filename;
+    if (!row)
+      return ERR_MYSQL_QUERY_FAIL;
+    filename= row[0];
+    position= strtoul(row[1], NULL, 0);
+    (*binlog_map).insert(std::make_pair<std::string, unsigned long>(filename, position));
+  }
+  return ERR_OK;
+}
 }} // end namespace mysql::system
