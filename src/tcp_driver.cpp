@@ -309,7 +309,7 @@ int Binlog_tcp_driver::set_position(const std::string &str, ulong position)
   //validate the new position before we attempt to set.
 
   MYSQL *mysql= mysql_init(NULL);
-  if (mysql)
+  if (!mysql)
     return ERR_FAIL;
   int err= sync_connect_and_authenticate(mysql, m_user, m_passwd, m_host, m_port);
   if (err != ERR_OK)

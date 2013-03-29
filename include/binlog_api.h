@@ -51,8 +51,8 @@ enum Error_code {
   ERR_CONNECT,
   ERR_BINLOG_VERSION,
   ERR_PACKET_LENGTH,
-  ERROR_CODE_COUNT,
-  ERR_MYSQL_QUERY_FAIL
+  ERR_MYSQL_QUERY_FAIL,
+  ERROR_CODE_COUNT
 };
 
 /**
@@ -71,6 +71,7 @@ static const char *bapi_error_messages[]=
   "Binlog Version not supported",
   "Error in packet length. Binlog checksums may be enabled on the master.\n"
   "Please set it to NONE.",
+  "Error in executing MySQL Query on the server",
   ""
 };
 
