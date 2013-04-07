@@ -332,22 +332,21 @@ public:
     std::vector<uint8_t> columns_before_image;
     std::vector<uint8_t> used_columns;
     std::vector<uint8_t> row;
-
-    static std::string get_flag_string(enum enum_flag flag)
+    static std::string get_flag_string(enum_flag flag)
     {
-      switch (flag)
-      {
-      case STMT_END_F:
-        return "Last event of the statement";
-      case NO_FOREIGN_KEY_CHECKS_F:
-        return "No foreign Key checks";
-      case RELAXED_UNIQUE_CHECKS_F:
-        return "No unique key checks";
-      case COMPLETE_ROWS_F:
-        return "Complete Rows";
-      default:
-        return "Unknown Flag";
-      }
+      std::string str= "";
+      if (flag & STMT_END_F)
+        str.append(" Last event of the statement");
+      if (flag & NO_FOREIGN_KEY_CHECKS_F)
+        str.append(" No foreign Key checks");
+      if (flag & RELAXED_UNIQUE_CHECKS_F)
+        str.append(" No unique key checks");
+      if (flag & COMPLETE_ROWS_F)
+        str.append(" Complete Rows");
+      if (flag & ~(STMT_END_F | NO_FOREIGN_KEY_CHECKS_F |
+                   RELAXED_UNIQUE_CHECKS_F | COMPLETE_ROWS_F)) 
+        str.append("Unknown Flag");
+      return str;
     }
     void print_event_info(std::ostream& info);
     void print_long_info(std::ostream& info);
