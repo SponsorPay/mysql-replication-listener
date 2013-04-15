@@ -86,28 +86,35 @@ public:
    */
    std::ostringstream os;
    os << ti_it->second->db_name << '.' << ti_it->second->table_name;
-   mysql::Row_event_set::iterator it= rows.begin();
-   do {
-     mysql::Row_of_fields fields= *it;
-     if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT ||
-         rev->get_event_type() == mysql::WRITE_ROWS_EVENT_V1)
-       table_insert(os.str(),fields);
-     if (rev->get_event_type() == mysql::UPDATE_ROWS_EVENT ||
-         rev->get_event_type() == mysql::UPDATE_ROWS_EVENT_V1)
-     {
-       ++it;
-       mysql::Row_of_fields fields2= *it;
-       table_update(os.str(),fields,fields2);
-     }
-     if (rev->get_event_type() == mysql::DELETE_ROWS_EVENT ||
-         rev->get_event_type() == mysql::DELETE_ROWS_EVENT_V1)
-       table_delete(os.str(),fields);
+   try
+   {
+     mysql::Row_event_set::iterator it= rows.begin();
+     do {
+       mysql::Row_of_fields fields= *it;
+       if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT ||
+           rev->get_event_type() == mysql::WRITE_ROWS_EVENT_V1)
+         table_insert(os.str(),fields);
+       if (rev->get_event_type() == mysql::UPDATE_ROWS_EVENT ||
+           rev->get_event_type() == mysql::UPDATE_ROWS_EVENT_V1)
+       {
+         ++it;
+         mysql::Row_of_fields fields2= *it;
+         table_update(os.str(),fields,fields2);
+       }
+       if (rev->get_event_type() == mysql::DELETE_ROWS_EVENT ||
+           rev->get_event_type() == mysql::DELETE_ROWS_EVENT_V1)
+         table_delete(os.str(),fields);
      } while (++it != rows.end());
+   }
+   catch (const std::logic_error& le)
+   {
+     std::cerr << "MySQL Data Type error: " << le.what() << '\n';
+   }
 
-     /* Consume the event */
-     delete rev;
-     return 0;
-  }
+   /* Consume the event */
+   delete rev;
+   return 0;
+ }
 private:
   Table_index *m_table_index;
 

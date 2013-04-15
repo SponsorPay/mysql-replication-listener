@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <my_global.h>
 #include <mysql.h>
 #include <vector>
+#include <stdexcept>
 
 using namespace mysql;
 
@@ -66,7 +67,7 @@ public:
 
   //Row_iterator end() const;
 private:
-    size_t fields(Iterator_value_type& fields_vector );
+    uint32_t fields(Iterator_value_type& fields_vector );
     const Row_event *m_row_event;
     const Table_map_event *m_table_map;
     unsigned long m_new_field_offset_calculated;
@@ -76,10 +77,10 @@ private:
 
 
 template <class Iterator_value_type>
-size_t Row_event_iterator<Iterator_value_type>::
+uint32_t Row_event_iterator<Iterator_value_type>::
        fields(Iterator_value_type& fields_vector )
 {
-  size_t field_offset= m_field_offset;
+  uint32_t field_offset= m_field_offset;
   int row_field_col_index= 0;
   std::vector<uint8_t> nullbits(m_row_event->null_bits_len);
   std::copy(m_row_event->row.begin() + m_field_offset,
@@ -105,7 +106,9 @@ size_t Row_event_iterator<Iterator_value_type>::
         If the value is null it is not in the list of values and thus we won't
         increse the offset. TODO what if all values are null?!
        */
-      field_offset += val.length();
+       if (val.length() == UINT_MAX)
+         throw std::logic_error("Field type is unrecognized");
+       field_offset += val.length();
     }
     fields_vector.push_back(val);
   }
@@ -120,7 +123,6 @@ Iterator_value_type Row_event_iterator<Iterator_value_type>::operator*()
    * Remember this offset if we need to increate the row pointer
    */
   m_new_field_offset_calculated= fields(fields_vector);
-
   return fields_vector;
 }
 
@@ -128,6 +130,9 @@ template< class Iterator_value_type >
 Row_event_iterator< Iterator_value_type >&
   Row_event_iterator< Iterator_value_type >::operator++()
 { // preﬁx
+  if (m_field_offset == UINT_MAX)
+    throw std::logic_error("Field type is unrecognized");
+
   if (m_field_offset < m_row_event->row.size())
   {
     /*

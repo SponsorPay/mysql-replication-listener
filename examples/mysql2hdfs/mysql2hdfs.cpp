@@ -106,17 +106,22 @@ public:
 
     string table_name= ti_it->second->table_name;
     string db_name= ti_it->second->db_name;
-
-    mysql::Row_event_set::iterator it= rows.begin();
-    do
+    try
     {
-      mysql::Row_of_fields fields= *it;
-      long int timestamp= rev->header()->timestamp;
-      if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT ||
-          rev->get_event_type() == mysql::WRITE_ROWS_EVENT_V1)
-        table_insert(db_name, table_name, fields, timestamp, m_hdfs_schema);
-    } while (++it != rows.end());
-
+      mysql::Row_event_set::iterator it= rows.begin();
+      do
+      {
+        mysql::Row_of_fields fields= *it;
+        long int timestamp= rev->header()->timestamp;
+        if (rev->get_event_type() == mysql::WRITE_ROWS_EVENT ||
+            rev->get_event_type() == mysql::WRITE_ROWS_EVENT_V1)
+          table_insert(db_name, table_name, fields, timestamp, m_hdfs_schema);
+      } while (++it != rows.end());
+    }
+    catch (const std::logic_error& le)
+    {
+      std::cerr << "MySQL Data Type error: " << le.what() << '\n';
+    }
     /* Consume the event */
     delete rev;
     return 0;

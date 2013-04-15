@@ -24,11 +24,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "protocol.h"
 #include <my_global.h>
 #include <mysql.h>
+#include <climits>
 #include <iostream>
+#define MAX_TIME_WIDTH 10
+#define MAX_DATETIME_WIDTH 19
+#define DATETIME_MAX_DECIMALS 6
 
 using namespace mysql;
 namespace mysql {
-
 /**
  This helper function calculates the size in bytes of a particular field in a
  row type event as defined by the field_ptr and metadata_ptr arguments.
@@ -41,7 +44,7 @@ namespace mysql {
 
  @return The size in bytes of a particular field
 */
-int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
+uint32_t calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
                     uint32_t metadata);
 
 
@@ -91,7 +94,7 @@ public:
      * Get the length in bytes of the entire storage (any metadata part +
      * atual data)
      */
-    size_t length() const { return m_size; }
+    uint32_t length() const { return m_size; }
     enum_field_types type() const { return m_type; }
     uint32_t metadata() const { return m_metadata; }
 
@@ -145,7 +148,7 @@ public:
 
 private:
     enum_field_types m_type;
-    size_t m_size;
+    uint32_t m_size;
 		const char *m_storage;
     uint32_t m_metadata;
     bool m_is_null;

@@ -25,7 +25,7 @@ using namespace mysql;
 using namespace mysql::system;
 namespace mysql {
 
-int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
+uint32_t calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
                     uint32_t metadata)
 {
   uint32_t length;
@@ -80,9 +80,9 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
   case MYSQL_TYPE_LONG:
     length= 4;
     break;
-//  case MYSQL_TYPE_LONGLONG:
-//    length= 8;
-//    break;
+  case MYSQL_TYPE_LONGLONG:
+    length= 8;
+    break;
   case MYSQL_TYPE_NULL:
     length= 0;
     break;
@@ -148,8 +148,26 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
       }
       break;
     }
+  case MYSQL_TYPE_TIME2:
+    if (metadata >  MAX_TIME_WIDTH)
+      length= 3 + (metadata - MAX_TIME_WIDTH)/2;
+    else
+      length= 3;
+    break;
+  case MYSQL_TYPE_TIMESTAMP2:
+    if (metadata > MAX_DATETIME_WIDTH)
+      length= 4 + (metadata - MAX_DATETIME_WIDTH)/2;
+    else
+      length= 4;
+    break;
+  case MYSQL_TYPE_DATETIME2:
+    if (metadata > MAX_DATETIME_WIDTH)
+      length= 5 + (metadata - MAX_DATETIME_WIDTH)/2;
+    else
+      length= 5;
+    break;
   default:
-    length= ~(uint32_t) 0;
+    length= UINT_MAX;
   }
   return length;
 }
