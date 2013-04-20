@@ -72,14 +72,31 @@ It is also required to set the Environment variable $HADOOP_HOME, which
 points to the Hadoop installation directory.
 
 For hadoop version 1.x, the path for libhdfs library and include files
-requires to be modified in the file FindHDFS.cmake, which is:
+requires to be modified in the file FindHDFS.cmake. The following
+patch will fix the FindHDFS.cmake file:
 
-    set(HDFS_LIB_PATHS $ENV{HADOOP_HOME}/c++/Linux-i386-32/lib)
-    find_path(HDFS_INCLUDE_DIR hdfs.h PATHS
-              $ENV{HADOOP_HOME}/src/c++/libhdfs
-              # make sure we don't accidentally pick up a different version
-              NO_DEFAULT_PATH
-             )
+    --- a/cmake_modules/FindHDFS.cmake
+    +++ b/cmake_modules/FindHDFS.cmake
+    @@ -11,6 +11,7 @@ exec_program(hadoop ARGS version OUTPUT_VARIABLE Hadoop_VERSION
+     # currently only looking in HADOOP_HOME
+     find_path(HDFS_INCLUDE_DIR hdfs.h PATHS
+       $ENV{HADOOP_HOME}/include/
+    +  $ENV{HADOOP_HOME}/src/c++/libhdfs/
+       # make sure we don't accidentally pick up a different version
+       NO_DEFAULT_PATH
+     )
+    @@ -26,9 +27,9 @@ endif()
+     message(STATUS "Architecture: ${arch_hint}")
+
+     if ("${arch_hint}" STREQUAL "x64")
+    -  set(HDFS_LIB_PATHS $ENV{HADOOP_HOME}/lib/native)
+    +  set(HDFS_LIB_PATHS $ENV{HADOOP_HOME}/c++/Linux-amd64-64/lib)
+     else ()
+    -  set(HDFS_LIB_PATHS $ENV{HADOOP_HOME}/lib/native)
+    +  set(HDFS_LIB_PATHS $ENV{HADOOP_HOME}/c++/Linux-i386-32/lib)
+     endif ()
+
+     message(STATUS "HDFS_LIB_PATHS: ${HDFS_LIB_PATHS}")
 
 The environment variable $HADOOP_HOME must be set, pointing to the hadoop
 installation directory on your machine.

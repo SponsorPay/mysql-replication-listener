@@ -25,6 +25,9 @@ Steps to install and configure
 
 Follow these steps to install and run the Hadoop Applier:
 1. Download a Hadoop release, configure and install.
+   Flag 'dfs.support.append' must be set to true while configuring HDFS
+   (hdfs-site.xml). Since append is  not supported in Hadoop 1.x, please
+   set the flag 'dfs.support.broken.append' to true.
 2. Set the environment variable  $HADOOP_HOME to point to the Hadoop
    installation directory.
 3. Ensure that the file 'FindHDFS.cmake' is in the CMAKE_MODULE_PATH.
