@@ -255,7 +255,7 @@ char *Value::as_c_str(unsigned long &size) const
 
   char *str = const_cast<char *>(m_storage + metadata_length);
 
-  if (m_type == mysql::system::MYSQL_TYPE_VARCHAR && m_metadata > 255) {
+  if (m_type == MYSQL_TYPE_VARCHAR && m_metadata > 255) {
     str++;
     size--;
   }
@@ -409,7 +409,16 @@ void Converter::to(std::string &str, const Value &val) const
       date_val -= (date_year << 9);
       unsigned int date_month = date_val >> 5;
       unsigned int date_day = date_val - (date_month << 5);
-      str = boost::str(boost::format("%04d-%02d-%02d") % date_year % date_month % date_day);
+
+      std::ostringstream os;
+
+      os << std::setfill('0') << std::setw(4) << date_year
+         << std::setw(1) << '-'
+         << std::setfill('0') << std::setw(2) << date_month
+         << std::setw(1) << '-'
+         << std::setfill('0') << std::setw(2) << date_day;
+
+      str = os.str();
       break;
     }
     case MYSQL_TYPE_DATETIME:
@@ -442,7 +451,17 @@ void Converter::to(std::string &str, const Value &val) const
       time_val -= time_sec;
       unsigned int time_min = (time_val % 10000) / 100;
       unsigned int time_hour = (time_val - time_min) / 10000;
-      str = boost::str(boost::format("%02d:%02d:%02d") % time_hour % time_min % time_sec);
+
+      std::ostringstream os;
+
+      os << std::setfill('0') << std::setw(2) << time_hour
+         << std::setw(1) << ':'
+         << std::setfill('0') << std::setw(2) << time_min
+         << std::setw(1) << ':'
+         << std::setfill('0') << std::setw(2) << time_sec;
+
+      str = os.str();
+
       break;
     }
     case MYSQL_TYPE_YEAR:
@@ -450,7 +469,12 @@ void Converter::to(std::string &str, const Value &val) const
       const char* val_storage = val.storage();
       unsigned int year_val = (val_storage[0] & 0xff);
       year_val = year_val > 0 ? (year_val + 1900) : 0;
-      str = boost::str(boost::format("%04d") % year_val);
+
+      std::ostringstream os;
+
+      os << std::setfill('0') << std::setw(4) << year_val;
+
+      str = os.str();
       break;
     }
     case MYSQL_TYPE_NEWDATE:
@@ -476,12 +500,16 @@ void Converter::to(std::string &str, const Value &val) const
         str_type = val.metadata() & 0xff;
       }
 
-      if (str_type == mysql::system::MYSQL_TYPE_SET) {
+      if (str_type == MYSQL_TYPE_SET) {
         str = "not implemented";
         break;
-      } else if (str_type == mysql::system::MYSQL_TYPE_ENUM) {
+      } else if (str_type == MYSQL_TYPE_ENUM) {
         unsigned int val_storage = static_cast<unsigned int>(*val.storage());
-        str = boost::str(boost::format("%u") % val_storage);
+
+        std::ostringstream os;
+        os << val_storage;
+        str = os.str();
+
         break;
       }
 
