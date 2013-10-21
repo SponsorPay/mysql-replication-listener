@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -39,9 +39,9 @@ void table_delete(std::string table_name, mysql::Row_of_fields &fields)
   /*
    * First column must be an integer key value
   */
-  if (!(field_it->type() == mysql::system::MYSQL_TYPE_LONG ||
-      field_it->type() == mysql::system::MYSQL_TYPE_SHORT ||
-      field_it->type() == mysql::system::MYSQL_TYPE_LONGLONG))
+  if (!(field_it->type() == MYSQL_TYPE_LONG ||
+      field_it->type() == MYSQL_TYPE_SHORT ||
+      field_it->type() == MYSQL_TYPE_LONGLONG))
    return;
 
   int field_id= 0;
@@ -59,9 +59,9 @@ void table_delete(std::string table_name, mysql::Row_of_fields &fields)
       representation.
       Only index fields which might contain searchable information.
     */
-    if (field_it->type() == mysql::system::MYSQL_TYPE_VARCHAR ||
-        field_it->type() == mysql::system::MYSQL_TYPE_MEDIUM_BLOB ||
-        field_it->type() == mysql::system::MYSQL_TYPE_BLOB)
+    if (field_it->type() == MYSQL_TYPE_VARCHAR ||
+        field_it->type() == MYSQL_TYPE_MEDIUM_BLOB ||
+        field_it->type() == MYSQL_TYPE_BLOB)
     {
       std::string str;
       converter.to(str, *field_it);

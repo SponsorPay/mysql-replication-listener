@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -68,11 +68,13 @@ static Binary_log_driver *parse_mysql_url(const char *body, size_t len)
   assert(host_end - host >= 1);              // There has to be a host
 
   /* Find the port number */
-  unsigned long portno = 3306;
+  uint portno = 3306;
   if (*host_end == ':')
     portno = strtoul(host_end + 1, NULL, 10);
 
-  /* Host name is now the string [host, port-1) if port != NULL and [host, EOS) otherwise. */
+  /* Host name is now the string [host, port-1) if port != NULL and
+     [host, EOS) otherwise.
+  */
   /* Port number is stored in portno, either the default, or a parsed one */
   return new Binlog_tcp_driver(std::string(user, user_end - user),
                                std::string(pass, pass_end - pass),

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
+Copyright (c) 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -17,32 +17,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef ROW_OF_FIELDS_INCLUDED
-#define	ROW_OF_FIELDS_INCLUDED
 
-#include "value.h"
-#include <vector>
-#include <iostream>
+#ifndef TABLE_INDEX_INCLUDED
+#define	TABLE_INDEX_INCLUDED
 
-using namespace mysql;
+#include "binlog_event.h"
+#include "basic_content_handler.h"
+#include <map>
 
-namespace mysql
-{
+typedef std::pair<long int, mysql::Table_map_event *> Event_index_element;
+typedef std::map<long int, mysql::Table_map_event *> Int2event_map;
 
-class Row_of_fields : public std::vector<Value >
+class Table_index : public mysql::Content_handler, public Int2event_map
 {
 public:
-    Row_of_fields() : std::vector<Value >(0) { }
-    Row_of_fields(int field_count) : std::vector<Value >(field_count) {}
-    virtual ~Row_of_fields() {}
+  mysql::Binary_log_event *process_event(mysql::Table_map_event *tm);
 
-    Row_of_fields& operator=(const Row_of_fields &right);
-    Row_of_fields& operator=(Row_of_fields &right);
-
-private:
-
+  ~Table_index();
 };
 
-}
-
-#endif	/* ROW_OF_FIELDS_INCLUDED */
+#endif	/* TABLE_INDEX_INCLUDED */

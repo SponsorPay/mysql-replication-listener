@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,21 +18,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-/*
- * File:   table_index.h
- * Author: thek
- *
- * Created on den 8 september 2010, 13:47
- */
 
-#ifndef TABLE_INDEX_H
-#define	TABLE_INDEX_H
+#ifndef TABLE_INDEX_INCLUDED
+#define	TABLE_INDEX_INCLUDED
+
 #include "binlog_event.h"
 #include <map>
 #include "basic_content_handler.h"
 
-typedef std::pair<boost::uint64_t, mysql::Table_map_event *> Event_index_element;
-typedef std::map<boost::uint64_t, mysql::Table_map_event *> Int2event_map;
+typedef std::pair<uint64_t, mysql::Table_map_event *> Event_index_element;
+typedef std::map<uint64_t, mysql::Table_map_event *> Int2event_map;
 
 class Table_index : public mysql::Content_handler, public Int2event_map
 {

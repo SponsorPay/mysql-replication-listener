@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -106,7 +106,8 @@ TEST_F(TestTransport, CreateTransport_TcpIp) {
 
 TEST_F(TestTransport, CreateTransport_File) {
   TestFileTransport("file:///master-bin.000003", "/master-bin.000003");
-  TestFileTransport("file:///etc/foo/master-bin.000003", "/etc/foo/master-bin.000003");
+  TestFileTransport("file:///etc/foo/master-bin.000003",
+                    "/etc/foo/master-bin.000003");
 
   // Here are tests for bad URLs
   const char *bad_urls[] = {

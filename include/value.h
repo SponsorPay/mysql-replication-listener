@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,17 +18,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _VALUE_ADAPTER_H
-#define	_VALUE_ADAPTER_H
+#ifndef VALUE_ADAPTER_INCLUDED
+#define	VALUE_ADAPTER_INCLUDED
 
-#include <boost/cstdint.hpp>
 #include "protocol.h"
-#include <boost/any.hpp>
+#include <my_global.h>
+#include <mysql.h>
+#include <climits>
 #include <iostream>
+#define MAX_TIME_WIDTH 10
+#define MAX_DATETIME_WIDTH 19
+#define DATETIME_MAX_DECIMALS 6
 
 using namespace mysql;
 namespace mysql {
-
 /**
  This helper function calculates the size in bytes of a particular field in a
  row type event as defined by the field_ptr and metadata_ptr arguments.
@@ -41,12 +44,13 @@ namespace mysql {
 
  @return The size in bytes of a particular field
 */
-int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
-                    boost::uint32_t metadata);
+uint32_t calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
+                    uint32_t metadata);
 
 
 /**
- * A value object class which encapsluate a tuple (value type, metadata, storage)
+ * A value object class which encapsluate a tuple
+ * (value type, metadata, storage)
  * and provide for views to this storage through a well defined interface.
  *
  * Can be used with a Converter to convert between different Values.
@@ -54,13 +58,12 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr,
 class Value
 {
 public:
-    Value(enum system::enum_field_types type, boost::uint32_t metadata, const char *storage) :
+    Value(enum_field_types type, uint32_t metadata, const char *storage) :
       m_type(type), m_storage(storage), m_metadata(metadata), m_is_null(false)
     {
       m_size= calc_field_size((unsigned char)type,
                               (const unsigned char*)storage,
                               metadata);
-      //std::cout << "TYPE: " << type << " SIZE: " << m_size << std::endl;
     };
 
     Value()
@@ -91,33 +94,33 @@ public:
      * Get the length in bytes of the entire storage (any metadata part +
      * atual data)
      */
-    size_t length() const { return m_size; }
-    enum system::enum_field_types type() const { return m_type; }
-    boost::uint32_t metadata() const { return m_metadata; }
+    uint32_t length() const { return m_size; }
+    enum_field_types type() const { return m_type; }
+    uint32_t metadata() const { return m_metadata; }
 
     /**
      * Returns the integer representation of a storage of a pre-specified
      * type.
      */
-    boost::int32_t as_int32() const;
+    int32_t as_int32() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int64_t as_int64() const;
+    int64_t as_int64() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int8_t as_int8() const;
+    int8_t as_int8() const;
 
     /**
      * Returns the integer representation of a storage of pre-specified
      * type.
      */
-    boost::int16_t as_int16() const;
+    int16_t as_int16() const;
 
     /**
      * Returns a pointer to the character data of a string type stored
@@ -144,10 +147,10 @@ public:
     double as_double() const;
 
 private:
-    enum system::enum_field_types m_type;
-    size_t m_size;
-    const char *m_storage;
-    boost::uint32_t m_metadata;
+    enum_field_types m_type;
+    uint32_t m_size;
+		const char *m_storage;
+    uint32_t m_metadata;
     bool m_is_null;
 };
 
@@ -178,4 +181,4 @@ public:
 
 
 } // end namespace mysql
-#endif	/* _VALUE_ADAPTER_H */
+#endif	/* VALUE_ADAPTER_INCLUDED */

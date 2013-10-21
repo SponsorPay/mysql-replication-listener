@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -20,9 +20,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include <vector>
 
 #include "row_of_fields.h"
-#include <stdexcept>
-#include <boost/foreach.hpp>
 #include "value.h"
+#include <stdexcept>
 
 using namespace mysql;
 
@@ -31,9 +30,11 @@ Row_of_fields& Row_of_fields::operator=(const Row_of_fields &right)
   if (size() != right.size())
     throw std::length_error("Row dimension doesn't match.");
   int i= 0;
-  BOOST_FOREACH(Value value, right)
+  Row_of_fields::const_iterator it= right.begin();
+
+  for(; it != right.end() ; it++ )
   {
-    this->assign(++i, value);
+    this->assign(++i, *it);
   }
   return *this;
 }
@@ -43,9 +44,11 @@ Row_of_fields& Row_of_fields::operator=(Row_of_fields &right)
   if (size() != right.size())
     throw std::length_error("Row dimension doesn't match.");
   int i= 0;
-  BOOST_FOREACH(Value value, right)
+  Row_of_fields::iterator it= right.begin();
+
+  for(; it != right.end() ; it++ )
   {
-    this->assign(++i, value);
+    this->assign(++i, *it);
   }
   return *this;
 }

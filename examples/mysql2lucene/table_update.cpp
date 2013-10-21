@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -22,7 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "table_insert.h"
 #include "table_delete.h"
 
-void table_update(std::string table_name, mysql::Row_of_fields &old_fields, mysql::Row_of_fields &new_fields)
+void table_update(std::string table_name, mysql::Row_of_fields &old_fields,
+                  mysql::Row_of_fields &new_fields)
 {
   /*
     Find previous entry and delete it.

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -17,13 +17,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef _ROWSET_H
-#define	_ROWSET_H
+#ifndef ROWSET_INCLUDED
+#define	ROWSET_INCLUDED
 
 #include "field_iterator.h"
 #include "resultset_iterator.h"
-#include <boost/function.hpp>
-#include <boost/iterator.hpp>
 
 using namespace mysql;
 
@@ -38,18 +36,37 @@ public:
     typedef Row_event_iterator<Row_of_fields > iterator;
     typedef Row_event_iterator<Row_of_fields const > const_iterator;
 
-    Row_event_set(Row_event *arg1, Table_map_event *arg2) { source(arg1, arg2); }
+    Row_event_set(Row_event *arg1, Table_map_event *arg2)
+    {
+      source(arg1, arg2);
+    }
 
-    iterator begin() { return iterator(m_row_event, m_table_map_event); }
-    iterator end() { return iterator(); }
-    const_iterator begin() const { return const_iterator(m_row_event, m_table_map_event); }
-    const_iterator end() const { return const_iterator(); }
+    iterator begin()
+    {
+      return iterator(m_row_event, m_table_map_event);
+    }
+    iterator end()
+    {
+      return iterator();
+    }
+    const_iterator begin() const
+    {
+      return const_iterator(m_row_event, m_table_map_event);
+    }
+    const_iterator end() const
+    {
+      return const_iterator();
+    }
 
 private:
-    void source(Row_event *arg1, Table_map_event *arg2) { m_row_event= arg1; m_table_map_event= arg2; }
+    void source(Row_event *arg1, Table_map_event *arg2)
+    {
+      m_row_event= arg1;
+      m_table_map_event= arg2;
+    }
     Row_event *m_row_event;
     Table_map_event *m_table_map_event;
 };
 
 }
-#endif	/* _ROWSET_H */
+#endif	/* ROWSET_INCLUDED */

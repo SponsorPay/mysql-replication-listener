@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,12 +18,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _UTILITIES_H
-#define _UTILITIES_H
+#ifndef UTILITIES_INCLUDED
+#define UTILITIES_INCLUDED
 
 #include "value.h"
 #include "protocol.h"
-
+#include <map>
 
 using namespace mysql;
 
@@ -46,8 +46,8 @@ typedef enum
 } enum_var_types;
 
 int server_var_decoder (std::map<std::string, mysql::Value> *my_var_map,
-                        std::vector<boost::uint8_t > variables);
+                        std::vector<uint8_t > variables);
 
 }
 
-#endif                                          /* _UTILITIES_H */
+#endif                                          /* UTILITIES_INCLUDED */

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -22,18 +22,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 #include "basic_transaction_parser.h"
 #include "protocol.h"
 #include "value.h"
-#include <boost/any.hpp>
-#include <boost/lexical_cast.hpp>
-#include <iostream>
 #include "field_iterator.h"
+#include <iostream>
 
 namespace mysql {
 
-mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Query_event *qev)
+mysql::Binary_log_event *Basic_transaction_parser::
+process_event(mysql::Query_event *qev)
 {
   if (qev->query == "BEGIN")
   {
-    //std::cout << "Transaction has started!" << std::endl;
     m_transaction_state= STARTING;
   }
   else if (qev->query == "COMMIT")
@@ -44,13 +42,15 @@ mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Query_ev
   return process_transaction_state(qev);
 }
 
-mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Xid *ev)
+mysql::Binary_log_event *Basic_transaction_parser::
+process_event(mysql::Xid *ev)
 {
   m_transaction_state= COMMITTING;
   return process_transaction_state(ev);
 }
 
-mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Table_map_event *ev)
+mysql::Binary_log_event *Basic_transaction_parser::
+process_event(mysql::Table_map_event *ev)
 {
   if(m_transaction_state ==IN_PROGRESS)
   {
@@ -60,7 +60,8 @@ mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Table_ma
   return ev;
 }
 
-mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Row_event *ev)
+mysql::Binary_log_event *Basic_transaction_parser::
+process_event(mysql::Row_event *ev)
 {
   if(m_transaction_state ==IN_PROGRESS)
   {
@@ -70,7 +71,8 @@ mysql::Binary_log_event *Basic_transaction_parser::process_event(mysql::Row_even
   return ev;
 }
 
-mysql::Binary_log_event *Basic_transaction_parser::process_transaction_state(mysql::Binary_log_event *incomming_event)
+mysql::Binary_log_event *Basic_transaction_parser::
+process_transaction_state(mysql::Binary_log_event *incomming_event)
 {
   switch(m_transaction_state)
   {
@@ -89,10 +91,10 @@ mysql::Binary_log_event *Basic_transaction_parser::process_transaction_state(mys
        * Propagate the start time for the transaction to the newly created
        * event.
        */
-      mysql::Transaction_log_event *trans=  mysql::create_transaction_log_event();
+      mysql::Transaction_log_event *trans=
+      mysql::create_transaction_log_event();
       trans->header()->timestamp= m_start_time;
 
-      //std::cout << "There are " << m_event_stack.size() << " events in the transaction: ";
       while( m_event_stack.size() > 0)
       {
         mysql::Binary_log_event *event= m_event_stack.front();
@@ -104,16 +106,19 @@ mysql::Binary_log_event *Basic_transaction_parser::process_transaction_state(mys
             /*
              Index the table name with a table id to ease lookup later.
             */
-            mysql::Table_map_event *tm= static_cast<mysql::Table_map_event *>(event);
-            //std::cout << "Indexing table " << tm->table_id << " " << tm->table_name << std::endl;
-            //std::cout.flush ();
-            trans->m_table_map.insert(mysql::Event_index_element(tm->table_id,tm));
+            mysql::Table_map_event *tm=
+            static_cast<mysql::Table_map_event *>(event);
+            trans->m_table_map.insert(mysql::
+                                      Event_index_element(tm->table_id,tm));
             trans->m_events.push_back(event);
           }
           break;
           case mysql::WRITE_ROWS_EVENT:
+          case mysql::WRITE_ROWS_EVENT_V1:
           case mysql::DELETE_ROWS_EVENT:
+          case mysql::DELETE_ROWS_EVENT_V1:
           case mysql::UPDATE_ROWS_EVENT:
+          case mysql::UPDATE_ROWS_EVENT_V1:
           {
             trans->m_events.push_back(event);
              /*

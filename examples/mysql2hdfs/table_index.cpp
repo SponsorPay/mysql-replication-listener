@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
+Copyright (c) 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -17,32 +17,24 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
-#ifndef ROW_OF_FIELDS_INCLUDED
-#define	ROW_OF_FIELDS_INCLUDED
 
-#include "value.h"
-#include <vector>
-#include <iostream>
+#include "table_index.h"
 
-using namespace mysql;
-
-namespace mysql
+mysql::Binary_log_event *Table_index::process_event(mysql::Table_map_event *tm)
 {
+  if (find(tm->table_id) == end())
+    insert(Event_index_element(tm->table_id,tm));
 
-class Row_of_fields : public std::vector<Value >
-{
-public:
-    Row_of_fields() : std::vector<Value >(0) { }
-    Row_of_fields(int field_count) : std::vector<Value >(field_count) {}
-    virtual ~Row_of_fields() {}
-
-    Row_of_fields& operator=(const Row_of_fields &right);
-    Row_of_fields& operator=(Row_of_fields &right);
-
-private:
-
-};
-
+  /* Consume this event so it won't be deallocated beneath our feet */
+  return 0;
 }
 
-#endif	/* ROW_OF_FIELDS_INCLUDED */
+Table_index::~Table_index ()
+{
+  Int2event_map::iterator it= begin();
+  do
+  {
+    delete it->second;
+  } while (++it != end());
+}
+

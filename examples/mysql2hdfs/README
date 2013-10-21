@@ -1,0 +1,108 @@
+Hadoop Applier replicates rows inserted to a table
+to HDFS.
+
+Dependencies
+------------
+
+You need to have Hadoop installed. Since Hadoop is written in Java
+you will need to have Java installed on your machine, version 6 or
+later.
+
+You can download a stable release of Hadoop from the Apache Hadoop
+releases page (http://hadoop.apache.org/common/releases.html).
+
+The example uses an API provided by libhdfs library to manipulate the DFS.
+The library is part of the hadoop distribution and comes pre-compiled
+in ${HADOOP_HOME}/libhdfs/libhdfs.so .
+
+Make sure you set the CLASSPATH to all the hadoop jars needed to run
+Hadoop itself.
+
+        export CLASSPATH=$(hadoop classpath)
+
+Steps to install and configure
+-------------------------------
+
+Follow these steps to install and run the Hadoop Applier:
+1. Download a Hadoop release, configure and install.
+   Flag 'dfs.support.append' must be set to true while configuring HDFS
+   (hdfs-site.xml). Since append is  not supported in Hadoop 1.x, please
+   set the flag 'dfs.support.broken.append' to true.
+2. Set the environment variable  $HADOOP_HOME to point to the Hadoop
+   installation directory.
+3. Ensure that the file 'FindHDFS.cmake' is in the CMAKE_MODULE_PATH.
+   You can download a copy online.
+4. Edit the file 'FindHDFS.cmake', if necessary, to have  HDFS_LIB_PATHS set
+   as a path to libhdfs.so, and HDFS_INCLUDE_DIRS have the path pointing to
+   the location of hdfs.h.
+5. If you have 'FindJNI.cmake' in CMAKE_MODULE_PATH and JAVA_HOME set, JNI
+   headers will be included and target (happlier)  would be linked to JNI libraries.
+   Else, you will need to link them separately.
+6. Build and install the Binlog API library using CMake.
+7. Set the CLASSPATH as mentioned above.
+8. Load the libraries(modify LD_LIBRARY_PATH if required), and run the command
+   'make happlier' on the terminal. This wil create an executable file in
+   the mysql2hdfs folder.
+
+
+Running the executable
+-----------------------
+
+As an example, if the MySQL server is running on port 13000, and hdfs on port
+9000 on localhost, to connect to the MySQL server and HDFS file system,
+run the executable happlier as:
+
+    ./happlier [options] mysql://root@127.0.0.1:13000 hdfs://localhost:9000
+
+Providing MySQL and HDFS uri's are optional, the default value being
+mysql://user@127.0.0.1:3306 for MySQL. HDFS uses the 'configured' filesystem
+(core-site/core-default.xml), if uri is not provided.
+
+There are useful filters as command line options, you can know more by --help
+option.
+
+For each row inserted in the table dbname.tbname in MySQL, a corresponding
+entry will be made in hdfs, mapped to
+
+      hdfs://localhost:9000/user/hive/warehouse/dbname.db/tbname/datafile1.txt
+
+You can modify it in case you wish to store the  data at ai different location.
+Data will be inserted in the file in a tabular format, with the 'timestamp'
+of the binary log event as the first field for each row.
+
+Since the inserts are performed on the occurence of WRITE_ROW_EVENT only,
+make sure to set the session variable binlog_format='ROW' on MySQL client.
+
+
+Integration with Hive
+----------------------
+
+Hive runs on top of Hadoop. It is sufficient to install Hive only on Hadoop
+master node. Take note of the default data warehouse directory, set as a
+property in hive-default.xml.template configuration file. This must be the same
+as the base directory  into which Hadoop Applier writes.
+
+Since the Applier does not import DDL statements; you have to create similar
+schema's on both MySQL and Hive, i.e. Set up a similar database in Hive using
+Hive QL. Since timestamps are inserted as first field in HDFS files, make sure to
+take this into account while creating equivalent tables in Hive.
+
+SQL Query:
+    CREATE TABLE t (i INT);
+
+Hive Query:
+    CREATE TABLE t ( time_stamp INT, i INT)
+    [ROW FORMAT DELIMITED]
+    STORED AS TEXTFILE;
+
+Now, when any row is inserted into table on MySQL databases, a corresponding
+entry is made in the Hive tables. You can also create an external table in hive
+and load data into the tables.
+
+Caveats
+-------
+
+You may get a memory leak while running the hadoop applier. This would be because
+of a posible bug in libhdfs library; the library provided by hadoop. A bug report
+related to the above is filed here.
+       https://issues.apache.org/jira/browse/HDFS-4467

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,18 +18,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-/*
- * File:   table_delete.h
- * Author: thek
- *
- * Created on den 17 juni 2010, 14:28
- */
 
-#ifndef _TABLE_DELETE_H
-#define	_TABLE_DELETE_H
+#ifndef TABLE_DELETE_INCLUDED
+#define	TABLE_DELETE_INCLUDED
+
 #include <string>
 #include "binlog_api.h"
 
 void table_delete(std::string table_name, mysql::Row_of_fields &fields);
 
-#endif	/* _TABLE_DELETE_H */
+#endif	/* TABLE_DELETE_H */

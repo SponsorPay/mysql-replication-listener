@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#ifndef _ACCESS_METHOD_FACTORY_H
-#define	_ACCESS_METHOD_FACTORY_H
+#ifndef ACCESS_METHOD_FACTORY_INCLUDED
+#define	ACCESS_METHOD_FACTORY_INCLUDED
 
 #include "binlog_driver.h"
 
@@ -33,4 +33,4 @@ Binary_log_driver *parse_file_url(char *url, const char
 }
 }
 
-#endif	/* _ACCESS_METHOD_FACTORY_H */
+#endif	/* ACCESS_METHOD_FACTORY_H */

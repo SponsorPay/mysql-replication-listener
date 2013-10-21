@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights
+Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
 reserved.
 
 This program is free software; you can redistribute it and/or
@@ -18,16 +18,35 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 02110-1301  USA
 */
 
-#include <list>
-
 #include "binlog_api.h"
-#include <boost/foreach.hpp>
+#include <list>
 
 using namespace mysql;
 using namespace mysql::system;
 namespace mysql
 {
-Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4), m_binlog_file("")
+/*
+  Get a string describing an error from BAPI.
+
+  @param  error_no   the error number
+
+  @retval buf        buffer containing the error message
+*/
+const char* str_error(int error_no)
+{
+  char *msg= NULL;
+  if (error_no != ERR_OK)
+  {
+    if ((error_no > ERR_OK) && (error_no < ERROR_CODE_COUNT))
+      msg= (char*)bapi_error_messages[error_no];
+    else
+      msg= "Unknown error";
+   }
+   return msg;
+}
+
+Binary_log::Binary_log(Binary_log_driver *drv) : m_binlog_position(4),
+                                                 m_binlog_file("")
 {
   if (drv == NULL)
   {
@@ -48,33 +67,23 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
   bool handler_code;
   mysql::Binary_log_event *event;
 
-  mysql::Injection_queue reinjection_queue;
-
   do {
-    handler_code= false;
-    if (!reinjection_queue.empty())
-    {
-      event= reinjection_queue.front();
-      reinjection_queue.pop_front();
-    }
-    else
-    {
       // Return in case of non-ERR_OK.
-      if(rc= m_driver->wait_for_next_event(&event))
+      if (rc= m_driver->wait_for_next_event(&event))
         return rc;
-    }
-    m_binlog_position= event->header()->next_position;
-    mysql::Content_handler *handler;
 
-    BOOST_FOREACH(handler, m_content_handlers)
+    m_binlog_position= event->header()->next_position;
+    std::list<mysql::Content_handler *>::iterator it=
+    m_content_handlers.begin();
+
+    for(; it != m_content_handlers.end(); it++)
     {
       if (event)
       {
-        handler->set_injection_queue(&reinjection_queue);
-        event= handler->internal_process_event(event);
+        event= (*it)->internal_process_event(event);
       }
     }
-  } while(event == 0 || !reinjection_queue.empty());
+  } while(event == 0);
 
   if (event_ptr)
     *event_ptr= event;
@@ -82,7 +91,7 @@ int Binary_log::wait_for_next_event(mysql::Binary_log_event **event_ptr)
   return 0;
 }
 
-int Binary_log::set_position(const std::string &filename, unsigned long position)
+int Binary_log::set_position(const std::string &filename, ulong position)
 {
   int status= m_driver->set_position(filename, position);
   if (status == ERR_OK)
@@ -93,28 +102,36 @@ int Binary_log::set_position(const std::string &filename, unsigned long position
   return status;
 }
 
-int Binary_log::set_position(unsigned long position)
+int Binary_log::set_position(ulong position)
 {
   std::string filename;
   m_driver->get_position(&filename, NULL);
   return this->set_position(filename, position);
 }
 
-unsigned long Binary_log::get_position(void)
+ulong Binary_log::get_position(void)
 {
   return m_binlog_position;
 }
 
-unsigned long Binary_log::get_position(std::string &filename)
+ulong Binary_log::get_position(std::string &filename)
 {
   m_driver->get_position(&m_binlog_file, &m_binlog_position);
   filename= m_binlog_file;
   return m_binlog_position;
 }
 
+int Binary_log::connect(ulong pos)
+{
+  return m_driver->connect((const std::string&)"", pos);
+}
+
+int Binary_log::disconnect()
+{
+  return m_driver->disconnect();
+}
 int Binary_log::connect()
 {
   return m_driver->connect();
 }
-
 }
