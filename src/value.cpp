@@ -116,6 +116,12 @@ int calc_field_size(unsigned char column_type, const unsigned char *field_ptr, b
   case mysql::system::MYSQL_TYPE_NEWDATE:
     length= 3;
     break;
+  case MYSQL_TYPE_DATETIME2:
+    if (metadata > 19)
+      length= 5 + (metadata - 19)/2;
+    else
+      length= 5;
+    break;
   case mysql::system::MYSQL_TYPE_DATE:
   case mysql::system::MYSQL_TYPE_TIME:
     length= 3;
