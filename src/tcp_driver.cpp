@@ -786,6 +786,7 @@ int hash_sha1(boost::uint8_t *output, ...)
   }
   EVP_DigestFinal_ex(hash_context, (unsigned char *)output, (unsigned int *)&result);
   va_end(ap);
+  EVP_MD_CTX_destroy(hash_context);
   return result;
 }
 
